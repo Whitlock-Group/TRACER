@@ -5,8 +5,6 @@ Created on Fri Nov 20 10:35:25 2020
 
 @author: jacopop
 """
-
-
 from __future__ import print_function
 
 # First run the nex line in the console
@@ -60,7 +58,7 @@ def readlabel( file ):
 
 # Classes to scroll the atlas slices (coronal, sagittal and horizontal)
 class IndexTracker_c(object):
-    def __init__(self, ax, X):
+    def __init__(self, ax, X, pixdim):
         self.ax = ax
         ax.set_title('Atlas viewer')
         print('use scroll wheel to navigate the atlas \n')
@@ -69,7 +67,7 @@ class IndexTracker_c(object):
         if len(self.X.shape) == 3:
             rows, self.slices, cols = X.shape
             self.ind = 653
-            self.im = ax.imshow(self.X[:, self.ind, :].T, origin="lower")
+            self.im = ax.imshow(self.X[:, self.ind, :].T, origin="lower", extent=[0, 512*pixdim, 0, 512*pixdim])
         elif len(self.X.shape) == 4:
             rows, self.slices, cols, color = X.shape
             self.ind = 653              
@@ -94,7 +92,7 @@ class IndexTracker_c(object):
         self.im.axes.figure.canvas.draw()  
         
 class IndexTracker_s(object):
-    def __init__(self, ax, X):
+    def __init__(self, ax, X, pixdim):
         self.ax = ax
         ax.set_title('Atlas viewer')
         print('use scroll wheel to navigate the atlas \n')
@@ -102,11 +100,11 @@ class IndexTracker_s(object):
         self.X = X
         if len(self.X.shape) == 3:
             self.slices, rows, cols = X.shape
-            self.ind = 266                
-            self.im = ax.imshow(self.X[self.ind, :, :].T, origin="lower" )
+            self.ind = 246                
+            self.im = ax.imshow(self.X[self.ind, :, :].T, origin="lower", extent=[0 ,1024*pixdim, 0, 512*pixdim])
         elif len(self.X.shape) == 4:                 
             self.slices, rows, cols, color = X.shape
-            self.ind = 266                
+            self.ind = 246                
             self.im = ax.imshow(self.X[self.ind, :, :].transpose((1,0,2)), origin="lower",alpha=0.5)
         self.update()
 
@@ -128,7 +126,7 @@ class IndexTracker_s(object):
         self.im.axes.figure.canvas.draw()               
         
 class IndexTracker_h(object):
-    def __init__(self, ax, X):
+    def __init__(self, ax, X, pixdim):
         self.ax = ax
         ax.set_title('Atlas viewer')
         print('use scroll wheel to navigate the atlas \n')
@@ -137,7 +135,7 @@ class IndexTracker_h(object):
         if len(self.X.shape) == 3:
             rows, cols, self.slices = X.shape
             self.ind = 440       
-            self.im = ax.imshow(self.X[:, :, self.ind].T, origin="lower")
+            self.im = ax.imshow(self.X[:, :, self.ind].T, origin="lower", extent=[0, 512*pixdim, 0, 1024*pixdim])
         elif len(self.X.shape) == 4:                 
             rows, cols, self.slices, color = X.shape
             self.ind = 440         
@@ -201,8 +199,9 @@ labels_index, labels_name, labels_color = readlabel( labels_item )
 # Mac
 #atlas = nib.load(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack/WHS_SD_rat_T2star_v1.01.nii.gz')
 # Windows
-#atlas = nib.load(atlas_path)
-#atlas_header = atlas.header
+atlas = nib.load(atlas_path)
+atlas_header = atlas.header
+pixdim = atlas_header.get('pixdim')[1]
 #atlas_data = atlas.get_fdata()
 #atlas_affine = atlas.affine
 atlas_data = np.load('atlas_data_masked.npy')
@@ -232,12 +231,11 @@ cv_plot = np.load('cv_plot.npy')/255
 # atlas_data[CC] = 0
 ##################
 
-
 # Display the atlas
 # resolution
-my_dpi = 39
+dpi_atl = 650
 # Bregma coordinates
-textstr = 'Bregma (voxels):\n c = 653, h = 440, s = 266'
+textstr = 'Bregma (mm): c = %.3f, h = %.3f, s = %.3f \nBregma (voxels): c = 653, h = 440, s = 246' %( 653*pixdim, 440*pixdim, 246*pixdim)
 # these are matplotlib.patch.Patch properties
 props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
 if plane.lower() == 'c':
@@ -246,10 +244,12 @@ if plane.lower() == 'c':
     d2 = 512
     d3 = 1024
     # compute the  width and height of the atlas at the the middle slice
-    width_atlas =  sum((atlas_data[:, 500, :].T > 0).any(axis=0))
-    height_atlas = sum((atlas_data[:, 500, :].T > 0).any(axis=1))
-    fig, ax = plt.subplots(1, 1, figsize=(float(d1)/my_dpi,float(d2)/my_dpi))
-    tracker = IndexTracker_c(ax, atlas_data)
+# =============================================================================
+#     width_atlas =  sum((atlas_data[:, 500, :].T > 0).any(axis=0))
+#     height_atlas = sum((atlas_data[:, 500, :].T > 0).any(axis=1))
+# =============================================================================
+    fig, ax = plt.subplots(1, 1)#, figsize=(float(d1)/dpi_atl,float(d2)/dpi_atl), dpi=dpi_atl)
+    tracker = IndexTracker_c(ax, atlas_data, pixdim)
     #tracker = IndexTracker_c(ax, cv_plot)
     #tracker_overlay = IndexTracker_c(ax, atlas_data)
     fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
@@ -260,9 +260,9 @@ if plane.lower() == 'c':
     # display the coordinates relative to the bregma
     # when hovering with the cursor
     def format_coord(x, y):
-        AP = tracker.ind - 653
-        ML = y - 266
-        Z = x - 440    
+        AP = tracker.ind - 653*pixdim
+        ML = y - 246*pixdim
+        Z = x - 440*pixdim
         if ML >0:        
             return 'AP=%1.4f, ML=R%1.4f, z=%1.4f'%(AP, ML, Z)
         else:
@@ -272,7 +272,7 @@ if plane.lower() == 'c':
     cursor = mplcursors.cursor(hover=True)
     # Show the names of the regions
     def show_annotation(sel):
-        xi, yi = sel.target
+        xi, yi = sel.target/pixdim
         if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1)).size:
             Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1))[0,0]]
         else:
@@ -286,11 +286,13 @@ elif plane.lower() == 's':
     d2 = 512    
     d3 = 512
     # compute the  width and height of the atlas at the the middle slice
-    width_atlas =  sum((atlas_data[250, :, :].T > 0).any(axis=0))
-    height_atlas = sum((atlas_data[250, :, :].T > 0).any(axis=1))
-    fig, ax = plt.subplots(1, 1, figsize=(float(d1)/my_dpi,float(d2)/my_dpi))
-    tracker = IndexTracker_s(ax, atlas_data)
-    tracker = IndexTracker_s(ax, cv_plot)
+# =============================================================================
+#     width_atlas =  sum((atlas_data[250, :, :].T > 0).any(axis=0))
+#     height_atlas = sum((atlas_data[250, :, :].T > 0).any(axis=1))
+# =============================================================================
+    fig, ax = plt.subplots(1, 1, figsize=(float(d1)/dpi_atl,float(d2)/dpi_atl))
+    tracker = IndexTracker_s(ax, atlas_data, pixdim)
+    #tracker = IndexTracker_s(ax, cv_plot)
     fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
     # place a text box with bregma coordinates 
     # in bottom left in axes coords
@@ -298,9 +300,9 @@ elif plane.lower() == 's':
     # display the coordinates relative to the bregma
     # when hovering with the cursor
     def format_coord(x, y):
-        AP = y - 653
-        ML = tracker.ind - 266
-        Z = x - 440
+        AP = y - 653*pixdim
+        ML = tracker.ind - 246*pixdim
+        Z = x - 440*pixdim
         if ML >0:        
             return 'AP=%1.4f, ML=R%1.4f, z=%1.4f'%(AP, ML, Z)
         else:
@@ -310,7 +312,7 @@ elif plane.lower() == 's':
     cursor = mplcursors.cursor(hover=True)
     # Show the names of the regions 
     def show_annotation(sel):
-        xi, yi = sel.target
+        xi, yi = sel.target/pixdim
         if np.argwhere(np.all(labels_index == segmentation_data[tracker.ind,int(math.modf(xi)[1]),int(math.modf(yi)[1])], axis = 1)).size:
             Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[tracker.ind,int(math.modf(xi)[1]),int(math.modf(yi)[1])], axis = 1))[0,0]]
         else:
@@ -324,21 +326,23 @@ elif plane.lower() == 'h':
     d2 = 1024
     d3 = 512    
     # compute the  width and height of the atlas at the the middle slice
-    width_atlas =  sum((atlas_data[:, :, 250].T > 0).any(axis=0))
-    height_atlas = sum((atlas_data[:, :, 250].T > 0).any(axis=1))
-    fig, ax = plt.subplots(1, 1, figsize=(float(d1)/my_dpi,float(d2)/my_dpi))
-    tracker = IndexTracker_h(ax, atlas_data)
-    tracker = IndexTracker_h(ax, cv_plot)
+# =============================================================================
+#     width_atlas =  sum((atlas_data[:, :, 250].T > 0).any(axis=0))
+#     height_atlas = sum((atlas_data[:, :, 250].T > 0).any(axis=1))
+# =============================================================================
+    fig, ax = plt.subplots(1, 1, figsize=(float(d1)/dpi_atl,float(d2)/dpi_atl))
+    tracker = IndexTracker_h(ax, atlas_data, pixdim)
+    #tracker = IndexTracker_h(ax, cv_plot)
     fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
     # place a text box with bregma coordinates 
     # in bottom left in axes coords
-    ax.text(0.03, 0.03, textstr, transform=ax.transAxes, fontsize=9 ,verticalalignment='bottom', bbox=props)
+    ax.text(0.03, 0.03, textstr, transform=ax.transAxes, fontsize=6 ,verticalalignment='bottom', bbox=props)
     # display the coordinates relative to the bregma
     # when hovering with the cursor
     def format_coord(x, y):
-        AP = x - 653
-        ML = y - 266        
-        Z = tracker.ind - 440
+        AP = x - 653*pixdim
+        ML = y - 246*pixdim        
+        Z = tracker.ind - 440*pixdim
         if ML >0:        
             return 'AP=%1.4f, ML=R%1.4f, z=%1.4f'%(AP, ML, Z)
         else:
@@ -348,7 +352,7 @@ elif plane.lower() == 'h':
     cursor = mplcursors.cursor(hover=True)
     # Show the names of the regions
     def show_annotation(sel):
-        xi, yi = sel.target
+        xi, yi = sel.target/pixdim
         if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),int(math.modf(yi)[1]),tracker.ind], axis = 1)).size:
             Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),int(math.modf(yi)[1]),tracker.ind], axis = 1))[0,0]]
         else:
@@ -367,9 +371,9 @@ width_img_hist =  sum((img_hist.T > 0).any(axis=0))
 height_img_hist = sum((img_hist.T > 0).any(axis=1))
 #img_hist = cv2.resize(img_hist,(width_atlas, height_atlas), interpolation = cv2.INTER_CUBIC)
 #img_hist = cv2.resize(img_hist,(512,512), interpolation = cv2.INTER_CUBIC)
-my_dpi = 39
+dpi_hist = 39
 # Set up figure
-fig_hist, ax_hist = plt.subplots(1, 1, figsize=(float(d1)/my_dpi,float(d2)/my_dpi))
+fig_hist, ax_hist = plt.subplots(1, 1, figsize=(float(d1)/dpi_hist,float(d2)/dpi_hist))
 # Remove whitespace from around the image
 #fig_hist.subplots_adjust(left=0,right=1,bottom=0,top=1)
 ax_hist.set_title("Histology viewer")
@@ -398,7 +402,7 @@ while True:  # making a loop
         print('Select at least 4 points in the same order in both figures')
         
         # ATLAS
-        fig, ax = plt.subplots(1, 1, figsize=(float(d1)/my_dpi,float(d2)/my_dpi))
+        fig, ax = plt.subplots(1, 1, figsize=(float(d1)/dpi_atl,float(d2)/dpi_atl))
         ax.set_ylabel('slice %d' % tracker.ind)
         ax.set_title('Atlas viewer') 
         #ax.format_coord = format_coord
@@ -429,7 +433,7 @@ while True:  # making a loop
         mngr.window.setGeometry(800,300,d2,d1)       
         
         # HISTOLOGY  
-        fig_hist, ax_hist = plt.subplots(1, 1, figsize=(float(d1)/my_dpi,float(d2)/my_dpi))
+        fig_hist, ax_hist = plt.subplots(1, 1, figsize=(float(d1)/dpi_hist,float(d2)/dpi_hist))
         ax_hist.set_title("Histology viewer")
         ax_hist.imshow(img_hist)
         plt.show()
@@ -459,7 +463,7 @@ while True:  # making a loop
         t.estimate(np.float32(coords_atlas),np.float32(coords_hist))
         img_warped = transform.warp(img_hist, t,output_shape = (d1,d2), order=1, clip=False)#, mode='constant',cval=float('nan'))
         
-        fig_trans, ax_trans = plt.subplots(1, 1, figsize=(float(d1)/my_dpi,float(d2)/my_dpi))
+        fig_trans, ax_trans = plt.subplots(1, 1, figsize=(float(d1)/dpi_atl,float(d2)/dpi_atl))
         ax_trans.imshow(img_warped, origin="lower")
         #ax_trans.imshow(cv_plot[:,tracker.ind,:,:].transpose((1,0,2)), origin="lower",alpha = 0.3) 
         plt.show()
@@ -506,13 +510,6 @@ while True:  # making a loop
         print('Continue')
         break  # if user pressed a key other than the given key the loop will break
 
-
-img = cv2.imread('brain.png',0)
-edges = cv2.Canny(img,50,200)   # canny edge detector
-
-img = cv2.merge((img,img,img))  # creat RGB image from grayscale
-img2 = img.copy()
-img2[edges == 255] = [255, 0, 0]  # turn edges to red
 
 
 
