@@ -1,8 +1,3 @@
-"""
-Created on Tue Oct 13 08:53:57 2020
-
-@author: jacopop
-"""
 # First run the nex line in the console
 # %matplotlib inline
 
@@ -42,9 +37,15 @@ file_name = input('Histology file name: ')
         
 # Open the histology
 # histology = Image.open(os.path.join(histology_folder, file_name[0]+'.tif'))
-histology = Image.open(os.path.join(histology_folder, file_name+'.tif')).copy()
+# Windows
+histology = Image.open(os.path.join(histology_folder, file_name+'.jpg')).copy()
+# Mac
+histology = Image.open('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/rat.jpg').copy()
+
+
 #histology = resizeimage.resize_crop(histology, [200, 200])
-my_dpi = 39
+my_dpi = histology.info['dpi'][1]
+pixdim_hist = 25.4/my_dpi # 1 inch = 25,4 mm
 # Set up figure
 fig=plt.figure(figsize=(float(histology.size[0])/my_dpi,float(histology.size[1])/my_dpi),dpi=my_dpi)
 ax=fig.add_subplot(111)
@@ -89,7 +90,7 @@ histology_old = histology.copy()
 
 factor = 1
 while True:
-    if keyboard.is_pressed('a'):  # if key 'q' is pressed 
+    if keyboard.is_pressed('a'):  # if key 'a' is pressed 
         print('+ to increase and - to decrease')
         while True:
             enhancer = ImageEnhance.Contrast(histology)
@@ -103,7 +104,7 @@ while True:
                 ax.set_title("Slice viewer")
                 # Show the histology image  
                 ax.imshow(histology)
-                #plt.tick_params(labelbottom=False, labelleft=False)
+                plt.tick_params(labelbottom=False, labelleft=False)
                 plt.show()
                 print('Contrast increased')            
             elif keyboard.is_pressed('-'):
@@ -116,7 +117,7 @@ while True:
                 ax.set_title("Slice viewer")
                 # Show the histology image  
                 ax.imshow(histology)
-                #plt.tick_params(labelbottom=False, labelleft=False)
+                plt.tick_params(labelbottom=False, labelleft=False)
                 plt.show()
                 print('Contrast decreased')
             elif keyboard.is_pressed('r'):
@@ -129,12 +130,11 @@ while True:
                 ax.set_title("Slice viewer")
                 # Show the histology image  
                 ax.imshow(histology)
-                #plt.tick_params(labelbottom=False, labelleft=False)
+                plt.tick_params(labelbottom=False, labelleft=False)
                 plt.show()
                 print('Original histology restored')
             elif keyboard.is_pressed('s'):
-                histology.save(os.path.join(path_processed, file_name+'_processed'),'tiff') 
-                histology.save(os.path.join(path_processed, file_name+'_processed.tiff')) 
+                histology.save(os.path.join(path_processed, file_name+'_processed.jpeg'),dpi=(300,300))
                 print('Histology saved')
                 break                          
             elif keyboard.is_pressed('f'):
@@ -144,7 +144,7 @@ while True:
                 print('Original histology restored')
                 break
     elif keyboard.is_pressed('s'):
-        histology.save(os.path.join(path_processed, file_name+'_processed.tif'),'tiff')                      
+        histology.save(os.path.join(path_processed, file_name+'_processed.jpeg'),dpi=(300,300))
         print('Histology saved')
         break
     elif keyboard.is_pressed('f'):
@@ -162,6 +162,7 @@ print('h: Remove grid')
 print('n: set grey scale on')
 print('c: crop slice')
 print('r: reset to original')
+print('s: save image and continue')
 print('e: terminate figure editing and save')
 
 F = 0
@@ -170,7 +171,7 @@ while True:
     if keyboard.is_pressed('t'):  # if key 'q' is pressed 
         #histology = histology.rotate(10)
         F += 10
-        histology_temp = ndimage.rotate(histology_copy, -10, reshape=True)
+        histology_temp = ndimage.rotate(histology_copy, F, reshape=True)
         histology = Image.fromarray(histology_temp)
         fig=plt.figure(figsize=(float(max(histology_old.size))/my_dpi,float(max(histology_old.size))/my_dpi),dpi=my_dpi)
         ax=fig.add_subplot(111)
@@ -180,13 +181,13 @@ while True:
         # Show the histology image  
         ax.imshow(histology)
         # ax.margins(x=0, y=-0.25) 
-        # plt.tick_params(labelbottom=False, labelleft=False)
+        plt.tick_params(labelbottom=False, labelleft=False)
         plt.show()
         print('10° rotation')
     elif keyboard.is_pressed('y'):  # if key 'q' is pressed 
         #histology = histology.rotate(-10)
         F -= 10
-        histology_temp = ndimage.rotate(histology_copy, -10, reshape=True)
+        histology_temp = ndimage.rotate(histology_copy, F, reshape=True)
         histology = Image.fromarray(histology_temp)
         fig=plt.figure(figsize=(float(max(histology.size))/my_dpi,float(max(histology.size))/my_dpi),dpi=my_dpi)
         ax=fig.add_subplot(111)
@@ -195,7 +196,7 @@ while True:
         ax.set_title("Slice viewer")
         # Show the histology image  
         ax.imshow(histology)
-        #plt.tick_params(labelbottom=False, labelleft=False)
+        plt.tick_params(labelbottom=False, labelleft=False)
         plt.show()
         print('10° rotation')            
     elif keyboard.is_pressed('g'):
@@ -211,7 +212,7 @@ while True:
         ax.grid(which='major', axis='both', linestyle='-')
         # Add the image
         ax.imshow(histology)
-        #plt.tick_params(labelbottom=False, labelleft=False)
+        plt.tick_params(labelbottom=False, labelleft=False)
         plt.show()
         print('Gridd added')
     elif keyboard.is_pressed('h'):
@@ -224,7 +225,7 @@ while True:
         ax.grid(False)
         # Add the image
         ax.imshow(histology)
-        #plt.tick_params(labelbottom=False, labelleft=False)
+        plt.tick_params(labelbottom=False, labelleft=False)
         plt.show()
         print('Gridd removed')            
     elif keyboard.is_pressed('n'):
@@ -237,7 +238,7 @@ while True:
         ax.set_title("Slice viewer")
         # Show the histology image  
         ax.imshow(histology)
-        #plt.tick_params(labelbottom=False, labelleft=False)
+        plt.tick_params(labelbottom=False, labelleft=False)
         plt.show()
         print('Histology in greyscale')
     elif keyboard.is_pressed('r'):  
@@ -251,7 +252,7 @@ while True:
         ax.set_title("Slice viewer")
         # Show the histology image  
         ax.imshow(histology)
-        #plt.tick_params(labelbottom=False, labelleft=False)
+        plt.tick_params(labelbottom=False, labelleft=False)
         plt.show()
         print('Original histology restored')
     elif keyboard.is_pressed('c'):
@@ -270,11 +271,15 @@ while True:
         ax.set_title("Slice viewer")
         # Show the histology image  
         ax.imshow(histology)
-        #plt.tick_params(labelbottom=False, labelleft=False)
+        plt.tick_params(labelbottom=False, labelleft=False)
         plt.show()
         print('the image is now: ' + str(histology.size[0]) + ' x ' + str(histology.size[1]) + ' pixels')
+    elif keyboard.is_pressed('s'):
+        histology.save(os.path.join(path_processed, file_name+'_processed.jpeg'),dpi=(300,300))
+        print('Histology saved')
+        break        
     elif keyboard.is_pressed('e'):  
-        histology.save(os.path.join(path_processed, file_name+'_processed.tif'),'tiff')                      
+        histology.save(os.path.join(path_processed, file_name+'_processed.jpeg'),dpi=(300,300))
         print('Histology saved')
         break
 
