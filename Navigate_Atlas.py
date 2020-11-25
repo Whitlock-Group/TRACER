@@ -1,10 +1,10 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Nov 20 10:35:25 2020
+Created on Wed Nov 25 12:44:57 2020
 
 @author: jacopop
 """
+
 from __future__ import print_function
 
 # First run the nex line in the console
@@ -66,7 +66,7 @@ class IndexTracker_c(object):
         self.X = X
         if len(self.X.shape) == 3:
             rows, self.slices, cols = X.shape
-            self.ind = 653
+            self.ind = 540
             self.im = ax.imshow(self.X[:, self.ind, :].T, origin="lower", extent=[0, 512*pixdim, 0, 512*pixdim])
         elif len(self.X.shape) == 4:
             rows, self.slices, cols, color = X.shape
@@ -169,10 +169,13 @@ processed_histology_folder = r'C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI
 # histology = Image.open(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/rat_processed.tif').copy()
 # For windows users
 file_name = input('Histology file name: ')
-# Windows
-#img_hist = cv2.imread(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/rat_processed.tif',cv2.IMREAD_GRAYSCALE)
 # Mac
-img_hist = cv2.imread(os.path.join(processed_histology_folder, file_name+'_processed.tif'),cv2.IMREAD_GRAYSCALE)
+#img_hist = cv2.imread(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/rat_processed.tif',cv2.IMREAD_GRAYSCALE)
+# Windows
+img_hist_temp = Image.open(os.path.join(processed_histology_folder, file_name+'_processed.jpeg')).copy()
+dpi_hist = img_hist_temp.info['dpi'][1]
+pixdim_hist = 25.4/dpi_hist # 1 inch = 25,4 mm
+img_hist = cv2.imread(os.path.join(processed_histology_folder, file_name+'_processed.jpeg'),cv2.IMREAD_GRAYSCALE)
 # Insert the plane of interest
 plane = input('Select the plane: coronal (c), sagittal (s), or horizontal (h): ')
 # Check if the input is correct
@@ -233,7 +236,7 @@ cv_plot = np.load('cv_plot.npy')/255
 
 # Display the atlas
 # resolution
-dpi_atl = 650
+dpi_atl = 25.4/pixdim
 # Bregma coordinates
 textstr = 'Bregma (mm): c = %.3f, h = %.3f, s = %.3f \nBregma (voxels): c = 653, h = 440, s = 246' %( 653*pixdim, 440*pixdim, 246*pixdim)
 # these are matplotlib.patch.Patch properties
@@ -256,11 +259,11 @@ if plane.lower() == 'c':
     #fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
     # place a text box with bregma coordinates 
     # in bottom left in axes coords
-    ax.text(0.03, 0.03, textstr, transform=ax.transAxes, fontsize=9 ,verticalalignment='bottom', bbox=props)
+    ax.text(0.03, 0.03, textstr, transform=ax.transAxes, fontsize=6 ,verticalalignment='bottom', bbox=props)
     # display the coordinates relative to the bregma
     # when hovering with the cursor
     def format_coord(x, y):
-        AP = tracker.ind - 653*pixdim
+        AP = tracker.ind*pixdim - 653*pixdim
         ML = y - 246*pixdim
         Z = x - 440*pixdim
         if ML >0:        
@@ -269,17 +272,19 @@ if plane.lower() == 'c':
             return 'AP=%1.4f, ML=L%1.4f, z=%1.4f'%(AP, ML, Z)    
     ax.format_coord = format_coord
     plt.show()
-    cursor = mplcursors.cursor(hover=True)
-    # Show the names of the regions
-    def show_annotation(sel):
-        xi, yi = sel.target/pixdim
-        if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1)).size:
-            Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1))[0,0]]
-        else:
-            # display nothing
-            Text = ' '
-        sel.annotation.set_text(Text)
-    cursor.connect('add', show_annotation)            
+# =============================================================================
+#     cursor = mplcursors.cursor(hover=True)
+#     # Show the names of the regions
+#     def show_annotation(sel):
+#         xi, yi = sel.target/pixdim
+#         if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1)).size:
+#             Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1))[0,0]]
+#         else:
+#             # display nothing
+#             Text = ' '
+#         sel.annotation.set_text(Text)
+#     cursor.connect('add', show_annotation)            
+# =============================================================================
 elif plane.lower() == 's':
     # dimensions
     d1 = 1024 
@@ -296,12 +301,12 @@ elif plane.lower() == 's':
     fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
     # place a text box with bregma coordinates 
     # in bottom left in axes coords
-    ax.text(0.03, 0.03, textstr, transform=ax.transAxes, fontsize=9 ,verticalalignment='bottom', bbox=props)
+    ax.text(0.03, 0.03, textstr, transform=ax.transAxes, fontsize=6 ,verticalalignment='bottom', bbox=props)
     # display the coordinates relative to the bregma
     # when hovering with the cursor
     def format_coord(x, y):
         AP = y - 653*pixdim
-        ML = tracker.ind - 246*pixdim
+        ML = tracker.ind*pixdim - 246*pixdim
         Z = x - 440*pixdim
         if ML >0:        
             return 'AP=%1.4f, ML=R%1.4f, z=%1.4f'%(AP, ML, Z)
@@ -309,17 +314,19 @@ elif plane.lower() == 's':
             return 'AP=%1.4f, ML=L%1.4f, z=%1.4f'%(AP, ML, Z)    
     ax.format_coord = format_coord
     plt.show()
-    cursor = mplcursors.cursor(hover=True)
-    # Show the names of the regions 
-    def show_annotation(sel):
-        xi, yi = sel.target/pixdim
-        if np.argwhere(np.all(labels_index == segmentation_data[tracker.ind,int(math.modf(xi)[1]),int(math.modf(yi)[1])], axis = 1)).size:
-            Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[tracker.ind,int(math.modf(xi)[1]),int(math.modf(yi)[1])], axis = 1))[0,0]]
-        else:
-            # display nothing
-            Text = ' '
-        sel.annotation.set_text(Text)  
-    cursor.connect('add', show_annotation)            
+# =============================================================================
+#     cursor = mplcursors.cursor(hover=True)
+#     # Show the names of the regions 
+#     def show_annotation(sel):
+#         xi, yi = sel.target/pixdim
+#         if np.argwhere(np.all(labels_index == segmentation_data[tracker.ind,int(math.modf(xi)[1]),int(math.modf(yi)[1])], axis = 1)).size:
+#             Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[tracker.ind,int(math.modf(xi)[1]),int(math.modf(yi)[1])], axis = 1))[0,0]]
+#         else:
+#             # display nothing
+#             Text = ' '
+#         sel.annotation.set_text(Text)  
+#     cursor.connect('add', show_annotation)            
+# =============================================================================
 elif plane.lower() == 'h':
     # dimensions
     d1 = 512
@@ -342,136 +349,115 @@ elif plane.lower() == 'h':
     def format_coord(x, y):
         AP = x - 653*pixdim
         ML = y - 246*pixdim        
-        Z = tracker.ind - 440*pixdim
+        Z = tracker.ind*pixdim - 440*pixdim
         if ML >0:        
             return 'AP=%1.4f, ML=R%1.4f, z=%1.4f'%(AP, ML, Z)
         else:
             return 'AP=%1.4f, ML=L%1.4f, z=%1.4f'%(AP, ML, Z)    
     ax.format_coord = format_coord
     plt.show()
-    cursor = mplcursors.cursor(hover=True)
-    # Show the names of the regions
-    def show_annotation(sel):
-        xi, yi = sel.target/pixdim
-        if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),int(math.modf(yi)[1]),tracker.ind], axis = 1)).size:
-            Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),int(math.modf(yi)[1]),tracker.ind], axis = 1))[0,0]]
-        else:
-            # display nothing
-            Text = ' '
-        sel.annotation.set_text(Text)
-    cursor.connect('add', show_annotation)
+# =============================================================================
+#     cursor = mplcursors.cursor(hover=True)
+#     # Show the names of the regions
+#     def show_annotation(sel):
+#         xi, yi = sel.target/pixdim
+#         if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),int(math.modf(yi)[1]),tracker.ind], axis = 1)).size:
+#             Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),int(math.modf(yi)[1]),tracker.ind], axis = 1))[0,0]]
+#         else:
+#             # display nothing
+#             Text = ' '
+#         sel.annotation.set_text(Text)
+#     cursor.connect('add', show_annotation)
+# =============================================================================
 # Fix size and location of the figure window
 mngr = plt.get_current_fig_manager()
 mngr.window.setGeometry(800,300,d2,d1)     
 
 
+# =============================================================================
+# #width and height of histology
+# width_img_hist =  sum((img_hist.T > 0).any(axis=0))
+# height_img_hist = sum((img_hist.T > 0).any(axis=1))
+# =============================================================================
+
 # Show the processed histology
-img_hist = cv2.imread(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/rat_processed.tif',cv2.IMREAD_GRAYSCALE)
-width_img_hist =  sum((img_hist.T > 0).any(axis=0))
-height_img_hist = sum((img_hist.T > 0).any(axis=1))
-#img_hist = cv2.resize(img_hist,(width_atlas, height_atlas), interpolation = cv2.INTER_CUBIC)
-#img_hist = cv2.resize(img_hist,(512,512), interpolation = cv2.INTER_CUBIC)
-dpi_hist = 39
 # Set up figure
-fig_hist, ax_hist = plt.subplots(1, 1, figsize=(float(d1)/dpi_hist,float(d2)/dpi_hist))
+fig_hist, ax_hist = plt.subplots(1, 1, figsize=(float(img_hist.shape[1])/dpi_hist,float(img_hist.shape[0])/dpi_hist))
 # Remove whitespace from around the image
 #fig_hist.subplots_adjust(left=0,right=1,bottom=0,top=1)
 ax_hist.set_title("Histology viewer")
 # Show the histology image  
-ax_hist.imshow(img_hist)
+ax_hist.imshow(img_hist, extent=[0, img_hist.shape[1]*pixdim_hist, img_hist.shape[0]*pixdim_hist, 0])
 plt.show()
 # Fix size and location of the figure window
 mngr_hist = plt.get_current_fig_manager()
 mngr_hist.window.setGeometry(150,300,d2,d1)
-
-
+        
 # User controls 
 print('Registration: \n')
 print('t: toggle mode where clicks are logged for transform \n')
 print('h: toggle overlay of current histology slice \n')
 print('a: toggle to viewing boundaries \n')
 
-
-
-while True:  # making a loop
-    if keyboard.is_pressed('t'):  # if key 'q' is pressed 
-
-        # close the plots windows    
-        plt.close(fig)
-        plt.close(fig_hist)
+# Lists for the points clicked in atlas and histology
+coords_atlas = []
+coords_hist = []
+def on_key(event):
+    if event.key == 't':
         print('Select at least 4 points in the same order in both figures')
-        
         # ATLAS
-        fig, ax = plt.subplots(1, 1, figsize=(float(d1)/dpi_atl,float(d2)/dpi_atl))
-        ax.set_ylabel('slice %d' % tracker.ind)
-        ax.set_title('Atlas viewer') 
-        #ax.format_coord = format_coord
-        if plane.lower() == 'c':
-            ax.imshow(atlas_data[:,tracker.ind,:].T, origin="lower")
-        elif plane.lower() == 's':
-            ax.imshow(atlas_data[tracker.ind,:,:].T, origin="lower")
-        elif plane.lower() == 'h':    
-            ax.imshow(atlas_data[:,:,tracker.ind].T, origin="lower")
-        plt.show()
         # Mouse click function to store coordinates.
         # Leave a red dot when a point is clicked
         # when registering slides        
         def onclick(event):
             global ix, iy
-            ix, iy = event.xdata, event.ydata
+            ix, iy = event.xdata/pixdim, event.ydata/pixdim
             # assign global variable to access outside of function
             global coords_atlas
             coords_atlas.append((ix, iy))
             plt.plot(event.xdata, event.ydata, 'ro',markersize=2)
             fig.canvas.draw()
             return
-        coords_atlas = []
         # Call click func
-        cid = fig.canvas.mpl_connect('button_press_event', onclick)  
-        # Fix size and location of the figure window
-        mngr = plt.get_current_fig_manager()
-        mngr.window.setGeometry(800,300,d2,d1)       
-        
+        fig.canvas.mpl_connect('button_press_event', onclick)  
+  
         # HISTOLOGY  
-        fig_hist, ax_hist = plt.subplots(1, 1, figsize=(float(d1)/dpi_hist,float(d2)/dpi_hist))
-        ax_hist.set_title("Histology viewer")
-        ax_hist.imshow(img_hist)
-        plt.show()
         # Mouse click function to store coordinates.
         # Leave a red dot when a point is clicked
         # when registering slides        
         def onclick_hist(event):
             global xh, yh
-            xh, yh = event.xdata, event.ydata
+            xh, yh = event.xdata/pixdim_hist, event.ydata/pixdim_hist
             # assign global variable to access outside of function
             global coords_hist
             coords_hist.append((xh, yh))
             plt.plot(event.xdata, event.ydata, 'ro',markersize=2)
             fig_hist.canvas.draw()
             return
-        coords_hist = []
         # Call click func
-        cid_hist = fig_hist.canvas.mpl_connect('button_press_event', onclick_hist)
-        # Fix size and location of the figure window
-        mngr_hist = plt.get_current_fig_manager()
-        mngr_hist.window.setGeometry(150,300,d2,d1)
+        fig_hist.canvas.mpl_connect('button_press_event', onclick_hist)
         
+    elif event.key == 'h':
+        print('Transform histology to adpat to the atlas')
         
-    elif keyboard.is_pressed('h'):
         # get the projective transformation from the set of clicked points
         t = transform.ProjectiveTransform()
         t.estimate(np.float32(coords_atlas),np.float32(coords_hist))
-        img_warped = transform.warp(img_hist, t,output_shape = (d1,d2), order=1, clip=False)#, mode='constant',cval=float('nan'))
+        global img_warped # avoid unbound local error when passed top the next step
+        img_warped = transform.warp(img_hist, t, output_shape = (d1,d2), order=1, clip=False)#, mode='constant',cval=float('nan'))
         
-        fig_trans, ax_trans = plt.subplots(1, 1, figsize=(float(d1)/dpi_atl,float(d2)/dpi_atl))
-        ax_trans.imshow(img_warped, origin="lower")
-        #ax_trans.imshow(cv_plot[:,tracker.ind,:,:].transpose((1,0,2)), origin="lower",alpha = 0.3) 
-        plt.show()
-
-    elif keyboard.is_pressed('a') :                  
+# =============================================================================
+#         # Show the  transformed figure  
+#         fig_trans, ax_trans = plt.subplots(1, 1)#, figsize=(float(d1)/dpi_atl,float(d2)/dpi_atl))
+#         ax_trans.imshow(img_warped, extent=[0, d1*pixdim, 0, d2*pixdim] )
+#         plt.show()
+# =============================================================================
+        
+    elif event.key == 'a':        
+        print('Overlay to the atlas')
         # get the edges of the colors defined in the label
         if plane.lower() == 'c':
-            edges = cv2.Canny(np.uint8((cv_plot[:,tracker.ind,:]*255).transpose((1,0,2))),100,200)            
+            edges = cv2.Canny(np.uint8((cv_plot[:,tracker.ind,:]*255).transpose((1,0,2))),100,200)  
         elif plane.lower() == 's':
             edges = cv2.Canny(np.uint8((cv_plot[tracker.ind,:,:]*255).transpose((1,0,2))),100,200)
         elif plane.lower() == 'h':    
@@ -492,23 +478,38 @@ while True:  # making a loop
 # =============================================================================
         img2 = (img_warped).copy()
         img2[CC] = 1
-        ax_grid.imshow(img2, origin="lower")       
-        plt.show(), plt.xticks([]), plt.yticks([])
+        ax_grid.imshow(img2, origin="lower", extent=[0, d1*pixdim, 0, d2*pixdim])    
+        ax_grid.text(0.2, 0.05, textstr, transform=ax.transAxes, fontsize=6 ,verticalalignment='bottom', bbox=props)
+        ax_grid.format_coord = format_coord
+        plt.show()
         cursor = mplcursors.cursor(hover=True)
         # Show the names of the regions
         def show_annotation(sel):
-            xi, yi = sel.target
+            xi, yi = sel.target/pixdim
             if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1)).size:
                 Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1))[0,0]]
             else:
                 # display nothing
                 Text = ' '
             sel.annotation.set_text(Text)
-        cursor.connect('add', show_annotation)     
+        cursor.connect('add', show_annotation)   
 
-    elif keyboard.is_pressed('f') :
-        print('Continue')
-        break  # if user pressed a key other than the given key the loop will break
+fig.canvas.mpl_connect('key_press_event', on_key)
+fig_hist.canvas.mpl_connect('key_press_event', on_key)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
