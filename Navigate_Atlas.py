@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Nov 25 12:44:57 2020
+Created on Thu Nov 26 09:33:18 2020
 
 @author: jacopop
 """
+
 
 from __future__ import print_function
 
@@ -67,7 +68,7 @@ class IndexTracker_c(object):
         if len(self.X.shape) == 3:
             rows, self.slices, cols = X.shape
             self.ind = 540
-            self.im = ax.imshow(self.X[:, self.ind, :].T, origin="lower", extent=[0, 512*pixdim, 0, 512*pixdim])
+            self.im = ax.imshow(self.X[:, self.ind, :].T, origin="lower", extent=[0, 512*pixdim, 0, 512*pixdim], cmap='gray')
         elif len(self.X.shape) == 4:
             rows, self.slices, cols, color = X.shape
             self.ind = 653              
@@ -101,7 +102,7 @@ class IndexTracker_s(object):
         if len(self.X.shape) == 3:
             self.slices, rows, cols = X.shape
             self.ind = 246                
-            self.im = ax.imshow(self.X[self.ind, :, :].T, origin="lower", extent=[0 ,1024*pixdim, 0, 512*pixdim])
+            self.im = ax.imshow(self.X[self.ind, :, :].T, origin="lower", extent=[0 ,1024*pixdim, 0, 512*pixdim], cmap='gray')
         elif len(self.X.shape) == 4:                 
             self.slices, rows, cols, color = X.shape
             self.ind = 246                
@@ -135,7 +136,7 @@ class IndexTracker_h(object):
         if len(self.X.shape) == 3:
             rows, cols, self.slices = X.shape
             self.ind = 440       
-            self.im = ax.imshow(self.X[:, :, self.ind].T, origin="lower", extent=[0, 512*pixdim, 0, 1024*pixdim])
+            self.im = ax.imshow(self.X[:, :, self.ind].T, origin="lower", extent=[0, 512*pixdim, 0, 1024*pixdim], cmap='gray')
         elif len(self.X.shape) == 4:                 
             rows, cols, self.slices, color = X.shape
             self.ind = 440         
@@ -157,9 +158,37 @@ class IndexTracker_h(object):
             self.im.set_data(self.X[:, :, self.ind].transpose((1,0,2)))
         #ndimage.rotate(img, 45, reshape=False)
         ax.set_ylabel('slice %d' % self.ind)
-        self.im.axes.figure.canvas.draw()    
+        self.im.axes.figure.canvas.draw()   
+        
+class IndexTracker_cg(object):
+    def __init__(self, ax, X, pixdim, S):
+        self.ax = ax
+        ax.set_title('Atlas viewer')
+        print('use scroll wheel to navigate the atlas \n')
+        
+        self.X = X
+        rows, self.slices, cols = X.shape
+        self.ind = S
+        self.im = ax.imshow(self.X[:, self.ind, :], origin="lower", alpha=0.5, extent=[0, 512*pixdim, 512*pixdim, 0], cmap='gray')
+        self.update()
 
-    
+    def onscroll(self, event):
+        #print("%s %s" % (event.button, event.step))
+        if event.button == 'up':
+            self.ind = (self.ind + 1) % self.slices
+        else:
+            self.ind = (self.ind - 1) % self.slices
+        self.update()        
+        
+    def update(self):
+        self.im.set_data(self.X[:, self.ind, :])
+        #ndimage.rotate(img, 45, reshape=False)
+        ax.set_ylabel('slice %d' % self.ind)
+        self.im.axes.figure.canvas.draw()      
+        
+        
+        
+
 # Directory of the processed histology
 # for mac user 
 #processed_histology_folder = r'/Users/jacopop/Box\ Sync/macbook/Documents/KAVLI\histology/processed'
@@ -246,11 +275,6 @@ if plane.lower() == 'c':
     d1 = 512
     d2 = 512
     d3 = 1024
-    # compute the  width and height of the atlas at the the middle slice
-# =============================================================================
-#     width_atlas =  sum((atlas_data[:, 500, :].T > 0).any(axis=0))
-#     height_atlas = sum((atlas_data[:, 500, :].T > 0).any(axis=1))
-# =============================================================================
     fig, ax = plt.subplots(1, 1)#, figsize=(float(d1)/dpi_atl,float(d2)/dpi_atl), dpi=dpi_atl)
     tracker = IndexTracker_c(ax, atlas_data, pixdim)
     #tracker = IndexTracker_c(ax, cv_plot)
@@ -290,11 +314,6 @@ elif plane.lower() == 's':
     d1 = 1024 
     d2 = 512    
     d3 = 512
-    # compute the  width and height of the atlas at the the middle slice
-# =============================================================================
-#     width_atlas =  sum((atlas_data[250, :, :].T > 0).any(axis=0))
-#     height_atlas = sum((atlas_data[250, :, :].T > 0).any(axis=1))
-# =============================================================================
     fig, ax = plt.subplots(1, 1, figsize=(float(d1)/dpi_atl,float(d2)/dpi_atl))
     tracker = IndexTracker_s(ax, atlas_data, pixdim)
     #tracker = IndexTracker_s(ax, cv_plot)
@@ -332,11 +351,6 @@ elif plane.lower() == 'h':
     d1 = 512
     d2 = 1024
     d3 = 512    
-    # compute the  width and height of the atlas at the the middle slice
-# =============================================================================
-#     width_atlas =  sum((atlas_data[:, :, 250].T > 0).any(axis=0))
-#     height_atlas = sum((atlas_data[:, :, 250].T > 0).any(axis=1))
-# =============================================================================
     fig, ax = plt.subplots(1, 1, figsize=(float(d1)/dpi_atl,float(d2)/dpi_atl))
     tracker = IndexTracker_h(ax, atlas_data, pixdim)
     #tracker = IndexTracker_h(ax, cv_plot)
@@ -373,12 +387,9 @@ elif plane.lower() == 'h':
 mngr = plt.get_current_fig_manager()
 mngr.window.setGeometry(800,300,d2,d1)     
 
+# Store the current slice
+S = tracker.ind 
 
-# =============================================================================
-# #width and height of histology
-# width_img_hist =  sum((img_hist.T > 0).any(axis=0))
-# height_img_hist = sum((img_hist.T > 0).any(axis=1))
-# =============================================================================
 
 # Show the processed histology
 # Set up figure
@@ -387,7 +398,16 @@ fig_hist, ax_hist = plt.subplots(1, 1, figsize=(float(img_hist.shape[1])/dpi_his
 #fig_hist.subplots_adjust(left=0,right=1,bottom=0,top=1)
 ax_hist.set_title("Histology viewer")
 # Show the histology image  
-ax_hist.imshow(img_hist, extent=[0, img_hist.shape[1]*pixdim_hist, img_hist.shape[0]*pixdim_hist, 0])
+ax_hist.imshow(img_hist_temp, extent=[0, img_hist.shape[1]*pixdim_hist, img_hist.shape[0]*pixdim_hist, 0])
+plt.tick_params(
+    axis='both', 
+    which='both',      # both major and minor ticks are affected
+    bottom=False,
+    left=False,      # ticks along the bottom edge are off
+    top=False,         # ticks along the top edge are off
+    labelbottom=False,
+    labelleft=False) # labels along the bottom edge are off
+ax_hist.format_coord = lambda x, y: ''
 plt.show()
 # Fix size and location of the figure window
 mngr_hist = plt.get_current_fig_manager()
@@ -397,11 +417,22 @@ mngr_hist.window.setGeometry(150,300,d2,d1)
 print('Registration: \n')
 print('t: toggle mode where clicks are logged for transform \n')
 print('h: toggle overlay of current histology slice \n')
-print('a: toggle to viewing boundaries \n')
+#print('b: toggle to viewing boundaries \n')
+print('a: higher quality visualization of boundaries \n')
+print('d: delete most recent probe point or transform point \n');
 
 # Lists for the points clicked in atlas and histology
 coords_atlas = []
 coords_hist = []
+# Lists for the points plotted in atlas and histology
+redp_atlas = []
+redp_hist = []
+
+Edges = np.empty((512,1024,512))
+for sl in range(0,1024):
+    Edges[:,sl,:] = cv2.Canny(np.uint8((cv_plot[:,sl,:]*255).transpose((1,0,2))),100,200)  
+
+# Reaction to key pressed
 def on_key(event):
     if event.key == 't':
         print('Select at least 4 points in the same order in both figures')
@@ -413,9 +444,9 @@ def on_key(event):
             global ix, iy
             ix, iy = event.xdata/pixdim, event.ydata/pixdim
             # assign global variable to access outside of function
-            global coords_atlas
+            global coords_atlas, redp_atlas
             coords_atlas.append((ix, iy))
-            plt.plot(event.xdata, event.ydata, 'ro',markersize=2)
+            redp_atlas.extend(plt.plot(event.xdata, event.ydata, 'ro',markersize=2))
             fig.canvas.draw()
             return
         # Call click func
@@ -429,9 +460,9 @@ def on_key(event):
             global xh, yh
             xh, yh = event.xdata/pixdim_hist, event.ydata/pixdim_hist
             # assign global variable to access outside of function
-            global coords_hist
+            global coords_hist, redp_hist
             coords_hist.append((xh, yh))
-            plt.plot(event.xdata, event.ydata, 'ro',markersize=2)
+            redp_hist.extend(plt.plot(event.xdata, event.ydata, 'ro',markersize=2))
             fig_hist.canvas.draw()
             return
         # Call click func
@@ -444,7 +475,7 @@ def on_key(event):
         t = transform.ProjectiveTransform()
         t.estimate(np.float32(coords_atlas),np.float32(coords_hist))
         global img_warped # avoid unbound local error when passed top the next step
-        img_warped = transform.warp(img_hist, t, output_shape = (d1,d2), order=1, clip=False)#, mode='constant',cval=float('nan'))
+        img_warped = transform.warp(img_hist_temp, t, output_shape = (d1,d2), order=1, clip=False)#, mode='constant',cval=float('nan'))
         
 # =============================================================================
 #         # Show the  transformed figure  
@@ -452,22 +483,30 @@ def on_key(event):
 #         ax_trans.imshow(img_warped, extent=[0, d1*pixdim, 0, d2*pixdim] )
 #         plt.show()
 # =============================================================================
+    
+# =============================================================================
+#     elif event.key == 'b':   
+# #       SIMPLE OVERLAY
+#         fig_g, ax_g = plt.subplots(1, 1) 
+#         ax_g.imshow(img_warped, origin="lower", extent=[0, d1*pixdim, d2*pixdim,0])
+#         tracker2 = IndexTracker_cg(ax_g, Edges, pixdim, S)
+#         fig_g.canvas.mpl_connect('scroll_event', tracker2.onscroll)                
+#         ax_g.format_coord = format_coord
+#         plt.show()  
+#         plt.pause(0.001)
+# =============================================================================
         
     elif event.key == 'a':        
         print('Overlay to the atlas')
         # get the edges of the colors defined in the label
         if plane.lower() == 'c':
-            edges = cv2.Canny(np.uint8((cv_plot[:,tracker.ind,:]*255).transpose((1,0,2))),100,200)  
+            edges = cv2.Canny(np.uint8((cv_plot[:,S,:]*255).transpose((1,0,2))),100,200)  
         elif plane.lower() == 's':
-            edges = cv2.Canny(np.uint8((cv_plot[tracker.ind,:,:]*255).transpose((1,0,2))),100,200)
+            edges = cv2.Canny(np.uint8((cv_plot[S,:,:]*255).transpose((1,0,2))),100,200)
         elif plane.lower() == 'h':    
-            edges = cv2.Canny(np.uint8((cv_plot[:,:,tracker.ind]*255).transpose((1,0,2))),100,200)
+            edges = cv2.Canny(np.uint8((cv_plot[:,:,S]*255).transpose((1,0,2))),100,200)
+            
         fig_grid, ax_grid = plt.subplots(1, 1) 
-# =============================================================================
-#       SIMPLE OVERLAY
-#         ax_grid.imshow(img_warped, origin="lower")
-#         ax_grid.imshow(edges, origin="lower",alpha = 0.4, cmap = 'gray')
-# =============================================================================
         CC = np.where(edges == 255)
 # =============================================================================
 #         GRAY SCALE
@@ -477,22 +516,37 @@ def on_key(event):
 #         ax_grid.imshow(img2, origin="lower")
 # =============================================================================
         img2 = (img_warped).copy()
-        img2[CC] = 1
-        ax_grid.imshow(img2, origin="lower", extent=[0, d1*pixdim, 0, d2*pixdim])    
-        ax_grid.text(0.2, 0.05, textstr, transform=ax.transAxes, fontsize=6 ,verticalalignment='bottom', bbox=props)
+        img2[CC] = 0.5
+        ax_grid.imshow(img2, origin="lower", extent=[0, d1*pixdim, 0, d2*pixdim])   
+        ax_grid.text(0.15, 0.05, textstr, transform=ax.transAxes, fontsize=6 ,verticalalignment='bottom', bbox=props)
         ax_grid.format_coord = format_coord
         plt.show()
         cursor = mplcursors.cursor(hover=True)
         # Show the names of the regions
         def show_annotation(sel):
             xi, yi = sel.target/pixdim
-            if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1)).size:
-                Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1))[0,0]]
+            if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),S,int(math.modf(yi)[1])], axis = 1)).size:
+                Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),S,int(math.modf(yi)[1])], axis = 1))[0,0]]
             else:
                 # display nothing
                 Text = ' '
             sel.annotation.set_text(Text)
         cursor.connect('add', show_annotation)   
+        mngr_grid = plt.get_current_fig_manager()
+        mngr_grid.window.setGeometry(800,300,d2,d1)     
+    elif event.key == 'p':        
+        print('Register probe track')
+        
+    elif event.key == 'd':
+        print('Delete clicked points')
+        coords_atlas.pop(-1) # remove the point from the list
+        redp_atlas[-1].remove() # remove the point from the plot
+        fig.canvas.draw()
+        redp_atlas.pop(-1)
+        coords_hist.pop(-1) # remove the point from the list        
+        redp_hist[-1].remove() # remove the point from the plot
+        fig_hist.canvas.draw()
+        redp_hist.pop(-1)
 
 fig.canvas.mpl_connect('key_press_event', on_key)
 fig_hist.canvas.mpl_connect('key_press_event', on_key)
