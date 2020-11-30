@@ -11,6 +11,8 @@ from __future__ import print_function
 # %matplotlib qt5
 # Import libraries
 import os
+import os.path
+from os import path
 import numpy as np
 import nibabel as nib
 import matplotlib
@@ -27,6 +29,7 @@ from nilearn.image import resample_img
 from nibabel.affines import apply_affine
 import keyboard
 from skimage import io, transform
+import pickle 
 
 # Functions defined in separate files
 # from Readlabel import readlabel
@@ -138,6 +141,13 @@ class IndexTracker_g(object):
         self.ax.set_ylabel('slice %d' % self.ind)
         self.im.axes.figure.canvas.draw()      
         
+class save_transform(object):    
+    def __init__(self, tracker, coord, image, nolines):
+        self.Slice = tracker
+        self.Transform_points = coord
+        self.Transform = image
+        self.Transform_withoulines = nolines           
+        
 
 # Directory of the processed histology
 # for mac user 
@@ -147,7 +157,7 @@ processed_histology_folder = r'C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI
 # for mac user 
 # histology = Image.open(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/rat_processed.tif').copy()
 # For windows users
-file_name = input('Histology file name: ')
+file_name = str(input('Histology file name: '))
 # Mac
 #img_hist = cv2.imread(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/rat_processed.tif',cv2.IMREAD_GRAYSCALE)
 # Windows
@@ -157,11 +167,11 @@ dpi_hist = img_hist_temp.info['dpi'][1]
 pixdim_hist = 25.4/dpi_hist # 1 inch = 25,4 mm
 img_hist = cv2.imread(os.path.join(processed_histology_folder, file_name+'_processed.jpeg'),cv2.IMREAD_GRAYSCALE)
 # Insert the plane of interest
-plane = input('Select the plane: coronal (c), sagittal (s), or horizontal (h): ')
+plane = str(input('Select the plane: coronal (c), sagittal (s), or horizontal (h): '))
 # Check if the input is correct
 while plane.lower() != 'c' and plane.lower() != 's' and plane.lower() != 'h':
     print('Error: Wrong plane name')
-    plane = input('Select the plane: coronal (c), sagittal (s), or horizontal (h): ')
+    plane = str(input('Select the plane: coronal (c), sagittal (s), or horizontal (h): '))
 
 # Paths of the atlas, segmentation and labels
 # Atlas
@@ -342,19 +352,43 @@ mngr_hist = plt.get_current_fig_manager()
 mngr_hist.window.setGeometry(150,300,d2,d1)
         
 # User controls 
-print('Registration: \n')
+print('\n Registration: \n')
 print('t: toggle mode where clicks are logged for transform \n')
 print('h: toggle overlay of current histology slice \n')
-#print('b: toggle to viewing boundaries \n')
-print('a: higher quality visualization of boundaries \n')
-print('d: delete most recent probe point or transform point \n');
+print('x: save transform and current atlas location')
+image_name = str(input('Enter transformed image name: '))
+print('\nr: toggle mode where clicks are logged for probe or switch probes \n')
+print('n: add a new probe \n')
 
-# Lists for the points clicked in atlas and histology
+print('\n Viewing modes: \n')
+print('a: higher quality visualization of boundaries \n')
+print('b: toggle to viewing boundaries \n')
+print('d: delete most recent probe point or transform point \n')
+print('g: toggle gridlines \n')
+print('v: toggle to color atlas mode \n')
+
+
+# =============================================================================
+# print('\n Registration: \n');
+# ;
+# print('l: load transform for current slice; press again to load probe points \n');
+# print('s: save current probe \n');
+# print('w: enable/disable probe viewer mode for current probe  \n');
+# ============================================================================
+
+
+
+# Lists for the points clicked in atlas and histology and probe
 coords_atlas = []
 coords_hist = []
+coords_probe = []
 # Lists for the points plotted in atlas and histology
 redp_atlas = []
 redp_hist = []
+# List of probe points
+p_probe = []
+# Initialize probe counter
+probe_counter = 1
 
 # get the edges of the colors defined in the label
 Edges = np.load('Edges.npy')
@@ -367,7 +401,7 @@ Edges = np.load('Edges.npy')
 
 # Reaction to key pressed
 def on_key(event):
-    if event.key == 't':
+    if event.key == 't': 
         print('Select at least 4 points in the same order in both figures')
         # ATLAS
         # Mouse click function to store coordinates. Leave a red dot when a point is clicked
@@ -399,23 +433,20 @@ def on_key(event):
         
     elif event.key == 'h':
         print('Transform histology to adpat to the atlas')
-        
         # get the projective transformation from the set of clicked points
         t = transform.ProjectiveTransform()
         t.estimate(np.float32(coords_atlas),np.float32(coords_hist))
-        global img_warped # avoid unbound local error when passed top the next step
+        global img_warped, fig_trans # avoid unbound local error when passed top the next step
         img_warped = transform.warp(img_hist_temp, t, output_shape = (d1,d2), order=1, clip=False)#, mode='constant',cval=float('nan'))
-# =============================================================================
-#         # Show the  transformed figure  
-#         fig_trans, ax_trans = plt.subplots(1, 1)#, figsize=(float(d1)/dpi_atl,float(d2)/dpi_atl))
-#         ax_trans.imshow(img_warped, extent=[0, d1*pixdim, 0, d2*pixdim] )
-#         plt.show()
-# =============================================================================
+        # Show the  transformed figure  
+        fig_trans, ax_trans = plt.subplots(1, 1)#, figsize=(float(d1)/dpi_atl,float(d2)/dpi_atl))
+        ax_trans.imshow(img_warped, origin="lower", extent=[0, d1*pixdim, 0, d2*pixdim] )
+        plt.show()
     
     elif event.key == 'b':
         print('Simple overlay')
 #       SIMPLE OVERLAY
-        global tracker2
+        global tracker2, fig_g
         fig_g, ax_g = plt.subplots(1, 1) 
         ax_g.imshow(img_warped, origin="lower", extent=[0, d1*pixdim, d2*pixdim,0])
         tracker2 = IndexTracker_g(ax_g, Edges, pixdim, plane.lower(), tracker.ind)
@@ -434,6 +465,7 @@ def on_key(event):
             edges = cv2.Canny(np.uint8((cv_plot[tracker.ind,:,:]*255).transpose((1,0,2))),100,200)
         elif plane.lower() == 'h':    
             edges = cv2.Canny(np.uint8((cv_plot[:,:,tracker.ind]*255).transpose((1,0,2))),100,200)
+        global img2, fig_grid
         # Set up the figure    
         fig_grid, ax_grid = plt.subplots(1, 1) 
         # position of the lines
@@ -459,9 +491,6 @@ def on_key(event):
         mngr_grid = plt.get_current_fig_manager()
         mngr_grid.window.setGeometry(800,300,d2,d1)   
         
-    elif event.key == 'p':        
-        print('Register probe track')
-        
     elif event.key == 'd':
         print('Delete clicked points')
         coords_atlas.pop(-1) # remove the point from the list
@@ -472,20 +501,82 @@ def on_key(event):
         redp_hist[-1].remove() # remove the point from the plot
         fig_hist.canvas.draw()
         redp_hist.pop(-1)
-
+        
+    elif event.key == 'x':
+        print('Save image and slice')            
+        # The Transformed images will be saved in a subfolder of process histology called transformations
+        path_transformed = os.path.join(processed_histology_folder, 'transformations')
+        if path.exists(os.path.join(processed_histology_folder, 'transformations')) == 'False':
+            os.mkdir(path_transformed)
+        # Create and save slice, clicked points, and image info                                 
+        SS = save_transform(tracker.ind, [coords_hist, coords_atlas], img2, img_warped)        # Saving the object
+        with open(os.path.join(path_transformed, image_name+'.pkl'), 'wb') as f: 
+            pickle.dump(SS, f)
+        # Save the images
+        fig_trans.savefig(os.path.join(path_transformed, image_name+'_Transformed_withoutlines.jpeg'))
+                        
+    elif event.key == 'v':
+        print('Colored Atlas on')
+        global fig_color
+        fig_color, ax_color = plt.subplots(1, 1) 
+        ax_color.imshow(img2, extent=[0, d1*pixdim, 0, d2*pixdim])
+        if plane.lower() == 'c':
+            ax_color.imshow(cv_plot[:,tracker.ind,:].transpose((1,0,2)), origin="lower", extent=[0, d1*pixdim, d2*pixdim, 0], alpha = 0.5)                        
+        elif plane.lower() == 's':
+            ax_color.imshow(cv_plot[tracker.ind,:,:].transpose((1,0,2)), origin="lower", extent=[0, d1*pixdim, d2*pixdim, 0], alpha = 0.5)
+        elif plane.lower() == 'h':
+            ax_color.imshow(cv_plot[:,:,tracker.ind].transpose((1,0,2)), origin="lower", extent=[0, d1*pixdim, d2*pixdim, 0], alpha = 0.5)     
+        plt.show()
+        
+    elif event.key == 'r':     
+        print('Register probe')
+        try:
+            plt.close(fig_g)
+            plt.close(fig_color)
+        except:
+            pass
+        def onclick_probe(event):
+            global px, py
+            px, py = event.xdata/pixdim, event.ydata/pixdim
+            # assign global variable to access outside of function
+            global coords_probe
+            coords_probe.append((px, py))
+            p_probe.extend(plt.plot(event.xdata, event.ydata, 'wo', markersize=2))
+            fig_grid.canvas.draw()
+            return
+        # Call click func
+        fig_grid.canvas.mpl_connect('button_press_event', onclick_probe) 
+        def on_key2(event):
+            if event.key == 'n':
+                # new probes have different colors
+                global probe_counter
+                probe_counter +=  1
+                probe_colors = ['green', 'purple', 'blue', 'yellow', 'orange', 'red']
+                print('probe %d added (%s)' %(probe_counter, probe_colors[probe_counter-2]))
+                def onclick_probe(event):
+                    global px, py
+                    px, py = event.xdata/pixdim, event.ydata/pixdim
+                    # assign global variable to access outside of function
+                    global coords_probe
+                    coords_probe.append((px, py))
+                    p_probe.extend(plt.plot(event.xdata, event.ydata, color=probe_colors[probe_counter-2], marker='o', markersize=2))
+                    fig_grid.canvas.draw()
+                    return
+                # Call click func
+                fig_grid.canvas.mpl_connect('button_press_event', onclick_probe) 
+        fig_grid.canvas.mpl_connect('key_press_event', on_key2)
+        
+        
+            
 fig.canvas.mpl_connect('key_press_event', on_key)
 fig_hist.canvas.mpl_connect('key_press_event', on_key)
+#fig_grid.canvas.mpl_connect('key_press_event', on_key)
 
 
 
 
 
-
-
-
-
-
-
+  
 
 
 
