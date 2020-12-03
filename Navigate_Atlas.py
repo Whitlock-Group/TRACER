@@ -141,14 +141,18 @@ class IndexTracker_g(object):
         self.ax.set_ylabel('slice %d' % self.ind)
         self.im.axes.figure.canvas.draw()      
         
+# Store the transformed image features        
 class save_transform(object):    
     def __init__(self, tracker, coord, image, nolines):
         self.Slice = tracker
         self.Transform_points = coord
         self.Transform = image
         self.Transform_withoulines = nolines           
-        
 
+# object for the clicked probes
+class probe_obj(object):
+    pass
+        
 # Directory of the processed histology
 # for mac user 
 #processed_histology_folder = r'/Users/jacopop/Box\ Sync/macbook/Documents/KAVLI\histology/processed'
@@ -359,36 +363,47 @@ print('x: save transform and current atlas location')
 image_name = str(input('Enter transformed image name: '))
 print('\nr: toggle mode where clicks are logged for probe or switch probes \n')
 print('n: add a new probe \n')
+print('e: save current probe \n')
+print('w: enable/disable probe viewer mode for current probe  \n')
 
 print('\n Viewing modes: \n')
 print('a: higher quality visualization of boundaries \n')
 print('b: toggle to viewing boundaries \n')
-print('d: delete most recent probe point or transform point \n')
+print('d: delete most recent transform point \n')
+print('c: delete most recent probe point \n')
 print('g: toggle gridlines \n')
 print('v: toggle to color atlas mode \n')
 
 
 # =============================================================================
 # print('\n Registration: \n');
-# ;
+
 # print('l: load transform for current slice; press again to load probe points \n');
-# print('s: save current probe \n');
-# print('w: enable/disable probe viewer mode for current probe  \n');
+# ;
 # ============================================================================
 
 
 
-# Lists for the points clicked in atlas and histology and probe
+# Lists for the points clicked in atlas and histology
 coords_atlas = []
 coords_hist = []
-coords_probe = []
+coords_probe_temp_w = []
+coords_probe_temp_g = []
+coords_probe_temp_p = []          
+coords_probe_temp_b = []
+coords_probe_temp_y = []
+coords_probe_temp_o = []
+coords_probe_temp_r = []
+# Object for clicked probes
+coords_probe = probe_obj()
 # Lists for the points plotted in atlas and histology
 redp_atlas = []
 redp_hist = []
 # List of probe points
-p_probe = []
+p_probe_trans = []
+p_probe_grid = []
 # Initialize probe counter
-probe_counter = 1
+probe_counter = 0
 
 # get the edges of the colors defined in the label
 Edges = np.load('Edges.npy')
@@ -398,7 +413,11 @@ Edges = np.load('Edges.npy')
 #     Edges[:,sl,:] = cv2.Canny(np.uint8((cv_plot[:,sl,:]*255).transpose((1,0,2))),100,200)  
 # 
 # =============================================================================
-
+# Set up the figure    
+plt.ioff()
+fig_trans, ax_trans = plt.subplots(1, 1)
+#fig_grid, ax_grid = plt.subplots(1, 1)
+# plt.ioff()
 # Reaction to key pressed
 def on_key(event):
     if event.key == 't': 
@@ -436,10 +455,10 @@ def on_key(event):
         # get the projective transformation from the set of clicked points
         t = transform.ProjectiveTransform()
         t.estimate(np.float32(coords_atlas),np.float32(coords_hist))
-        global img_warped, fig_trans # avoid unbound local error when passed top the next step
+        global img_warped, fig_trans, ax_trans # avoid unbound local error when passed top the next step
         img_warped = transform.warp(img_hist_temp, t, output_shape = (d1,d2), order=1, clip=False)#, mode='constant',cval=float('nan'))
         # Show the  transformed figure  
-        fig_trans, ax_trans = plt.subplots(1, 1)#, figsize=(float(d1)/dpi_atl,float(d2)/dpi_atl))
+        #fig_trans, ax_trans = plt.subplots(1, 1)#, figsize=(float(d1)/dpi_atl,float(d2)/dpi_atl))
         ax_trans.imshow(img_warped, origin="lower", extent=[0, d1*pixdim, 0, d2*pixdim] )
         plt.show()
     
@@ -466,8 +485,7 @@ def on_key(event):
         elif plane.lower() == 'h':    
             edges = cv2.Canny(np.uint8((cv_plot[:,:,tracker.ind]*255).transpose((1,0,2))),100,200)
         global img2, fig_grid
-        # Set up the figure    
-        fig_grid, ax_grid = plt.subplots(1, 1) 
+        fig_grid, ax_grid = plt.subplots(1, 1)
         # position of the lines
         CC = np.where(edges == 255)
         img2 = (img_warped).copy()
@@ -492,7 +510,7 @@ def on_key(event):
         mngr_grid.window.setGeometry(800,300,d2,d1)   
         
     elif event.key == 'd':
-        print('Delete clicked points')
+        print('Delete clicked point')
         coords_atlas.pop(-1) # remove the point from the list
         redp_atlas[-1].remove() # remove the point from the plot
         fig.canvas.draw()
@@ -509,9 +527,9 @@ def on_key(event):
         if path.exists(os.path.join(processed_histology_folder, 'transformations')) == 'False':
             os.mkdir(path_transformed)
         # Create and save slice, clicked points, and image info                                 
-        SS = save_transform(tracker.ind, [coords_hist, coords_atlas], img2, img_warped)        # Saving the object
+        S = save_transform(tracker.ind, [coords_hist, coords_atlas], img2, img_warped)        # Saving the object
         with open(os.path.join(path_transformed, image_name+'.pkl'), 'wb') as f: 
-            pickle.dump(SS, f)
+            pickle.dump(S, f)
         # Save the images
         fig_trans.savefig(os.path.join(path_transformed, image_name+'_Transformed_withoutlines.jpeg'))
                         
@@ -529,58 +547,110 @@ def on_key(event):
         plt.show()
         
     elif event.key == 'r':     
-        print('Register probe')
+        print('Register probe 1 (white)')
         try:
             plt.close(fig_g)
+        except:
+            pass
+        try: 
             plt.close(fig_color)
         except:
             pass
+        # probes have different colors                            
+        probe_colors = ['white','green', 'purple', 'blue', 'yellow', 'orange', 'red']
+        # plot  point and register all the clicked points
         def onclick_probe(event):
             global px, py
             px, py = event.xdata/pixdim, event.ydata/pixdim
             # assign global variable to access outside of function
-            global coords_probe
-            coords_probe.append((px, py))
-            p_probe.extend(plt.plot(event.xdata, event.ydata, 'wo', markersize=2))
+            global coords_probe_temp_w, coords_probe_temp_g, coords_probe_temp_p, coords_probe_temp_b, coords_probe_temp_y, coords_probe_temp_o, coords_probe_temp_r,  p_probe_grid, p_probe_trans
+            if probe_counter == 0:
+                coords_probe_temp_w.append((px, py)) 
+                p_probe_grid.extend(plt.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe_trans.extend(ax_trans.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_w)
+            elif probe_counter == 1:
+                coords_probe_temp_g.append((px, py))
+                p_probe_grid.extend(plt.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe_trans.extend(ax_trans.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_g)
+            elif probe_counter == 2:
+                coords_probe_temp_p.append((px, py))    
+                p_probe_grid.extend(plt.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe_trans.extend(ax_trans.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_p)
+            elif probe_counter == 3:
+                coords_probe_temp_b.append((px, py))
+                p_probe_grid.extend(plt.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe_trans.extend(ax_trans.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_b)
+            elif probe_counter == 4:
+                coords_probe_temp_y.append((px, py))
+                p_probe_grid.extend(plt.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe_trans.extend(ax_trans.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_y)
+            elif probe_counter == 5:
+                coords_probe_temp_o.append((px, py))
+                p_probe_grid.extend(plt.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe_trans.extend(ax_trans.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_o)
+            elif probe_counter == 6:
+                coords_probe_temp_r.append((px, py))
+                p_probe_grid.extend(plt.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe_trans.extend(ax_trans.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_r)
             fig_grid.canvas.draw()
+            fig_trans.canvas.draw()
             return
         # Call click func
         fig_grid.canvas.mpl_connect('button_press_event', onclick_probe) 
-        def on_key2(event):
+        
+        def on_key2(event):            
             if event.key == 'n':
-                # new probes have different colors
+                # add a new probe, the function in defined in onclick_probe
                 global probe_counter
-                probe_counter +=  1
-                probe_colors = ['green', 'purple', 'blue', 'yellow', 'orange', 'red']
-                print('probe %d added (%s)' %(probe_counter, probe_colors[probe_counter-2]))
-                def onclick_probe(event):
-                    global px, py
-                    px, py = event.xdata/pixdim, event.ydata/pixdim
-                    # assign global variable to access outside of function
-                    global coords_probe
-                    coords_probe.append((px, py))
-                    p_probe.extend(plt.plot(event.xdata, event.ydata, color=probe_colors[probe_counter-2], marker='o', markersize=2))
-                    fig_grid.canvas.draw()
-                    return
-                # Call click func
-                fig_grid.canvas.mpl_connect('button_press_event', onclick_probe) 
+                if probe_counter+1 <=len(probe_colors):
+                    probe_counter +=  1                                                                                                 
+                    print('probe %d added (%s)' %(probe_counter+1, probe_colors[probe_counter]))
+                else:
+                    print('Cannot add more probes')
+                    probe_counter = len(probe_colors)
+            elif event.key == 'c':
+                print('Delete clicked point')
+                if len(getattr(coords_probe,probe_colors[0]))!= 0:
+                    if len(getattr(coords_probe,probe_colors[probe_counter])) != 0:
+                        getattr(coords_probe,probe_colors[probe_counter]).pop(-1) # remove the point from the list
+                        p_probe_trans[-1].remove() # remove the point from the plot
+                        fig_trans.canvas.draw()
+                        p_probe_trans.pop(-1)                        
+                        p_probe_grid[-1].remove() # remove the point from the plot
+                        fig_grid.canvas.draw()           
+                        p_probe_grid.pop(-1)
+                    elif len(getattr(coords_probe,probe_colors[probe_counter])) == 0:
+                        probe_counter -=1
+                        try:
+                            getattr(coords_probe,probe_colors[probe_counter]).pop(-1) # remove the point from the list
+                            p_probe_trans[-1].remove() # remove the point from the plot
+                            fig_trans.canvas.draw()                                        
+                            p_probe_trans.pop(-1)
+                            p_probe_grid[-1].remove() # remove the point from the plot
+                            fig_grid.canvas.draw()                        
+                            p_probe_grid.pop(-1)
+                        except:
+                            pass
         fig_grid.canvas.mpl_connect('key_press_event', on_key2)
+    elif event.key == 'e':
+        path_transformed = os.path.join(processed_histology_folder, 'transformations')
+        if path.exists(os.path.join(processed_histology_folder, 'transformations')) == 'False':
+            os.mkdir(path_transformed)
+        # Create and save slice, clicked probes
+        P = save_transform(tracker.ind, coords_probe)        # Saving the object
+        with open(os.path.join(path_transformed, image_name+'probes.pkl'), 'wb') as F: 
+            pickle.dump(P, F)# Create and save slice, clicked points, and image info                                 
         
         
             
 fig.canvas.mpl_connect('key_press_event', on_key)
 fig_hist.canvas.mpl_connect('key_press_event', on_key)
 #fig_grid.canvas.mpl_connect('key_press_event', on_key)
-
-
-
-
-
-  
-
-
-
-
-
-
-
+fig_trans.canvas.mpl_connect('key_press_event', on_key)
