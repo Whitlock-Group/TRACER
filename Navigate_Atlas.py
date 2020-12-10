@@ -61,7 +61,7 @@ def readlabel( file ):
     output_colors = np.array(output_colors)  # Use numpy array for  in the label file                  
     return [output_index, output_names, output_colors]
 
-# Classes to scroll the atlas slices (coronal, sagittal and horizontal)    
+# Class to scroll the atlas slices (coronal, sagittal and horizontal)    
 class IndexTracker(object):
     def __init__(self, ax, X, pixdim, p):
         self.ax = ax
@@ -99,9 +99,9 @@ class IndexTracker(object):
         elif self.plane == 'h':
             self.im.set_data(self.X[:, :, self.ind].T)
         self.ax.set_ylabel('slice %d' % self.ind)
-        self.im.axes.figure.canvas.draw()          
-            
+        self.im.axes.figure.canvas.draw()                      
         
+# Class to scroll the overlayed atlas slices (coronal, sagittal and horizontal)            
 class IndexTracker_g(object):
     def __init__(self, ax, X, pixdim, p, S):
         self.ax = ax
@@ -140,6 +140,46 @@ class IndexTracker_g(object):
             self.im.set_data(self.X[:, :, self.ind])
         self.ax.set_ylabel('slice %d' % self.ind)
         self.im.axes.figure.canvas.draw()      
+
+# Class to scroll the atlas slices with probe (coronal, sagittal and horizontal)    
+class IndexTracker_p(object):
+    def __init__(self, ax, X, pixdim, p, S):
+        self.ax = ax
+        self.plane = p.lower()
+        ax.set_title('Atlas viewer')
+        print('use scroll wheel to navigate the atlas \n')
+
+        self.X = X
+        if self.plane == 'c':
+            rows, self.slices, cols = X.shape
+            self.ind = S
+            self.im = ax.imshow(self.X[:, self.ind, :].T, origin="lower", extent=[0, 512*pixdim, 0, 512*pixdim], cmap='gray')
+        elif self.plane == 's':
+            self.slices, rows, cols = X.shape
+            self.ind = S                
+            self.im = ax.imshow(self.X[self.ind, :, :].T, origin="lower", extent=[0 ,1024*pixdim, 0, 512*pixdim], cmap='gray')            
+        elif self.plane == 'h':  
+            rows, cols, self.slices = X.shape
+            self.ind = S       
+            self.im = ax.imshow(self.X[:, :, self.ind].T, origin="lower", extent=[0, 512*pixdim, 0, 1024*pixdim], cmap='gray')            
+        self.update()
+
+    def onscroll(self, event):
+        if event.button == 'up':
+            self.ind = (self.ind + 1) % self.slices
+        else:
+            self.ind = (self.ind - 1) % self.slices
+        self.update()
+
+    def update(self):
+        if self.plane == 'c':
+            self.im.set_data(self.X[:, self.ind, :].T)
+        elif self.plane == 's':
+            self.im.set_data(self.X[self.ind, :, :].T)
+        elif self.plane == 'h':
+            self.im.set_data(self.X[:, :, self.ind].T)
+        self.ax.set_ylabel('slice %d' % self.ind)
+        self.im.axes.figure.canvas.draw()          
         
 # Store the transformed image features        
 class save_transform(object):    
@@ -147,7 +187,13 @@ class save_transform(object):
         self.Slice = tracker
         self.Transform_points = coord
         self.Transform = image
-        self.Transform_withoulines = nolines           
+        self.Transform_withoulines = nolines  
+        
+# Store probe features                
+class save_probe(object):
+    def __init__(self,a,b):
+        self.Slice = a
+        self.Probe = b        
 
 # object for the clicked probes
 class probe_obj(object):
@@ -364,8 +410,11 @@ image_name = str(input('Enter transformed image name: '))
 print('\nr: toggle mode where clicks are logged for probe or switch probes \n')
 print('n: add a new probe \n')
 print('e: save current probe \n')
+print('p: switch probe')
 print('w: enable/disable probe viewer mode for current probe  \n')
-
+# =============================================================================
+# print('l: load transform for current slice; press again to load probe points \n');
+# ============================================================================
 print('\n Viewing modes: \n')
 print('a: higher quality visualization of boundaries \n')
 print('b: toggle to viewing boundaries \n')
@@ -373,16 +422,6 @@ print('d: delete most recent transform point \n')
 print('c: delete most recent probe point \n')
 print('g: toggle gridlines \n')
 print('v: toggle to color atlas mode \n')
-
-
-# =============================================================================
-# print('\n Registration: \n');
-
-# print('l: load transform for current slice; press again to load probe points \n');
-# ;
-# ============================================================================
-
-
 
 # Lists for the points clicked in atlas and histology
 coords_atlas = []
@@ -402,8 +441,9 @@ redp_hist = []
 # List of probe points
 p_probe_trans = []
 p_probe_grid = []
-# Initialize probe counter
+# Initialize probe counter and selecter
 probe_counter = 0
+probe_selecter = 0
 
 # get the edges of the colors defined in the label
 Edges = np.load('Edges.npy')
@@ -556,7 +596,8 @@ def on_key(event):
             plt.close(fig_color)
         except:
             pass
-        # probes have different colors                            
+        # probes have different colors 
+        global probe_colors                            
         probe_colors = ['white','green', 'purple', 'blue', 'yellow', 'orange', 'red']
         # plot  point and register all the clicked points
         def onclick_probe(event):
@@ -615,8 +656,9 @@ def on_key(event):
                 else:
                     print('Cannot add more probes')
                     probe_counter = len(probe_colors)
+                    
             elif event.key == 'c':
-                print('Delete clicked point')
+                print('Delete clicked probe point')
                 if len(getattr(coords_probe,probe_colors[0]))!= 0:
                     if len(getattr(coords_probe,probe_colors[probe_counter])) != 0:
                         getattr(coords_probe,probe_colors[probe_counter]).pop(-1) # remove the point from the list
@@ -638,15 +680,65 @@ def on_key(event):
                             p_probe_grid.pop(-1)
                         except:
                             pass
+# =============================================================================
+#             elif event.key == 'p':
+#                 print( 'Change probe' )
+#                 global probe_counter
+#                 if probe_counter-1 > 0:
+#                     probe_counter -=  1                                                                                                 
+#                     print('probe %d selected (%s)' %(probe_counter+1, probe_colors[probe_counter]))
+#                 elif probe_counter == 0:
+#                     probe_counter +=1 
+#                     print('probe %d selected (%s)' %(probe_counter+1, probe_colors[probe_counter]))
+# 
+# 
+# =============================================================================
+                        
         fig_grid.canvas.mpl_connect('key_press_event', on_key2)
+        
     elif event.key == 'e':
+        print('Probe points saved')
         path_transformed = os.path.join(processed_histology_folder, 'transformations')
         if path.exists(os.path.join(processed_histology_folder, 'transformations')) == 'False':
             os.mkdir(path_transformed)
         # Create and save slice, clicked probes
-        P = save_transform(tracker.ind, coords_probe)        # Saving the object
+        P = save_probe(tracker.ind, coords_probe)        # Saving the object
         with open(os.path.join(path_transformed, image_name+'probes.pkl'), 'wb') as F: 
-            pickle.dump(P, F)# Create and save slice, clicked points, and image info                                 
+            pickle.dump(P, F)# Create and save slice, clicked points, and image info    
+
+            
+    elif event.key == 'w':
+        print('probe view mode')
+        L = getattr(coords_probe,probe_colors[probe_counter])
+        probe_x = []
+        probe_y = []
+        for i in range(len(L)):
+            probe_x.append(L[i][0]*pixdim)
+            probe_y.append(L[i][1]*pixdim)
+        m, b = np.polyfit(probe_x, probe_y, 1)
+        fig_probe, ax_probe = plt.subplots(1, 1)  
+        trackerp = IndexTracker_p(ax_probe, atlas_data, pixdim, plane.lower(), tracker.ind)
+        fig_probe.canvas.mpl_connect('scroll_event', trackerp.onscroll)        
+        ax_probe.text(0.15, 0.05, textstr, transform=ax_probe.transAxes, fontsize=6 ,verticalalignment='bottom', bbox=props)
+        ax_probe.format_coord = format_coord
+        plt.show()
+        cursor = mplcursors.cursor(fig_probe, hover=True)
+        # Show the names of the regions
+        def show_annotation(sel):
+            xi, yi = sel.target/pixdim
+            if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1)).size:
+                Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1))[0,0]]
+            else:
+                # display nothing
+                Text = ' '
+            sel.annotation.set_text(Text)
+        cursor.connect('add', show_annotation)   
+        mngr_probe = plt.get_current_fig_manager()
+        mngr_probe.window.setGeometry(800,300,d2,d1)    
+        # plot the clicked points
+        plt.scatter(probe_x, probe_y, color=probe_colors[probe_counter], s=2)#, marker='o', markersize=1)
+        # plot the probe
+        plt.plot(np.array(probe_x), m*np.array(probe_x) + b,color=probe_colors[probe_counter], linestyle='dashed', linewidth=0.8)
         
         
             
