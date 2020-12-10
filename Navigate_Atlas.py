@@ -564,7 +564,7 @@ def on_key(event):
         print('Save image and slice')            
         # The Transformed images will be saved in a subfolder of process histology called transformations
         path_transformed = os.path.join(processed_histology_folder, 'transformations')
-        if path.exists(os.path.join(processed_histology_folder, 'transformations')) == 'False':
+        if not path.exists(os.path.join(processed_histology_folder, 'transformations')):
             os.mkdir(path_transformed)
         # Create and save slice, clicked points, and image info                                 
         S = save_transform(tracker.ind, [coords_hist, coords_atlas], img2, img_warped)        # Saving the object
@@ -698,48 +698,54 @@ def on_key(event):
         
     elif event.key == 'e':
         print('Probe points saved')
-        path_transformed = os.path.join(processed_histology_folder, 'transformations')
-        if path.exists(os.path.join(processed_histology_folder, 'transformations')) == 'False':
-            os.mkdir(path_transformed)
+        path_probes = os.path.join(processed_histology_folder, 'probes')
+        if not path.exists(os.path.join(processed_histology_folder, 'probes')):
+            os.mkdir(path_probes)
         # Create and save slice, clicked probes
         P = save_probe(tracker.ind, coords_probe)        # Saving the object
-        with open(os.path.join(path_transformed, image_name+'probes.pkl'), 'wb') as F: 
+        with open(os.path.join(path_probes, image_name+'probes.pkl'), 'wb') as F: 
             pickle.dump(P, F)# Create and save slice, clicked points, and image info    
 
             
     elif event.key == 'w':
-        print('probe view mode')
-        L = getattr(coords_probe,probe_colors[probe_counter])
-        probe_x = []
-        probe_y = []
-        for i in range(len(L)):
-            probe_x.append(L[i][0]*pixdim)
-            probe_y.append(L[i][1]*pixdim)
-        m, b = np.polyfit(probe_x, probe_y, 1)
-        fig_probe, ax_probe = plt.subplots(1, 1)  
-        trackerp = IndexTracker_p(ax_probe, atlas_data, pixdim, plane.lower(), tracker.ind)
-        fig_probe.canvas.mpl_connect('scroll_event', trackerp.onscroll)        
-        ax_probe.text(0.15, 0.05, textstr, transform=ax_probe.transAxes, fontsize=6 ,verticalalignment='bottom', bbox=props)
-        ax_probe.format_coord = format_coord
-        plt.show()
-        cursor = mplcursors.cursor(fig_probe, hover=True)
-        # Show the names of the regions
-        def show_annotation(sel):
-            xi, yi = sel.target/pixdim
-            if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1)).size:
-                Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1))[0,0]]
-            else:
-                # display nothing
-                Text = ' '
-            sel.annotation.set_text(Text)
-        cursor.connect('add', show_annotation)   
-        mngr_probe = plt.get_current_fig_manager()
-        mngr_probe.window.setGeometry(800,300,d2,d1)    
-        # plot the clicked points
-        plt.scatter(probe_x, probe_y, color=probe_colors[probe_counter], s=2)#, marker='o', markersize=1)
-        # plot the probe
-        plt.plot(np.array(probe_x), m*np.array(probe_x) + b,color=probe_colors[probe_counter], linestyle='dashed', linewidth=0.8)
-        
+        try:   
+            global probe_selecter
+            print('probe %d view mode' %(probe_selecter+1))
+            L = getattr(coords_probe,probe_colors[probe_selecter])
+            probe_x = []
+            probe_y = []
+            for i in range(len(L)):
+                probe_x.append(L[i][0]*pixdim)
+                probe_y.append(L[i][1]*pixdim)
+            m, b = np.polyfit(probe_x, probe_y, 1)
+            fig_probe, ax_probe = plt.subplots(1, 1)  
+            trackerp = IndexTracker_p(ax_probe, atlas_data, pixdim, plane.lower(), tracker.ind)
+            fig_probe.canvas.mpl_connect('scroll_event', trackerp.onscroll)        
+            ax_probe.text(0.15, 0.05, textstr, transform=ax_probe.transAxes, fontsize=6 ,verticalalignment='bottom', bbox=props)
+            ax_probe.format_coord = format_coord
+            plt.show()
+            cursor = mplcursors.cursor(fig_probe, hover=True)
+            # Show the names of the regions
+            def show_annotation(sel):
+                xi, yi = sel.target/pixdim
+                if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1)).size:
+                    Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1))[0,0]]
+                else:
+                    # display nothing
+                    Text = ' '
+                sel.annotation.set_text(Text)
+            cursor.connect('add', show_annotation)   
+            mngr_probe = plt.get_current_fig_manager()
+            mngr_probe.window.setGeometry(800,300,d2,d1)    
+            # plot the clicked points
+            plt.scatter(probe_x, probe_y, color=probe_colors[probe_selecter], s=2)#, marker='o', markersize=1)
+            # plot the probe
+            plt.plot(np.array(probe_x), m*np.array(probe_x) + b,color=probe_colors[probe_selecter], linestyle='dashed', linewidth=0.8)
+            probe_selecter +=1        
+        except:
+            print('No more probes to visualize')
+            pass
+
         
             
 fig.canvas.mpl_connect('key_press_event', on_key)
