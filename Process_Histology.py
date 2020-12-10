@@ -11,6 +11,7 @@ import numpy as np
 #import gzip  # needed to read .gz files of the Waxholm atlas
 #import nibabel as nib
 import matplotlib
+matplotlib.use('inline')
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import matplotlib.ticker as plticker
@@ -39,8 +40,9 @@ file_name = input('Histology file name: ')
 # histology = Image.open(os.path.join(histology_folder, file_name[0]+'.tif'))
 # Windows
 histology = Image.open(os.path.join(histology_folder, file_name+'.jpg')).copy()
+# histology = histology.resize((512, 512))
 # Mac
-histology = Image.open('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/rat.jpg').copy()
+# histology = Image.open('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/rat.jpg').copy()
 
 
 #histology = resizeimage.resize_crop(histology, [200, 200])
@@ -59,7 +61,7 @@ plt.show()
 
 # The modified images will be saved in a subfolder called processed
 path_processed = os.path.join(histology_folder, 'processed')
-if path.exists(os.path.join(histology_folder, 'processed')) == 'False':
+if not path.exists(os.path.join(histology_folder, 'processed')):
     os.mkdir(path_processed)
 
 # Insert the plane of interest
@@ -134,7 +136,7 @@ while True:
                 plt.show()
                 print('Original histology restored')
             elif keyboard.is_pressed('s'):
-                histology.save(os.path.join(path_processed, file_name+'_processed.jpeg'),dpi=(300,300))
+                histology.save(os.path.join(path_processed, file_name+'_processed.jpeg'),dpi=(my_dpi,my_dpi))
                 print('Histology saved')
                 break                          
             elif keyboard.is_pressed('f'):
@@ -144,7 +146,7 @@ while True:
                 print('Original histology restored')
                 break
     elif keyboard.is_pressed('s'):
-        histology.save(os.path.join(path_processed, file_name+'_processed.jpeg'),dpi=(300,300))
+        histology.save(os.path.join(path_processed, file_name+'_processed.jpeg'),dpi=(my_dpi,my_dpi))
         print('Histology saved')
         break
     elif keyboard.is_pressed('f'):
@@ -275,11 +277,11 @@ while True:
         plt.show()
         print('the image is now: ' + str(histology.size[0]) + ' x ' + str(histology.size[1]) + ' pixels')
     elif keyboard.is_pressed('s'):
-        histology.save(os.path.join(path_processed, file_name+'_processed.jpeg'),dpi=(300,300))
+        histology.save(os.path.join(path_processed, file_name+'_processed.jpeg'),dpi=(my_dpi,my_dpi))
         print('Histology saved')
         break        
     elif keyboard.is_pressed('e'):  
-        histology.save(os.path.join(path_processed, file_name+'_processed.jpeg'),dpi=(300,300))
+        histology.save(os.path.join(path_processed, file_name+'_processed.jpeg'),dpi=(my_dpi,my_dpi))
         print('Histology saved')
         break
 
