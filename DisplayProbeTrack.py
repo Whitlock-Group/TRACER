@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 # Import libraries
+import math 
 import os
 import os.path
 import numpy as np
@@ -117,11 +118,20 @@ lut = buildLUT([
               )
 
 mesh.cmap(lut, data)
-    
+
+# compute and display the insertion angle
+print('\n3D atlas with probes\n')
+deg_lat = math.degrees(math.atan(line_fit.direction[0]))
+deg_ant = math.degrees(math.atan(line_fit.direction[1]))
+print('estimated probe insertion angle: ')
+print('%.2f degrees in the anterior direction' %deg_ant)
+print('%.2f degrees in the lateral direction' %deg_lat)
+
 show(mesh, pp, L , __doc__,
      axes=dict(zLabelSize=.04, numberOfDivisions=10),
      elevation=-80, bg='white',
 )
+
 
 
 
