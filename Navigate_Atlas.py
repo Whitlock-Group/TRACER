@@ -7,8 +7,6 @@ Created on Thu Nov 26 09:33:18 2020
 
 from __future__ import print_function
 
-# First run the nex line in the console
-# %matplotlib qt5
 # Import libraries
 import os
 import os.path
@@ -27,201 +25,46 @@ import math
 import mplcursors
 from nilearn.image import resample_img
 from nibabel.affines import apply_affine
-import keyboard
 from skimage import io, transform
 import pickle 
 
 # Functions defined in separate files
-# from Readlabel import readlabel
-
-# class to read labels
-def readlabel( file ):
-    output_index = []
-    output_names = []
-    output_colors = []
-    labels = file.readlines()    
-    pure_labels = [ x for x in labels if "#" not in x ]
+# read label file
+from Readlabel import readlabel
+from readlabel_customized import readlabel_c
+# Allow to navigate in the atlas
+from Tracker import IndexTracker, IndexTracker_g, IndexTracker_p
+# create objects to svae transformations and probes
+from ObjSave import  save_transform, probe_obj, save_probe
+        
     
-    for line in pure_labels:
-        line_labels = line.split()
-        accessed_mapping = map(line_labels.__getitem__, [0])
-        L = list(accessed_mapping)
-        indice = [int(i) for i in L] 
-        accessed_mapping_rgb = map(line_labels.__getitem__, [1,2,3])
-        L_rgb = list(accessed_mapping_rgb)
-        colorsRGB = [int(i) for i in L_rgb]  
-        output_colors.append(colorsRGB) 
-        output_index.append(indice)
-        output_names.append(' '.join(line_labels[7:]))         
-    
-    for i in range(len(output_names)):
-        output_names[i] = output_names[i][1:-1]
-        
-    output_index = np.array(output_index)  # Use numpy array for  in the label file
-    output_colors = np.array(output_colors)  # Use numpy array for  in the label file                  
-    return [output_index, output_names, output_colors]
-
-# Class to scroll the atlas slices (coronal, sagittal and horizontal)    
-class IndexTracker(object):
-    def __init__(self, ax, X, pixdim, p):
-        self.ax = ax
-        self.plane = p.lower()
-        ax.set_title('Atlas viewer')
-        print('use scroll wheel to navigate the atlas \n')
-
-        self.X = X
-        if self.plane == 'c':
-            rows, self.slices, cols = X.shape
-            self.ind = 540
-            self.im = ax.imshow(self.X[:, self.ind, :].T, origin="lower", extent=[0, 512*pixdim, 0, 512*pixdim], cmap='gray')
-        elif self.plane == 's':
-            self.slices, rows, cols = X.shape
-            self.ind = 246                
-            self.im = ax.imshow(self.X[self.ind, :, :].T, origin="lower", extent=[0 ,1024*pixdim, 0, 512*pixdim], cmap='gray')            
-        elif self.plane == 'h':  
-            rows, cols, self.slices = X.shape
-            self.ind = 440       
-            self.im = ax.imshow(self.X[:, :, self.ind].T, origin="lower", extent=[0, 512*pixdim, 0, 1024*pixdim], cmap='gray')            
-        self.update()
-
-    def onscroll(self, event):
-        if event.button == 'up':
-            self.ind = (self.ind + 1) % self.slices
-        else:
-            self.ind = (self.ind - 1) % self.slices
-        self.update()
-
-    def update(self):
-        if self.plane == 'c':
-            self.im.set_data(self.X[:, self.ind, :].T)
-        elif self.plane == 's':
-            self.im.set_data(self.X[self.ind, :, :].T)
-        elif self.plane == 'h':
-            self.im.set_data(self.X[:, :, self.ind].T)
-        self.ax.set_ylabel('slice %d' % self.ind)
-        self.im.axes.figure.canvas.draw()                      
-        
-# Class to scroll the overlayed atlas slices (coronal, sagittal and horizontal)            
-class IndexTracker_g(object):
-    def __init__(self, ax, X, pixdim, p, S):
-        self.ax = ax
-        self.plane = p.lower()
-        ax.set_title('Atlas viewer')
-        print('use scroll wheel to navigate the atlas \n')
-        
-        self.X = X
-        if self.plane == 'c':
-            rows, self.slices, cols = X.shape
-            self.ind = S
-            self.im = ax.imshow(self.X[:, self.ind, :], origin="lower", alpha=0.5, extent=[0, 512*pixdim, 512*pixdim, 0], cmap='gray')
-        elif self.plane == 's':
-            self.slices, rows, cols = X.shape
-            self.ind = S                
-            self.im = ax.imshow(self.X[self.ind, :, :].T, origin="lower", extent=[0 ,1024*pixdim, 512*pixdim , 0], cmap='gray')            
-        elif self.plane == 'h':  
-            rows, cols, self.slices = X.shape
-            self.ind = S       
-            self.im = ax.imshow(self.X[:, :, self.ind].T, origin="lower", extent=[0, 512*pixdim, 1024*pixdim, 0], cmap='gray')  
-        self.update()
-
-    def onscroll(self, event):
-        if event.button == 'up':
-            self.ind = (self.ind + 1) % self.slices
-        else:
-            self.ind = (self.ind - 1) % self.slices
-        self.update()        
-        
-    def update(self):
-        if self.plane == 'c':
-            self.im.set_data(self.X[:, self.ind, :])
-        elif self.plane == 's':
-            self.im.set_data(self.X[self.ind, :, :])
-        elif self.plane == 'h':
-            self.im.set_data(self.X[:, :, self.ind])
-        self.ax.set_ylabel('slice %d' % self.ind)
-        self.im.axes.figure.canvas.draw()      
-
-# Class to scroll the atlas slices with probe (coronal, sagittal and horizontal)    
-class IndexTracker_p(object):
-    def __init__(self, ax, X, pixdim, p, S):
-        self.ax = ax
-        self.plane = p.lower()
-        ax.set_title('Atlas viewer')
-        print('use scroll wheel to navigate the atlas \n')
-
-        self.X = X
-        if self.plane == 'c':
-            rows, self.slices, cols = X.shape
-            self.ind = S
-            self.im = ax.imshow(self.X[:, self.ind, :].T, origin="lower", extent=[0, 512*pixdim, 0, 512*pixdim], cmap='gray')
-        elif self.plane == 's':
-            self.slices, rows, cols = X.shape
-            self.ind = S                
-            self.im = ax.imshow(self.X[self.ind, :, :].T, origin="lower", extent=[0 ,1024*pixdim, 0, 512*pixdim], cmap='gray')            
-        elif self.plane == 'h':  
-            rows, cols, self.slices = X.shape
-            self.ind = S       
-            self.im = ax.imshow(self.X[:, :, self.ind].T, origin="lower", extent=[0, 512*pixdim, 0, 1024*pixdim], cmap='gray')            
-        self.update()
-
-    def onscroll(self, event):
-        if event.button == 'up':
-            self.ind = (self.ind + 1) % self.slices
-        else:
-            self.ind = (self.ind - 1) % self.slices
-        self.update()
-
-    def update(self):
-        if self.plane == 'c':
-            self.im.set_data(self.X[:, self.ind, :].T)
-        elif self.plane == 's':
-            self.im.set_data(self.X[self.ind, :, :].T)
-        elif self.plane == 'h':
-            self.im.set_data(self.X[:, :, self.ind].T)
-        self.ax.set_ylabel('slice %d' % self.ind)
-        self.im.axes.figure.canvas.draw()          
-        
-# Store the transformed image features        
-class save_transform(object):    
-    def __init__(self, tracker, coord, image, nolines):
-        self.Slice = tracker
-        self.Transform_points = coord
-        self.Transform = image
-        self.Transform_withoulines = nolines  
-        
-# Store probe features                
-class save_probe(object):
-    def __init__(self,a,b):
-        self.Slice = a
-        self.Probe = b        
-
-# object for the clicked probes
-class probe_obj(object):
-    pass
         
 # Directory of the processed histology
 # for mac user 
-#processed_histology_folder = r'/Users/jacopop/Box\ Sync/macbook/Documents/KAVLI\histology/processed'
+processed_histology_folder = '/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed'
 # For windows users
-processed_histology_folder = r'C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\histology\processed'
+# processed_histology_folder = r'C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\histology\processed'
 # for mac user 
 # histology = Image.open(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/rat_processed.tif').copy()
 # For windows users
 file_name = str(input('Histology file name: '))
 # Mac
-#img_hist = cv2.imread(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/rat_processed.tif',cv2.IMREAD_GRAYSCALE)
+img_hist_temp = Image.open(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/rat_processed.jpeg').copy()
 # Windows
-img_hist_temp = Image.open(os.path.join(processed_histology_folder, file_name+'_processed.jpeg')).copy()
+# img_hist_temp = Image.open(os.path.join(processed_histology_folder, file_name+'_processed.jpeg')).copy()
 # get the pixel dimension
 dpi_hist = img_hist_temp.info['dpi'][1]
 pixdim_hist = 25.4/dpi_hist # 1 inch = 25,4 mm
-img_hist = cv2.imread(os.path.join(processed_histology_folder, file_name+'_processed.jpeg'),cv2.IMREAD_GRAYSCALE)
+# Windows
+# img_hist = cv2.imread(os.path.join(processed_histology_folder, file_name+'_processed.jpeg'),cv2.IMREAD_GRAYSCALE)
+# Mac
+img_hist = cv2.imread(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/rat_processed.jpeg',cv2.IMREAD_GRAYSCALE)
 # Insert the plane of interest
-plane = str(input('Select the plane: coronal (c), sagittal (s), or horizontal (h): '))
+plane = str(input('Select the plane: coronal (c), sagittal (s), or horizontal (h): ')).lower()
 # Check if the input is correct
-while plane.lower() != 'c' and plane.lower() != 's' and plane.lower() != 'h':
-    print('Error: Wrong plane name')
-    plane = str(input('Select the plane: coronal (c), sagittal (s), or horizontal (h): '))
+while plane != 'c' and plane != 's' and plane != 'h':
+    print('Error: Wrong plane name \n')
+    plane = str(input('Select the plane: coronal (c), sagittal (s), or horizontal (h): ')).lower()
 
 # Paths of the atlas, segmentation and labels
 # Atlas
@@ -232,36 +75,49 @@ mask_path = os.path.join(r'C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Wax
 segmentation_path = os.path.join(r'C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas', 'WHS_SD_rat_atlas_v4_beta.nii.gz')
 # Labels
 # Mac
-#labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
+labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
 # Windows
-labels_item = open(r"C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas\WHS_SD_rat_atlas_v4_beta.label", "r")
-#labels = readlabel( labels_item )
-labels_index, labels_name, labels_color = readlabel( labels_item )
-    
+# labels_item = open(r"C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas\WHS_SD_rat_atlas_v4_beta.label", "r")
+
+# Option to custumize colors of Brain regions
+answer = input('\nDo you want to customize the colors of the brain regions? [y/n]: ')
+
+if answer.lower() == 'n':
+    labels_index, labels_name, labels_color = readlabel( labels_item )    
+elif answer.lower() == 'y':    
+    labels_index, labels_name, labels_color = readlabel_c( labels_item )        
+else:
+    print('Default colors will be used \n')
+    labels_index, labels_name, labels_color = readlabel( labels_item )  
 # Load the atlas, mask, color and segmentation
 # Mac
-#atlas = nib.load(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack/WHS_SD_rat_T2star_v1.01.nii.gz')
+atlas = nib.load(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack/WHS_SD_rat_T2star_v1.01.nii.gz')
 # Windows
-atlas = nib.load(atlas_path)
+#atlas = nib.load(atlas_path)
 atlas_header = atlas.header
 # get pixel dimension
 pixdim = atlas_header.get('pixdim')[1]
 #atlas_data = atlas.get_fdata()
 #atlas_affine = atlas.affine
-atlas_data = np.load('atlas_data_masked.npy')
+# Windows
+# atlas_data = np.load('atlas_data_masked.npy')
+# mac
+atlas_data = np.load('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Rat/RatBrain/atlas_data_masked.npy')
 # Mac
 #mask = nib.load(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_brainmask_v1.01.nii.gz')
 # Windows
 #mask = nib.load(mask_path)
 #mask_data = mask.get_fdata()[:,:,:,0]
 # Mac
-#segmentation = nib.load('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.nii.gz')
+segmentation = nib.load('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.nii.gz')
 # Windows
-segmentation = nib.load(segmentation_path)
+#segmentation = nib.load(segmentation_path)
 segmentation_data = segmentation.get_fdata()
 
 # Atlas in RGB colors according with the label file
-cv_plot = np.load('cv_plot.npy')/255
+# cv_plot = np.load('cv_plot.npy')/255
+# mac
+cv_plot = np.load('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Rat/RatBrain/cv_plot.npy')/255
 #cv_plot = np.zeros(shape = (atlas_data.shape[0],atlas_data.shape[1],atlas_data.shape[2],3))
 # here I create the array to plot the brain regions in the RGB
 # of the label file
@@ -289,7 +145,7 @@ tracker = IndexTracker(ax, atlas_data, pixdim, plane)
 fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
 # place a text box with bregma coordinates in bottom left in axes coords
 ax.text(0.03, 0.03, textstr, transform=ax.transAxes, fontsize=6 ,verticalalignment='bottom', bbox=props)
-if plane.lower() == 'c':
+if plane == 'c':
     # dimensions
     d1 = 512
     d2 = 512
@@ -317,7 +173,7 @@ if plane.lower() == 'c':
 #         sel.annotation.set_text(Text)
 #     cursor.connect('add', show_annotation)            
 # =============================================================================
-elif plane.lower() == 's':
+elif plane == 's':
     # dimensions
     d1 = 1024 
     d2 = 512    
@@ -345,7 +201,7 @@ elif plane.lower() == 's':
 #         sel.annotation.set_text(Text)  
 #     cursor.connect('add', show_annotation)            
 # =============================================================================
-elif plane.lower() == 'h':
+elif plane == 'h':
     # dimensions
     d1 = 512
     d2 = 1024
@@ -410,7 +266,7 @@ image_name = str(input('Enter transformed image name: '))
 print('\nr: toggle mode where clicks are logged for probe or switch probes \n')
 print('n: add a new probe \n')
 print('e: save current probe \n')
-print('p: switch probe')
+print('p: switch probe \n')
 print('w: enable/disable probe viewer mode for current probe  \n')
 # =============================================================================
 # print('l: load transform for current slice; press again to load probe points \n');
@@ -446,7 +302,10 @@ probe_counter = 0
 probe_selecter = 0
 
 # get the edges of the colors defined in the label
-Edges = np.load('Edges.npy')
+# Windows
+# Edges = np.load('Edges.npy')
+# mac
+Edges = np.load('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Rat/RatBrain/Edges.npy')
 # =============================================================================
 # Edges = np.empty((512,1024,512))
 # for sl in range(0,1024):
@@ -500,6 +359,7 @@ def on_key(event):
         # Show the  transformed figure  
         #fig_trans, ax_trans = plt.subplots(1, 1)#, figsize=(float(d1)/dpi_atl,float(d2)/dpi_atl))
         ax_trans.imshow(img_warped, origin="lower", extent=[0, d1*pixdim, 0, d2*pixdim] )
+        ax_trans.set_title("Histology adapted to atlas")
         plt.show()
     
     elif event.key == 'b':
@@ -508,9 +368,10 @@ def on_key(event):
         global tracker2, fig_g
         fig_g, ax_g = plt.subplots(1, 1) 
         ax_g.imshow(img_warped, origin="lower", extent=[0, d1*pixdim, d2*pixdim,0])
-        tracker2 = IndexTracker_g(ax_g, Edges, pixdim, plane.lower(), tracker.ind)
+        tracker2 = IndexTracker_g(ax_g, Edges, pixdim, plane, tracker.ind)
         fig_g.canvas.mpl_connect('scroll_event', tracker2.onscroll)  
         #ax_g.format_coord = format_coord
+        ax_g.set_title("Histology and atlas overlayed")
         plt.show()  
         # Remove axes tick
         plt.tick_params(axis='both', which='both', bottom=False, left=False, top=False, labelbottom=False, labelleft=False) 
@@ -518,13 +379,13 @@ def on_key(event):
     elif event.key == 'a':        
         print('Overlay to the atlas')
         # get the edges of the colors defined in the label
-        if plane.lower() == 'c':
+        if plane == 'c':
             edges = cv2.Canny(np.uint8((cv_plot[:,tracker.ind,:]*255).transpose((1,0,2))),100,200)  
-        elif plane.lower() == 's':
+        elif plane == 's':
             edges = cv2.Canny(np.uint8((cv_plot[tracker.ind,:,:]*255).transpose((1,0,2))),100,200)
-        elif plane.lower() == 'h':    
+        elif plane == 'h':    
             edges = cv2.Canny(np.uint8((cv_plot[:,:,tracker.ind]*255).transpose((1,0,2))),100,200)
-        global img2, fig_grid
+        global img2, fig_grid, ax_grid
         fig_grid, ax_grid = plt.subplots(1, 1)
         # position of the lines
         CC = np.where(edges == 255)
@@ -534,6 +395,7 @@ def on_key(event):
         overlay = ax_grid.imshow(img2, origin="lower", extent=[0, d1*pixdim, 0, d2*pixdim])   
         ax_grid.text(0.15, 0.05, textstr, transform=ax.transAxes, fontsize=6 ,verticalalignment='bottom', bbox=props)
         ax_grid.format_coord = format_coord
+        ax_grid.set_title("Histology and atlas overlayed")
         plt.show()
         cursor = mplcursors.cursor(overlay, hover=True)
         # Show the names of the regions
@@ -578,16 +440,17 @@ def on_key(event):
         global fig_color
         fig_color, ax_color = plt.subplots(1, 1) 
         ax_color.imshow(img2, extent=[0, d1*pixdim, 0, d2*pixdim])
-        if plane.lower() == 'c':
+        if plane == 'c':
             ax_color.imshow(cv_plot[:,tracker.ind,:].transpose((1,0,2)), origin="lower", extent=[0, d1*pixdim, d2*pixdim, 0], alpha = 0.5)                        
-        elif plane.lower() == 's':
+        elif plane == 's':
             ax_color.imshow(cv_plot[tracker.ind,:,:].transpose((1,0,2)), origin="lower", extent=[0, d1*pixdim, d2*pixdim, 0], alpha = 0.5)
-        elif plane.lower() == 'h':
+        elif plane == 'h':
             ax_color.imshow(cv_plot[:,:,tracker.ind].transpose((1,0,2)), origin="lower", extent=[0, d1*pixdim, d2*pixdim, 0], alpha = 0.5)     
+        ax_color.set_title("Histology and colored atlas")
         plt.show()
         
     elif event.key == 'r':     
-        print('Register probe 1 (white)')
+        print('Register probe 1 (green)')
         try:
             plt.close(fig_g)
         except:
@@ -598,7 +461,7 @@ def on_key(event):
             pass
         # probes have different colors 
         global probe_colors                            
-        probe_colors = ['white','green', 'purple', 'blue', 'yellow', 'orange', 'red']
+        probe_colors = ['green', 'purple', 'blue', 'yellow', 'orange', 'red']
         # plot  point and register all the clicked points
         def onclick_probe(event):
             global px, py
@@ -607,44 +470,39 @@ def on_key(event):
             global coords_probe_temp_w, coords_probe_temp_g, coords_probe_temp_p, coords_probe_temp_b, coords_probe_temp_y, coords_probe_temp_o, coords_probe_temp_r,  p_probe_grid, p_probe_trans
             if probe_counter == 0:
                 coords_probe_temp_w.append((px, py)) 
-                p_probe_grid.extend(plt.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe_grid.extend(ax_grid.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 p_probe_trans.extend(ax_trans.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_w)
             elif probe_counter == 1:
                 coords_probe_temp_g.append((px, py))
-                p_probe_grid.extend(plt.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe_grid.extend(ax_grid.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 p_probe_trans.extend(ax_trans.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_g)
             elif probe_counter == 2:
                 coords_probe_temp_p.append((px, py))    
-                p_probe_grid.extend(plt.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe_grid.extend(ax_grid.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 p_probe_trans.extend(ax_trans.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_p)
             elif probe_counter == 3:
                 coords_probe_temp_b.append((px, py))
-                p_probe_grid.extend(plt.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe_grid.extend(ax_grid.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 p_probe_trans.extend(ax_trans.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_b)
             elif probe_counter == 4:
                 coords_probe_temp_y.append((px, py))
-                p_probe_grid.extend(plt.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe_grid.extend(ax_grid.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 p_probe_trans.extend(ax_trans.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_y)
             elif probe_counter == 5:
                 coords_probe_temp_o.append((px, py))
-                p_probe_grid.extend(plt.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe_grid.extend(ax_grid.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 p_probe_trans.extend(ax_trans.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_o)
-            elif probe_counter == 6:
-                coords_probe_temp_r.append((px, py))
-                p_probe_grid.extend(plt.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
-                p_probe_trans.extend(ax_trans.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
-                setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_r)
             fig_grid.canvas.draw()
             fig_trans.canvas.draw()
             return
         # Call click func
-        fig_grid.canvas.mpl_connect('button_press_event', onclick_probe) 
+        fig_trans.canvas.mpl_connect('button_press_event', onclick_probe) 
         
         def on_key2(event):            
             if event.key == 'n':
@@ -694,18 +552,22 @@ def on_key(event):
 # 
 # =============================================================================
                         
-        fig_grid.canvas.mpl_connect('key_press_event', on_key2)
+        fig_trans.canvas.mpl_connect('key_press_event', on_key2)
         
     elif event.key == 'e':
-        print('Probe points saved')
+        print('Probe points saved')        
         path_probes = os.path.join(processed_histology_folder, 'probes')
         if not path.exists(os.path.join(processed_histology_folder, 'probes')):
             os.mkdir(path_probes)
         # Create and save slice, clicked probes
-        P = save_probe(tracker.ind, coords_probe)        # Saving the object
-        with open(os.path.join(path_probes, image_name+'probes.pkl'), 'wb') as F: 
-            pickle.dump(P, F)# Create and save slice, clicked points, and image info    
-
+        P = save_probe(tracker.ind, coords_probe, plane, probe_counter)        # Saving the object
+# =============================================================================
+#         with open(os.path.join(path_probes, image_name+'probes.pkl'), 'wb') as F: 
+#             pickle.dump(P, F)# Create and save slice, clicked points, and image info    
+# =============================================================================  
+        # MAC    
+        with open('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes/2probes.pkl', 'wb') as F: 
+            pickle.dump(P, F)# Create and save slice, clicked points, and image info 
             
     elif event.key == 'w':
         try:   
@@ -719,10 +581,11 @@ def on_key(event):
                 probe_y.append(L[i][1]*pixdim)
             m, b = np.polyfit(probe_x, probe_y, 1)
             fig_probe, ax_probe = plt.subplots(1, 1)  
-            trackerp = IndexTracker_p(ax_probe, atlas_data, pixdim, plane.lower(), tracker.ind)
+            trackerp = IndexTracker_p(ax_probe, atlas_data, pixdim, plane, tracker.ind)
             fig_probe.canvas.mpl_connect('scroll_event', trackerp.onscroll)        
             ax_probe.text(0.15, 0.05, textstr, transform=ax_probe.transAxes, fontsize=6 ,verticalalignment='bottom', bbox=props)
             ax_probe.format_coord = format_coord
+            ax_probe.set_title("Probe viewer")
             plt.show()
             cursor = mplcursors.cursor(fig_probe, hover=True)
             # Show the names of the regions
