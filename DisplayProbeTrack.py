@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+import matplotlib.patches as patches
 matplotlib.use('Qt5Agg')
 from mpl_toolkits.mplot3d import Axes3D
 from PIL import Image
@@ -142,6 +143,7 @@ coords = np.array(np.where(edges == 255))
 points = vedo.pointcloud.Points(coords)
 # Create the mesh
 mesh = Mesh(points)
+
 # create some dummy data array to be associated to points
 data = mesh.points()[:,2]  # pick z-coords, use them as scalar data
 # build a custom LookUp Table of colors:
@@ -155,8 +157,12 @@ lut = buildLUT([
               )
 mesh.cmap(lut, data)
 
+dist = []
 
-regions = []
+# To plot the probe with colors
+
+fig1 = plt.figure()
+ax1 = fig1.add_subplot(111, aspect='equal')
 # compute and display the insertion angle for each probe
 for i in range(0,n):
     line_fit = getattr(LINE_FIT, color_used[i])
@@ -171,49 +177,61 @@ for i in range(0,n):
     X2 = getattr(xyz, color_used[i])[1]
     s = min([int(math.modf(X1[2])[1]),int(math.modf(X2[2])[1])]) # starting point
     f = max([int(math.modf(X1[2])[1]),int(math.modf(X2[2])[1])]) # ending point
+    # get lenght of the probe
+    dist.append(np.linalg.norm(f-s))
+    regions = []
+    colori= []
     for z in range(s,f):
         x = line_fit.point[0]+((z-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[0]
         y = line_fit.point[1]+((z-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[1]
         regions.append(labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(x)[1]),int(math.modf(y)[1]),int(math.modf(z)[1])], axis = 1))[0,0]])
-    regioni = list(OrderedDict.fromkeys(regions))  
-    print('\nRegions traversed by %s probe\n: ' %color_used[i])
+        colori.append(labels_color[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(x)[1]),int(math.modf(y)[1]),int(math.modf(z)[1])], axis = 1))[0,0]])
+        # count the number of elements in each region to 
+    from collections import Counter
+    counter_regions = dict(Counter(regions))    
+    regioni = list(OrderedDict.fromkeys(regions))   
+    print('\nRegions traversed by %s probe> \n ' %color_used[i])
+    cc = 0
     for re in regioni:
         print(re)
-        
-
-
-
+        # proportion of the probe in the given region
+        dist_prop = counter_regions[re]/dist[i]
+        color_prop = labels_color[np.argwhere(np.array(labels_name)== re)]
+    # plot the probe with the colors of the region traversed
+        ax1.add_patch(patches.Rectangle((50*i+50, cc), 20, dist_prop*dist[i], color=color_prop[0][0]/255))
+        plt.text(50*i+50, max(dist)+2, 'Probe', fontsize=11)
+        cc = dist_prop*dist[i] + cc
+    
+lims = (0,max(dist))
+plt.ylim(lims)
+plt.xlim((0,50*n+50))
+plt.axis('off')
 
 # plot all the probes together
 if n==1:
      show(mesh, getattr(pr,color_used[0]), getattr(L, color_used[0]), __doc__,
-     axes=dict(zLabelSize=.04, numberOfDivisions=10),
-     elevation=-80, bg='white',
+     axes=0, viewup="z", bg='white',
      )        
 elif n==2:     
      show(mesh, getattr(pr,color_used[0]), getattr(pr,color_used[1]), getattr(L, color_used[0]), getattr(L, color_used[1]), __doc__,
-     axes=dict(zLabelSize=.04, numberOfDivisions=10),
-     elevation=-80, bg='white',
+     axes=0, viewup="z", bg='white',
      )
 elif n == 3:
      show(mesh, getattr(pr,color_used[0]), getattr(pr,color_used[1]), getattr(pr,color_used[2]), getattr(L, color_used[0]),getattr(L, color_used[1]), getattr(L, color_used[2]), __doc__,
-     axes=dict(zLabelSize=.04, numberOfDivisions=10),
-     elevation=-80, bg='white',
+     axes=0, viewup="z",
+     bg='white', 
      )
 elif n == 4:
      show(mesh, getattr(pr,color_used[0]), getattr(pr,color_used[1]), getattr(pr,color_used[2]), getattr(pr,color_used[3]), getattr(L, color_used[0]), getattr(L, color_used[1]), getattr(L, color_used[2]), getattr(L, color_used[3]), __doc__,
-     axes=dict(zLabelSize=.04, numberOfDivisions=10),
-     elevation=-80, bg='white',
+     axes=0, viewup="z", bg='white',
      )
 elif n==5:
      show(mesh, getattr(pr,color_used[0]), getattr(pr,color_used[1]), getattr(pr,color_used[2]), getattr(pr,color_used[3]), getattr(pr,color_used[4]), getattr(L, color_used[0]), getattr(L, color_used[1]), getattr(L, color_used[2]), getattr(L, color_used[3]), getattr(L, color_used[4]),  __doc__,
-     axes=dict(zLabelSize=.04, numberOfDivisions=10),
-     elevation=-80, bg='white',
+     axes=0, viewup="z", bg='white',
      )
 elif n == 6:
      show(mesh, getattr(pr,color_used[0]), getattr(pr,color_used[1]), getattr(pr,color_used[2]), getattr(pr,color_used[3]), getattr(pr,color_used[4]), getattr(pr,color_used[5]), getattr(L, color_used[0]), getattr(L, color_used[1]), getattr(L, color_used[2]), getattr(L, color_used[3]), getattr(L, color_used[4]), getattr(L, color_used[5]), __doc__,
-     axes=dict(zLabelSize=.04, numberOfDivisions=10),
-     elevation=-80, bg='white',
+     axes=0, viewup="z", bg='white',
      )
 
 
