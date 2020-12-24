@@ -13,6 +13,7 @@ def readlabel( file ):
     output_index = []
     output_names = []
     output_colors = []
+    output_initials = []
     labels = file.readlines()    
     pure_labels = [ x for x in labels if "#" not in x ]
     
@@ -26,11 +27,16 @@ def readlabel( file ):
         colorsRGB = [int(i) for i in L_rgb]  
         output_colors.append(colorsRGB) 
         output_index.append(indice)
-        output_names.append(' '.join(line_labels[7:]))         
-    
+        output_names.append(' '.join(line_labels[7:]))       
     for i in range(len(output_names)):
         output_names[i] = output_names[i][1:-1]
-        
+        output_initials_t = []
+        for s in output_names[i].split():
+            output_initials_t.append(s[0])       
+        output_initials.append(' '.join(output_initials_t) )    
     output_index = np.array(output_index)  # Use numpy array for  in the label file
     output_colors = np.array(output_colors)  # Use numpy array for  in the label file                  
-    return [output_index, output_names, output_colors]
+    return [output_index, output_names, output_colors, output_initials]
+
+
+    
