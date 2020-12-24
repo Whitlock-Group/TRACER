@@ -31,7 +31,7 @@ import pickle
 # Functions defined in separate files
 # read label file
 from Readlabel import readlabel
-from readlabel_customized import readlabel_c
+# from readlabel_customized import readlabel_c
 # Allow to navigate in the atlas
 from Tracker import IndexTracker, IndexTracker_g, IndexTracker_p
 # create objects to svae transformations and probes
@@ -78,17 +78,8 @@ segmentation_path = os.path.join(r'C:\Users\jacopop\Box Sync\macbook\Documents\K
 labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
 # Windows
 # labels_item = open(r"C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas\WHS_SD_rat_atlas_v4_beta.label", "r")
+labels_index, labels_name, labels_color = readlabel( labels_item )  
 
-# Option to custumize colors of Brain regions
-answer = input('\nDo you want to customize the colors of the brain regions? [y/n]: ')
-
-if answer.lower() == 'n':
-    labels_index, labels_name, labels_color = readlabel( labels_item )    
-elif answer.lower() == 'y':    
-    labels_index, labels_name, labels_color = readlabel_c( labels_item )        
-else:
-    print('Default colors will be used \n')
-    labels_index, labels_name, labels_color = readlabel( labels_item )  
 # Load the atlas, mask, color and segmentation
 # Mac
 atlas = nib.load(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack/WHS_SD_rat_T2star_v1.01.nii.gz')
@@ -510,7 +501,7 @@ def on_key(event):
                 global probe_counter
                 if probe_counter+1 <=len(probe_colors):
                     probe_counter +=  1                                                                                                 
-                    print('probe %d added (%s)' %(probe_counter+1, probe_colors[probe_counter]))
+                    print('probe %d added (%s)' %(probe_counter, probe_colors[probe_counter]))
                 else:
                     print('Cannot add more probes')
                     probe_counter = len(probe_colors)
@@ -566,7 +557,7 @@ def on_key(event):
 #             pickle.dump(P, F)# Create and save slice, clicked points, and image info    
 # =============================================================================  
         # MAC    
-        with open('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes/2probes.pkl', 'wb') as F: 
+        with open('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes/1probes.pkl', 'wb') as F: 
             pickle.dump(P, F)# Create and save slice, clicked points, and image info 
             
     elif event.key == 'w':
