@@ -16,7 +16,8 @@ from PIL import Image
 import cv2
 import pickle 
 from skimage import measure
-from collections import OrderedDict
+from collections import OrderedDict, Counter
+
     
 # 3d Brain
 from vedo import Volume as VedoVolume
@@ -39,7 +40,7 @@ from Readlabel import readlabel
 labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
 # Windows
 # labels_item = open(r"C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas\WHS_SD_rat_atlas_v4_beta.label", "r")
-labels_index, labels_name, labels_color = readlabel( labels_item )   
+labels_index, labels_name, labels_color, labels_initial = readlabel( labels_item )   
 
 # Segmentation
 # Mac
@@ -180,31 +181,38 @@ for i in range(0,n):
     # get lenght of the probe
     dist.append(np.linalg.norm(f-s))
     regions = []
-    colori= []
+    colori = []
+    initials = []
+    index = []
     for z in range(s,f):
         x = line_fit.point[0]+((z-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[0]
         y = line_fit.point[1]+((z-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[1]
         regions.append(labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(x)[1]),int(math.modf(y)[1]),int(math.modf(z)[1])], axis = 1))[0,0]])
         colori.append(labels_color[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(x)[1]),int(math.modf(y)[1]),int(math.modf(z)[1])], axis = 1))[0,0]])
+        initials.append(labels_initial[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(x)[1]),int(math.modf(y)[1]),int(math.modf(z)[1])], axis = 1))[0,0]])
+        index.append(segmentation_data[int(math.modf(x)[1]),int(math.modf(y)[1]),int(math.modf(z)[1])])
         # count the number of elements in each region to 
-    from collections import Counter
     counter_regions = dict(Counter(regions))    
-    regioni = list(OrderedDict.fromkeys(regions))   
-    print('\nRegions traversed by %s probe> \n ' %color_used[i])
+    regioni = list(OrderedDict.fromkeys(regions))
+    iniziali = list(OrderedDict.fromkeys(initials))
+    indici = list(OrderedDict.fromkeys(index))
+    print('\nRegions traversed by %s probe: \n ' %color_used[i])
     cc = 0
+    jj = 0
     for re in regioni:
         print(re)
         # proportion of the probe in the given region
         dist_prop = counter_regions[re]/dist[i]
         color_prop = labels_color[np.argwhere(np.array(labels_name)== re)]
-    # plot the probe with the colors of the region traversed
-        ax1.add_patch(patches.Rectangle((50*i+50, cc), 20, dist_prop*dist[i], color=color_prop[0][0]/255))
-        plt.text(50*i+50, max(dist)+2, 'Probe', fontsize=11)
-        cc = dist_prop*dist[i] + cc
-    
+        # plot the probe with the colors of the region traversed
+        ax1.add_patch(patches.Rectangle((70*i+20, cc), 20, dist_prop*dist[i], color=color_prop[0][0]/255))
+        plt.text(70*i+20, max(dist)+2, 'Probe %d (%s)'%(i+1, color_used[i]), fontsize=7.5)
+        plt.text(70*i+45, cc+round(dist_prop*dist[i]/2), '%s %d'%(iniziali[jj], indici[jj]), fontsize=5.5)        
+        jj +=1
+        cc = dist_prop*dist[i] + cc    
 lims = (0,max(dist))
 plt.ylim(lims)
-plt.xlim((0,50*n+50))
+plt.xlim((0,70*n+20))
 plt.axis('off')
 
 # plot all the probes together
@@ -233,15 +241,6 @@ elif n == 6:
      show(mesh, getattr(pr,color_used[0]), getattr(pr,color_used[1]), getattr(pr,color_used[2]), getattr(pr,color_used[3]), getattr(pr,color_used[4]), getattr(pr,color_used[5]), getattr(L, color_used[0]), getattr(L, color_used[1]), getattr(L, color_used[2]), getattr(L, color_used[3]), getattr(L, color_used[4]), getattr(L, color_used[5]), __doc__,
      axes=0, viewup="z", bg='white',
      )
-
-
-
-
-
-
-
-
-
 
 
 
