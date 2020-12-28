@@ -150,18 +150,22 @@ for i in range(0,n):
         regions.append(labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(punti[j,0])[1]),int(math.modf(punti[j,1])[1]),int(math.modf(punti[j,2])[1])], axis = 1))[0,0]])
         initials.append(labels_initial[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(punti[j,0])[1]),int(math.modf(punti[j,1])[1]),int(math.modf(punti[j,2])[1])], axis = 1))[0,0]])
         index.append(segmentation_data[int(math.modf(punti[j,0])[1]),int(math.modf(punti[j,1])[1]),int(math.modf(punti[j,2])[1])])
-        ML.append((punti[j,0]-246)*pixdim)
+        ml = (punti[j,0]-246)*pixdim
+        if ml > 0:
+            ML.append('R '+str(abs(round(ml,2))))
+        else:
+            ML.append('L '+str(abs(round(ml,2))))
         AP.append((punti[j,1]-653)*pixdim)
-        Z.append((punti[j,0]-440)*pixdim)
+        Z.append((punti[j,2]-440)*pixdim)
         
         # count the number of elements in each region to 
     print('\nRegions of clicked points for %s probe: \n ' %color_used[i])
-    LL = [regions,  initials, index, ML, AP, Z]
-    headers = [' Regions', 'Initialis','Index', 'ML', 'AP', 'Z']
+    LL = [regions,  initials, index, ML, AP,Z]
+    headers = [' Regions', 'Initials','Index', 'ML', 'AP', 'Z']
     numpy_array = np.array(LL)
     transpose = numpy_array.T
     transpose_list = transpose.tolist()
-    print(tabulate(transpose_list, headers))
+    print(tabulate(transpose_list, headers, floatfmt=".2f"))
     
         
 # =============================================================================
@@ -202,7 +206,7 @@ elif n==2:
      )
 elif n == 3:
      show(mesh, getattr(pr,color_used[0]), getattr(pr,color_used[1]), getattr(pr,color_used[2]), __doc__,
-     axes=1, viewup="z",
+     axes=0, viewup="z",
      bg='white', 
      )
 elif n == 4:
