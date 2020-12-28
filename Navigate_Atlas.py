@@ -147,9 +147,9 @@ if plane == 'c':
         ML = y - 246*pixdim
         Z = x - 440*pixdim
         if ML >0:        
-            return 'AP=%1.4f, ML=R%1.4f, z=%1.4f'%(AP, ML, Z)
+            return 'AP=%1.4f, ML=R%1.4f, z=%1.4f'%(AP, abs(ML), Z)
         else:
-            return 'AP=%1.4f, ML=L%1.4f, z=%1.4f'%(AP, ML, Z)    
+            return 'AP=%1.4f, ML=L%1.4f, z=%1.4f'%(AP, abs(ML), Z)    
     ax.format_coord = format_coord
 # =============================================================================
 #     cursor = mplcursors.cursor(hover=True)
@@ -175,9 +175,9 @@ elif plane == 's':
         ML = tracker.ind*pixdim - 246*pixdim
         Z = x - 440*pixdim
         if ML >0:        
-            return 'AP=%1.4f, ML=R%1.4f, z=%1.4f'%(AP, ML, Z)
+            return 'AP=%1.4f, ML=R%1.4f, z=%1.4f'%(AP, abs(ML), Z)
         else:
-            return 'AP=%1.4f, ML=L%1.4f, z=%1.4f'%(AP, ML, Z)    
+            return 'AP=%1.4f, ML=L%1.4f, z=%1.4f'%(AP, abs(ML), Z)    
     ax.format_coord = format_coord
 # =============================================================================
 #     cursor = mplcursors.cursor(hover=True)
@@ -203,9 +203,9 @@ elif plane == 'h':
         ML = y - 246*pixdim        
         Z = tracker.ind*pixdim - 440*pixdim
         if ML >0:        
-            return 'AP=%1.4f, ML=R%1.4f, z=%1.4f'%(AP, ML, Z)
+            return 'AP=%1.4f, ML=R%1.4f, z=%1.4f'%(AP, abs(ML), Z)
         else:
-            return 'AP=%1.4f, ML=L%1.4f, z=%1.4f'%(AP, ML, Z)    
+            return 'AP=%1.4f, ML=L%1.4f, z=%1.4f'%(AP, abs(ML), Z)    
     ax.format_coord = format_coord
 plt.show()    
 # =============================================================================
