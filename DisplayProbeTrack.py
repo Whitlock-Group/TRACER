@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Dec 29 11:09:13 2020
+
+@author: jacopop
+"""
+
 from __future__ import print_function
 
 # Import libraries
@@ -17,7 +25,7 @@ import cv2
 import pickle 
 from skimage import measure
 from collections import OrderedDict, Counter
-
+from tabulate import tabulate
     
 # 3d Brain
 from vedo import Volume as VedoVolume
@@ -169,9 +177,10 @@ for i in range(0,n):
     line_fit = getattr(LINE_FIT, color_used[i])
     deg_lat = math.degrees(math.atan(line_fit.direction[0]))
     deg_ant = math.degrees(math.atan(line_fit.direction[1]))
-    print('\nestimated %s probe insertion angle: ' %color_used[i])
+    print('\n\nAnalyze %s probe: \n ' %color_used[i])
+    print('Estimated %s probe insertion angle: ' %color_used[i])
     print('%.2f degrees in the anterior direction' %deg_ant)
-    print('%.2f degrees in the lateral direction' %deg_lat)
+    print('%.2f degrees in the lateral direction\n' %deg_lat)
 
     # Get the brain regions traversed by the probe
     X1 = getattr(xyz, color_used[i])[0]
@@ -184,6 +193,7 @@ for i in range(0,n):
     colori = []
     initials = []
     index = []
+    channels = []
     for z in range(s,f):
         x = line_fit.point[0]+((z-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[0]
         y = line_fit.point[1]+((z-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[1]
@@ -191,16 +201,23 @@ for i in range(0,n):
         colori.append(labels_color[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(x)[1]),int(math.modf(y)[1]),int(math.modf(z)[1])], axis = 1))[0,0]])
         initials.append(labels_initial[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(x)[1]),int(math.modf(y)[1]),int(math.modf(z)[1])], axis = 1))[0,0]])
         index.append(segmentation_data[int(math.modf(x)[1]),int(math.modf(y)[1]),int(math.modf(z)[1])])
+        #channels.append(0)
         # count the number of elements in each region to 
     counter_regions = dict(Counter(regions))    
     regioni = list(OrderedDict.fromkeys(regions))
     iniziali = list(OrderedDict.fromkeys(initials))
     indici = list(OrderedDict.fromkeys(index))
-    print('\nRegions traversed by %s probe: \n ' %color_used[i])
+    
+    LL = [regioni,  iniziali]
+    headers = [' Regions traversed', 'Initials']
+    numpy_array = np.array(LL)
+    transpose = numpy_array.T
+    transpose_list = transpose.tolist()
+    print(tabulate(transpose_list, headers, floatfmt=".2f"))
     cc = 0
     jj = 0
     for re in regioni:
-        print(re)
+        #print(re)
         # proportion of the probe in the given region
         dist_prop = counter_regions[re]/dist[i]
         color_prop = labels_color[np.argwhere(np.array(labels_name)== re)]
@@ -214,6 +231,19 @@ lims = (0,max(dist))
 plt.ylim(lims)
 plt.xlim((0,70*n+20))
 plt.axis('off')
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # plot all the probes together
 if n==1:
