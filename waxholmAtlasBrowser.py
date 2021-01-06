@@ -26,6 +26,7 @@ import pickle
 from skimage import measure
 from collections import OrderedDict, Counter
 from tabulate import tabulate
+import mplcursors
     
 # 3d Brain
 from vedo import Volume as VedoVolume
@@ -48,7 +49,7 @@ print('Controls: \n')
 print('--------- \n')
 print('scroll: move between slices \n')
 print('g: add/remove gridlines \n')
-print('o: add/remove overlay of current region extent \n')
+print('b: add name of current region extent \n')
 print('a: toggle viewing boundaries \n')
 print('v: toggle color atlas mode \n')
 print('p: enable/disable mode where clicks are logged for probe or switch probes \n')
@@ -59,7 +60,7 @@ print('w: enable/disable probe viewer mode for current probe  \n')
 print('d: delete most recent probe point \n')
 print('up: scroll through A/P angles \n')
 print('right: scroll through M/L angles \n')
-print('down: scroll through slices \n')
+
 
 plane = str(input('Select the plane: coronal (c), sagittal (s), or horizontal (h): ')).lower()
 # Check if the input is correct
@@ -225,7 +226,7 @@ plt.show()
 
 # Fix size and location of the figure window
 mngr = plt.get_current_fig_manager()
-mngr.window.setGeometry(600,200,d2*1.5,d1*1.5)      
+mngr.window.setGeometry(600,200,d2*2,d1*2)      
 # get the edges of the colors defined in the label
 # Windows
 # Edges = np.load('Edges.npy')
@@ -238,37 +239,72 @@ Edges = np.load('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Rat/RatBrain/Ed
 # 
 # =============================================================================
 
+
+# Lists for the points clicked in atlas and histology
+coords_atlas = []
+coords_probe_temp_w = []
+coords_probe_temp_g = []
+coords_probe_temp_p = []          
+coords_probe_temp_b = []
+coords_probe_temp_y = []
+coords_probe_temp_o = []
+coords_probe_temp_r = []
+# Object for clicked probes
+coords_probe = probe_obj()
+# Lists for the points plotted in atlas and histology
+redp_atlas = []
+redp_hist = []
+# List of probe points
+p_probe= []
+# Initialize probe counter and selecter
+probe_counter = 0
+probe_selecter = 0
+
+
 def on_key(event):
     if event.key == 'a':
-        print('View Boundaries')
-#       SIMPLE OVERLAY
+        print('View boundaries')
         global tracker2
-        #fig_g, ax_g = plt.subplots(1, 1) 
-        tracker2 = IndexTracker_b(ax, Edges, pixdim, plane, tracker.ind)
-        fig.canvas.mpl_connect('scroll_event', tracker2.onscroll)  
-        #ax_g.format_coord = format_coord
-        plt.show()  
-        # Remove axes tick
-        plt.tick_params(axis='both', which='both', bottom=False, left=False, top=False, labelbottom=False, labelleft=False) 
-
+        tracker2 = IndexTracker_b(ax, Edges, pixdim, plane, tracker.ind)    
+        fig.canvas.mpl_connect('scroll_event', tracker2.onscroll)
+        plt.show() 
     elif event.key == 'v':
-        print('Colored Atlas on')
+        print('View colors')
+        global tracker3
         tracker3 = IndexTracker_c(ax, cv_plot, pixdim, plane, tracker.ind)        
         fig.canvas.mpl_connect('scroll_event', tracker3.onscroll)  
         #ax_g.format_coord = format_coord 
         plt.show()
-        
+    elif event.key == 'b':   
+        print("Show region's name")
+        # Show the names of the regions
+        global cursor
+        cursor = mplcursors.cursor(hover=True)
+        def show_annotation(sel):
+            xi, yi = sel.target/pixdim
+            if plane == 'c':
+                if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1)).size:
+                    Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1))[0,0]]
+                else:
+                    # display nothing
+                    Text = ' '                
+            elif plane == 's':
+                if np.argwhere(np.all(labels_index == segmentation_data[tracker.ind,int(math.modf(xi)[1]),int(math.modf(yi)[1])], axis = 1)).size:
+                    Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[tracker.ind,int(math.modf(xi)[1]),int(math.modf(yi)[1])], axis = 1))[0,0]]
+                else:
+                    # display nothing
+                    Text = ' '
+            elif plane == 'h':
+                if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),int(math.modf(yi)[1]),tracker.ind], axis = 1)).size:
+                    Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),int(math.modf(yi)[1]),tracker.ind], axis = 1))[0,0]]
+                else:
+                    # display nothing
+                    Text = ' '                    
+            sel.annotation.set_text(Text)
+        cursor.connect('add', show_annotation) 
+
     elif event.key == 'r':     
         print('Register probe 1 (green)')
-        try:
-            plt.close(fig_g)
-        except:
-            pass
-        try: 
-            plt.close(fig_color)
-        except:
-            pass
-        # probes have different colors 
         global probe_colors                            
         probe_colors = ['green', 'purple', 'blue', 'yellow', 'orange', 'red']
         # plot  point and register all the clicked points
@@ -279,74 +315,64 @@ def on_key(event):
             global coords_probe_temp_w, coords_probe_temp_g, coords_probe_temp_p, coords_probe_temp_b, coords_probe_temp_y, coords_probe_temp_o, coords_probe_temp_r,  p_probe_grid, p_probe_trans
             if probe_counter == 0:
                 coords_probe_temp_w.append((px, py)) 
-                p_probe_grid.extend(ax_grid.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
-                p_probe_trans.extend(ax_trans.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_w)
             elif probe_counter == 1:
                 coords_probe_temp_g.append((px, py))
-                p_probe_grid.extend(ax_grid.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
-                p_probe_trans.extend(ax_trans.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_g)
             elif probe_counter == 2:
                 coords_probe_temp_p.append((px, py))    
-                p_probe_grid.extend(ax_grid.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
-                p_probe_trans.extend(ax_trans.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_p)
             elif probe_counter == 3:
                 coords_probe_temp_b.append((px, py))
-                p_probe_grid.extend(ax_grid.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
-                p_probe_trans.extend(ax_trans.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_b)
             elif probe_counter == 4:
                 coords_probe_temp_y.append((px, py))
-                p_probe_grid.extend(ax_grid.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
-                p_probe_trans.extend(ax_trans.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_y)
             elif probe_counter == 5:
                 coords_probe_temp_o.append((px, py))
-                p_probe_grid.extend(ax_grid.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
-                p_probe_trans.extend(ax_trans.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_o)
-            fig_grid.canvas.draw()
-            fig_trans.canvas.draw()
+            fig.canvas.draw()
             return
         # Call click func
-        fig_trans.canvas.mpl_connect('button_press_event', onclick_probe) 
+        fig.canvas.mpl_connect('button_press_event', onclick_probe) 
         
-        def on_key2(event):            
-            if event.key == 'n':
-                # add a new probe, the function in defined in onclick_probe
-                global probe_counter
-                if probe_counter+1 <=len(probe_colors):
-                    probe_counter +=  1                                                                                                 
-                    print('probe %d added (%s)' %(probe_counter, probe_colors[probe_counter]))
-                else:
-                    print('Cannot add more probes')
-                    probe_counter = len(probe_colors)
-                    
-            elif event.key == 'c':
-                print('Delete clicked probe point')
-                if len(getattr(coords_probe,probe_colors[0]))!= 0:
-                    if len(getattr(coords_probe,probe_colors[probe_counter])) != 0:
-                        getattr(coords_probe,probe_colors[probe_counter]).pop(-1) # remove the point from the list
-                        p_probe_trans[-1].remove() # remove the point from the plot
-                        fig_trans.canvas.draw()
-                        p_probe_trans.pop(-1)                        
-                        p_probe_grid[-1].remove() # remove the point from the plot
-                        fig_grid.canvas.draw()           
-                        p_probe_grid.pop(-1)
-                    elif len(getattr(coords_probe,probe_colors[probe_counter])) == 0:
-                        probe_counter -=1
-                        try:
-                            getattr(coords_probe,probe_colors[probe_counter]).pop(-1) # remove the point from the list
-                            p_probe_trans[-1].remove() # remove the point from the plot
-                            fig_trans.canvas.draw()                                        
-                            p_probe_trans.pop(-1)
-                            p_probe_grid[-1].remove() # remove the point from the plot
-                            fig_grid.canvas.draw()                        
-                            p_probe_grid.pop(-1)
-                        except:
-                            pass
+# =============================================================================
+#         def on_key2(event):            
+#             if event.key == 'n':
+#                 # add a new probe, the function in defined in onclick_probe
+#                 global probe_counter
+#                 if probe_counter+1 <=len(probe_colors):
+#                     probe_counter +=  1                                                                                                 
+#                     print('probe %d added (%s)' %(probe_counter, probe_colors[probe_counter]))
+#                 else:
+#                     print('Cannot add more probes')
+#                     probe_counter = len(probe_colors)
+#                     
+#             elif event.key == 'c':
+#                 print('Delete clicked probe point')
+#                 if len(getattr(coords_probe,probe_colors[0]))!= 0:
+#                     if len(getattr(coords_probe,probe_colors[probe_counter])) != 0:
+#                         getattr(coords_probe,probe_colors[probe_counter]).pop(-1) # remove the point from the list
+#                         p_probe[-1].remove() # remove the point from the plot
+#                         fig.canvas.draw()
+#                         p_probe.pop(-1)                        
+#                     elif len(getattr(coords_probe,probe_colors[probe_counter])) == 0:
+#                         probe_counter -=1
+#                         try:
+#                             getattr(coords_probe,probe_colors[probe_counter]).pop(-1) # remove the point from the list
+#                             p_probe[-1].remove() # remove the point from the plot
+#                             fig.canvas.draw()                                        
+#                             p_probe.pop(-1)
+# 
+#                         except:
+#                             pass
+# =============================================================================
 # =============================================================================
 #             elif event.key == 'p':
 #                 print( 'Change probe' )
@@ -361,69 +387,73 @@ def on_key(event):
 # 
 # =============================================================================
                         
-        fig_trans.canvas.mpl_connect('key_press_event', on_key2)
-        
-    elif event.key == 'e':
-        print('Probe points saved')        
-        path_probes = os.path.join(processed_histology_folder, 'probes')
-        if not path.exists(os.path.join(processed_histology_folder, 'probes')):
-            os.mkdir(path_probes)
-        # Create and save slice, clicked probes
-        P = save_probe(tracker.ind, coords_probe, plane, probe_counter)        # Saving the object
 # =============================================================================
-#         with open(os.path.join(path_probes, image_name+'probes.pkl'), 'wb') as F: 
-#             pickle.dump(P, F)# Create and save slice, clicked points, and image info    
-# =============================================================================  
-        # MAC    
-        with open('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes/1probes.pkl', 'wb') as F: 
-            pickle.dump(P, F)# Create and save slice, clicked points, and image info 
-            
-    elif event.key == 'w':
-        try:   
-            global probe_selecter
-            print('probe %d view mode' %(probe_selecter+1))
-            L = getattr(coords_probe,probe_colors[probe_selecter])
-            probe_x = []
-            probe_y = []
-            for i in range(len(L)):
-                probe_x.append(L[i][0]*pixdim)
-                probe_y.append(L[i][1]*pixdim)
-            m, b = np.polyfit(probe_x, probe_y, 1)
-            fig_probe, ax_probe = plt.subplots(1, 1)  
-            trackerp = IndexTracker_p(ax_probe, atlas_data, pixdim, plane, tracker.ind)
-            fig_probe.canvas.mpl_connect('scroll_event', trackerp.onscroll)        
-            ax_probe.text(0.15, 0.05, textstr, transform=ax_probe.transAxes, fontsize=6 ,verticalalignment='bottom', bbox=props)
-            ax_probe.format_coord = format_coord
-            ax_probe.set_title("Probe viewer")
-            plt.show()
-            cursor = mplcursors.cursor(fig_probe, hover=True)
-            # Show the names of the regions
-            def show_annotation(sel):
-                xi, yi = sel.target/pixdim
-                if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1)).size:
-                    Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1))[0,0]]
-                else:
-                    # display nothing
-                    Text = ' '
-                sel.annotation.set_text(Text)
-            cursor.connect('add', show_annotation)   
-            mngr_probe = plt.get_current_fig_manager()
-            mngr_probe.window.setGeometry(800,300,d2,d1)    
-            # plot the clicked points
-            plt.scatter(probe_x, probe_y, color=probe_colors[probe_selecter], s=2)#, marker='o', markersize=1)
-            # plot the probe
-            print(probe_x)
-            plt.plot(np.array(sorted(probe_x)), m*np.array(sorted(probe_x)) + b,color=probe_colors[probe_selecter], linestyle='dashed', linewidth=0.8)
-            probe_selecter +=1        
-        except:
-            print('No more probes to visualize')
-            pass
+#         fig_trans.canvas.mpl_connect('key_press_event', on_key2)
+#         
+#     elif event.key == 'e':
+#         print('Probe points saved')        
+#         path_probes = os.path.join(processed_histology_folder, 'probes')
+#         if not path.exists(os.path.join(processed_histology_folder, 'probes')):
+#             os.mkdir(path_probes)
+#         # Create and save slice, clicked probes
+#         P = save_probe(tracker.ind, coords_probe, plane, probe_counter)        # Saving the object
+# # =============================================================================
+# #         with open(os.path.join(path_probes, image_name+'probes.pkl'), 'wb') as F: 
+# #             pickle.dump(P, F)# Create and save slice, clicked points, and image info    
+# # =============================================================================  
+#         # MAC    
+#         with open('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes/1probes.pkl', 'wb') as F: 
+#             pickle.dump(P, F)# Create and save slice, clicked points, and image info 
+#             
+#     elif event.key == 'w':
+#         try:   
+#             global probe_selecter
+#             print('probe %d view mode' %(probe_selecter+1))
+#             L = getattr(coords_probe,probe_colors[probe_selecter])
+#             probe_x = []
+#             probe_y = []
+#             for i in range(len(L)):
+#                 probe_x.append(L[i][0]*pixdim)
+#                 probe_y.append(L[i][1]*pixdim)
+#             m, b = np.polyfit(probe_x, probe_y, 1)
+#             fig_probe, ax_probe = plt.subplots(1, 1)  
+#             trackerp = IndexTracker_p(ax_probe, atlas_data, pixdim, plane, tracker.ind)
+#             fig_probe.canvas.mpl_connect('scroll_event', trackerp.onscroll)        
+#             ax_probe.text(0.15, 0.05, textstr, transform=ax_probe.transAxes, fontsize=6 ,verticalalignment='bottom', bbox=props)
+#             ax_probe.format_coord = format_coord
+#             ax_probe.set_title("Probe viewer")
+#             plt.show()
+#             cursor = mplcursors.cursor(fig_probe, hover=True)
+#             # Show the names of the regions
+#             def show_annotation(sel):
+#                 xi, yi = sel.target/pixdim
+#                 if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1)).size:
+#                     Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1))[0,0]]
+#                 else:
+#                     # display nothing
+#                     Text = ' '
+#                 sel.annotation.set_text(Text)
+#             cursor.connect('add', show_annotation)   
+#             mngr_probe = plt.get_current_fig_manager()
+#             mngr_probe.window.setGeometry(800,300,d2,d1)    
+#             # plot the clicked points
+#             plt.scatter(probe_x, probe_y, color=probe_colors[probe_selecter], s=2)#, marker='o', markersize=1)
+#             # plot the probe
+#             print(probe_x)
+#             plt.plot(np.array(sorted(probe_x)), m*np.array(sorted(probe_x)) + b,color=probe_colors[probe_selecter], linestyle='dashed', linewidth=0.8)
+#             probe_selecter +=1        
+#         except:
+#             print('No more probes to visualize')
+#             pass
+# =============================================================================
 
         
             
 fig.canvas.mpl_connect('key_press_event', on_key)
 
 
+
+        
 
 
 
