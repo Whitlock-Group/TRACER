@@ -143,11 +143,11 @@ class IndexTracker_b(object):
         elif self.plane == 's':
             self.slices, rows, cols = X.shape
             self.ind = S                
-            self.im = ax.imshow(self.X[self.ind, :, :].T, origin="lower", extent=[0 ,1024*pixdim, 512*pixdim , 0], cmap='gray')            
+            self.im = ax.imshow(self.X[:, :, self.ind].T, origin="lower", alpha=0.5, extent=[0 ,1024*pixdim, 0, 512*pixdim], cmap='gray')            
         elif self.plane == 'h':  
             rows, cols, self.slices = X.shape
             self.ind = S       
-            self.im = ax.imshow(self.X[:, :, self.ind].T, origin="lower", extent=[0, 512*pixdim, 1024*pixdim, 0], cmap='gray')  
+            self.im = ax.imshow(self.X[self.ind, :, :].T, origin="lower", alpha=0.5, extent=[0, 512*pixdim, 0, 1024*pixdim], cmap='gray')  
         self.update()
 
     def onscroll(self, event):
@@ -161,9 +161,9 @@ class IndexTracker_b(object):
         if self.plane == 'c':
             self.im.set_data(self.X[:, self.ind, :])
         elif self.plane == 's':
-            self.im.set_data(self.X[self.ind, :, :])
-        elif self.plane == 'h':
             self.im.set_data(self.X[:, :, self.ind])
+        elif self.plane == 'h':
+            self.im.set_data(self.X[self.ind, :, :])
         self.ax.set_ylabel('slice %d' % self.ind)
         self.im.axes.figure.canvas.draw()           
         
@@ -180,15 +180,18 @@ class IndexTracker_c(object):
         if self.plane == 'c':
             rows, self.slices, cols, color = X.shape
             self.ind = S
-            self.im = ax.imshow(self.X[:, self.ind, :], origin="lower", alpha=0.5, extent=[0, 512*pixdim, 0, 512*pixdim], cmap='gray')
+            self.L = self.X.transpose((2,1,0,3))
+            self.im = ax.imshow(self.L[:, self.ind, :], origin="lower", alpha=0.5, extent=[0, 512*pixdim, 0, 512*pixdim ], cmap='gray')
         elif self.plane == 's':
             self.slices, rows, cols, color= X.shape
-            self.ind = S                
-            self.im = ax.imshow(self.X[self.ind, :, :].T, origin="lower", extent=[0 ,1024*pixdim, 512*pixdim , 0], cmap='gray')            
+            self.ind = S
+            self.L = self.X.transpose((0,2,1,3))            
+            self.im = ax.imshow(self.L[self.ind, :, :], origin="lower", alpha=0.5, extent=[0, 1024*pixdim, 0, 512*pixdim], cmap='gray')            
         elif self.plane == 'h':  
             rows, cols, self.slices, color = X.shape
-            self.ind = S       
-            self.im = ax.imshow(self.X[:, :, self.ind].T, origin="lower", extent=[0, 512*pixdim, 1024*pixdim, 0], cmap='gray')  
+            self.ind = S
+            self.L = self.X.transpose((1,0,2,3))
+            self.im = ax.imshow(self.L[:, :, self.ind], origin="lower", alpha=0.5, extent=[0, 512*pixdim,  0, 1024*pixdim ], cmap='gray')  
         self.update()
 
     def onscroll(self, event):
@@ -200,11 +203,11 @@ class IndexTracker_c(object):
         
     def update(self):
         if self.plane == 'c':
-            self.im.set_data(self.X[:, self.ind, :])
+            self.im.set_data(self.L[:, self.ind, :])
         elif self.plane == 's':
-            self.im.set_data(self.X[self.ind, :, :])
+            self.im.set_data(self.L[self.ind, :, :])
         elif self.plane == 'h':
-            self.im.set_data(self.X[:, :, self.ind])
+            self.im.set_data(self.L[:, :, self.ind])
         self.ax.set_ylabel('slice %d' % self.ind)
         self.im.axes.figure.canvas.draw()                
                  
