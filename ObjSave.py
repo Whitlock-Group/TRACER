@@ -22,6 +22,12 @@ class save_probe(object):
         self.Plane = plane
         self.Counter = probe_counter
         
+class save_probe_insertion(object):
+    def __init__(self, coord, plane, probe_counter):
+        self.Probe = coord
+        self.Plane = plane
+        self.Counter = probe_counter        
+        
         
 # object for the clicked probes
 class probe_obj(object):

@@ -4,14 +4,13 @@ Created on Thu Dec  3 15:20:33 2020
 
 @author: jacopop
 """
-
-
 from __future__ import print_function
 
 # Import libraries
 import math 
 import os
 import os.path
+from os import path
 import nibabel as nib
 import numpy as np
 import matplotlib
@@ -39,7 +38,7 @@ from vedo import *
 from skspatial.objects import Line
 #from skspatial.plotting import plot_3d
 
-from ObjSave import  probe_obj, save_probe
+from ObjSave import  probe_obj, save_probe_insertion
 from Tracker import IndexTracker, IndexTracker_g, IndexTracker_p, IndexTracker_b, IndexTracker_c
 # read label file
 from Readlabel import readlabel
@@ -52,14 +51,20 @@ print('g: add/remove gridlines \n')
 print('b: add name of current region extent \n')
 print('a: toggle viewing boundaries \n')
 print('v: toggle color atlas mode \n')
-print('p: enable/disable mode where clicks are logged for probe or switch probes \n')
+print('r: toggle mode where clicks are logged for probe \n')
 print('n: trace a new probe \n')
-print('l: load saved probe points \n')
-print('s: save current probe \n')
-print('w: enable/disable probe viewer mode for current probe  \n')
-print('d: delete most recent probe point \n')
-print('up: scroll through A/P angles \n')
-print('right: scroll through M/L angles \n')
+print('u: load saved probe points \n')   ##
+print('e: save probes \n') 
+print('w: enable/disable probe viewer mode for current probe  \n') 
+print('c: delete most recent probe point \n')
+print('up: scroll through A/P angles \n') ##
+print('right: scroll through M/L angles \n') ##
+
+
+# Directory of the processed histology
+path_probe_insertion = '/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Probe_Insertion'
+if not path.exists(path_probe_insertion):
+    os.mkdir(path_probe_insertion)
 
 
 plane = str(input('Select the plane: coronal (c), sagittal (s), or horizontal (h): ')).lower()
@@ -153,19 +158,6 @@ if plane == 'c':
         else:
             return 'AP=%1.4f, ML=L%1.4f, z=%1.4f'%(AP, abs(ML), Z)    
     ax.format_coord = format_coord
-# =============================================================================
-#     cursor = mplcursors.cursor(hover=True)
-#     # Show the names of the regions
-#     def show_annotation(sel):
-#         xi, yi = sel.target/pixdim
-#         if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1)).size:
-#             Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1))[0,0]]
-#         else:
-#             # display nothing
-#             Text = ' '
-#         sel.annotation.set_text(Text)
-#     cursor.connect('add', show_annotation)            
-# =============================================================================
 elif plane == 's':
     # dimensions
     d1 = 1024 
@@ -181,19 +173,6 @@ elif plane == 's':
         else:
             return 'AP=%1.4f, ML=L%1.4f, z=%1.4f'%(AP, abs(ML), Z)    
     ax.format_coord = format_coord
-# =============================================================================
-#     cursor = mplcursors.cursor(hover=True)
-#     # Show the names of the regions 
-#     def show_annotation(sel):
-#         xi, yi = sel.target/pixdim
-#         if np.argwhere(np.all(labels_index == segmentation_data[tracker.ind,int(math.modf(xi)[1]),int(math.modf(yi)[1])], axis = 1)).size:
-#             Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[tracker.ind,int(math.modf(xi)[1]),int(math.modf(yi)[1])], axis = 1))[0,0]]
-#         else:
-#             # display nothing
-#             Text = ' '
-#         sel.annotation.set_text(Text)  
-#     cursor.connect('add', show_annotation)            
-# =============================================================================
 elif plane == 'h':
     # dimensions
     d1 = 512
@@ -210,19 +189,6 @@ elif plane == 'h':
             return 'AP=%1.4f, ML=L%1.4f, z=%1.4f'%(AP, abs(ML), Z)    
     ax.format_coord = format_coord
 plt.show()    
-# =============================================================================
-#     cursor = mplcursors.cursor(hover=True)
-#     # Show the names of the regions
-#     def show_annotation(sel):
-#         xi, yi = sel.target/pixdim
-#         if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),int(math.modf(yi)[1]),tracker.ind], axis = 1)).size:
-#             Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),int(math.modf(yi)[1]),tracker.ind], axis = 1))[0,0]]
-#         else:
-#             # display nothing
-#             Text = ' '
-#         sel.annotation.set_text(Text)
-#     cursor.connect('add', show_annotation)
-# =============================================================================
 
 # Fix size and location of the figure window
 mngr = plt.get_current_fig_manager()
@@ -251,9 +217,6 @@ coords_probe_temp_o = []
 coords_probe_temp_r = []
 # Object for clicked probes
 coords_probe = probe_obj()
-# Lists for the points plotted in atlas and histology
-redp_atlas = []
-redp_hist = []
 # List of probe points
 p_probe= []
 # Initialize probe counter and selecter
@@ -302,11 +265,10 @@ def on_key(event):
                     Text = ' '                    
             sel.annotation.set_text(Text)
         cursor.connect('add', show_annotation) 
-
     elif event.key == 'r':     
-        print('Register probe 1 (green)')
+        print('Register probe 1 (purple)')
         global probe_colors                            
-        probe_colors = ['green', 'purple', 'blue', 'yellow', 'orange', 'red']
+        probe_colors = ['purple', 'blue', 'yellow', 'orange', 'red', 'green']
         # plot  point and register all the clicked points
         def onclick_probe(event):
             global px, py
@@ -314,376 +276,145 @@ def on_key(event):
             # assign global variable to access outside of function
             global coords_probe_temp_w, coords_probe_temp_g, coords_probe_temp_p, coords_probe_temp_b, coords_probe_temp_y, coords_probe_temp_o, coords_probe_temp_r,  p_probe_grid, p_probe_trans
             if probe_counter == 0:
-                coords_probe_temp_w.append((px, py)) 
+                coords_probe_temp_w.append((px, py, tracker.ind)) 
                 p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_w)
             elif probe_counter == 1:
-                coords_probe_temp_g.append((px, py))
+                coords_probe_temp_g.append((px, py, tracker.ind))
                 p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_g)
             elif probe_counter == 2:
-                coords_probe_temp_p.append((px, py))    
+                coords_probe_temp_p.append((px, py, tracker.ind))    
                 p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_p)
             elif probe_counter == 3:
-                coords_probe_temp_b.append((px, py))
+                coords_probe_temp_b.append((px, py, tracker.ind))
                 p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_b)
             elif probe_counter == 4:
-                coords_probe_temp_y.append((px, py))
+                coords_probe_temp_y.append((px, py, tracker.ind))
                 p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_y)
             elif probe_counter == 5:
-                coords_probe_temp_o.append((px, py))
+                coords_probe_temp_o.append((px, py, tracker.ind))
                 p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_o)
             fig.canvas.draw()
             return
         # Call click func
         fig.canvas.mpl_connect('button_press_event', onclick_probe) 
-        
-# =============================================================================
-#         def on_key2(event):            
-#             if event.key == 'n':
-#                 # add a new probe, the function in defined in onclick_probe
-#                 global probe_counter
-#                 if probe_counter+1 <=len(probe_colors):
-#                     probe_counter +=  1                                                                                                 
-#                     print('probe %d added (%s)' %(probe_counter, probe_colors[probe_counter]))
-#                 else:
-#                     print('Cannot add more probes')
-#                     probe_counter = len(probe_colors)
-#                     
-#             elif event.key == 'c':
-#                 print('Delete clicked probe point')
-#                 if len(getattr(coords_probe,probe_colors[0]))!= 0:
-#                     if len(getattr(coords_probe,probe_colors[probe_counter])) != 0:
-#                         getattr(coords_probe,probe_colors[probe_counter]).pop(-1) # remove the point from the list
-#                         p_probe[-1].remove() # remove the point from the plot
-#                         fig.canvas.draw()
-#                         p_probe.pop(-1)                        
-#                     elif len(getattr(coords_probe,probe_colors[probe_counter])) == 0:
-#                         probe_counter -=1
-#                         try:
-#                             getattr(coords_probe,probe_colors[probe_counter]).pop(-1) # remove the point from the list
-#                             p_probe[-1].remove() # remove the point from the plot
-#                             fig.canvas.draw()                                        
-#                             p_probe.pop(-1)
-# 
-#                         except:
-#                             pass
-# =============================================================================
+        def on_key2(event):            
+            if event.key == 'n':
+                # add a new probe
+                global probe_counter
+                if probe_counter+1 <len(probe_colors):
+                    probe_counter +=  1                                                                                               
+                    print('probe %d added (%s)' %(probe_counter+1, probe_colors[probe_counter]))
+                else:
+                    print('Cannot add more probes')
+                    probe_counter = len(probe_colors)
+                    
+            elif event.key == 'c':
+                print('Delete clicked probe point')
+                if len(getattr(coords_probe,probe_colors[0]))!= 0:
+                    if len(getattr(coords_probe,probe_colors[probe_counter])) != 0:
+                        getattr(coords_probe,probe_colors[probe_counter]).pop(-1) # remove the point from the list
+                        p_probe[-1].remove() # remove the point from the plot
+                        fig.canvas.draw()
+                        p_probe.pop(-1)                        
+                    elif len(getattr(coords_probe,probe_colors[probe_counter])) == 0:
+                        probe_counter -=1
+                        try:
+                            getattr(coords_probe,probe_colors[probe_counter]).pop(-1) # remove the point from the list
+                            p_probe[-1].remove() # remove the point from the plot
+                            fig.canvas.draw()                                        
+                            p_probe.pop(-1)
+
+                        except:
+                            pass
 # =============================================================================
 #             elif event.key == 'p':
 #                 print( 'Change probe' )
-#                 global probe_counter
 #                 if probe_counter-1 > 0:
 #                     probe_counter -=  1                                                                                                 
 #                     print('probe %d selected (%s)' %(probe_counter+1, probe_colors[probe_counter]))
 #                 elif probe_counter == 0:
 #                     probe_counter +=1 
 #                     print('probe %d selected (%s)' %(probe_counter+1, probe_colors[probe_counter]))
-# 
-# 
 # =============================================================================
-                        
+        fig.canvas.mpl_connect('key_press_event', on_key2)        
+    elif event.key == 'e':
+        print('Probe points saved')        
+        #num = input('If the probe goes over several slices insert the slice number, otherwise enter 0: ')        
+        # Create and save slice, clicked probes
+        P = save_probe_insertion(coords_probe, plane, probe_counter)        # Saving the object
 # =============================================================================
-#         fig_trans.canvas.mpl_connect('key_press_event', on_key2)
-#         
-#     elif event.key == 'e':
-#         print('Probe points saved')        
-#         path_probes = os.path.join(processed_histology_folder, 'probes')
-#         if not path.exists(os.path.join(processed_histology_folder, 'probes')):
-#             os.mkdir(path_probes)
-#         # Create and save slice, clicked probes
-#         P = save_probe(tracker.ind, coords_probe, plane, probe_counter)        # Saving the object
-# # =============================================================================
-# #         with open(os.path.join(path_probes, image_name+'probes.pkl'), 'wb') as F: 
-# #             pickle.dump(P, F)# Create and save slice, clicked points, and image info    
-# # =============================================================================  
-#         # MAC    
-#         with open('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes/1probes.pkl', 'wb') as F: 
-#             pickle.dump(P, F)# Create and save slice, clicked points, and image info 
-#             
-#     elif event.key == 'w':
-#         try:   
-#             global probe_selecter
-#             print('probe %d view mode' %(probe_selecter+1))
-#             L = getattr(coords_probe,probe_colors[probe_selecter])
-#             probe_x = []
-#             probe_y = []
-#             for i in range(len(L)):
-#                 probe_x.append(L[i][0]*pixdim)
-#                 probe_y.append(L[i][1]*pixdim)
-#             m, b = np.polyfit(probe_x, probe_y, 1)
-#             fig_probe, ax_probe = plt.subplots(1, 1)  
-#             trackerp = IndexTracker_p(ax_probe, atlas_data, pixdim, plane, tracker.ind)
-#             fig_probe.canvas.mpl_connect('scroll_event', trackerp.onscroll)        
-#             ax_probe.text(0.15, 0.05, textstr, transform=ax_probe.transAxes, fontsize=6 ,verticalalignment='bottom', bbox=props)
-#             ax_probe.format_coord = format_coord
-#             ax_probe.set_title("Probe viewer")
-#             plt.show()
+#         with open(os.path.join(path_probe_insertion, num+'probes.pkl'), 'wb') as F: 
+#             pickle.dump(P, F)# Create and save slice, clicked points, and image info    
+# =============================================================================  
+        # MAC    
+        with open('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Probe_Insertion/0probes.pkl', 'wb') as F: 
+            pickle.dump(P, F)# Create and save slice, clicked points, and image info 
+    elif event.key == 'u':        
+        print('Load probe')
+            
+    elif event.key == 'w':
+        try:   
+            global probe_selecter, fig_probe
+            print('probe %d view mode' %(probe_selecter+1))
+            L = getattr(coords_probe,probe_colors[probe_selecter])
+            probe_x = []
+            probe_y = []
+            for i in range(len(L)):
+                probe_x.append(L[i][0]*pixdim)
+                probe_y.append(L[i][1]*pixdim)
+            m, b = np.polyfit(probe_x, probe_y, 1)  
+            fig_probe, ax_probe = plt.subplots(1, 1)  
+            trackerp = IndexTracker_p(ax_probe, atlas_data, pixdim, plane, tracker.ind)
+            fig_probe.canvas.mpl_connect('scroll_event', trackerp.onscroll)        
+            ax_probe.text(0.15, 0.05, textstr, transform=ax_probe.transAxes, fontsize=6 ,verticalalignment='bottom', bbox=props)
+            ax_probe.format_coord = format_coord
+            ax_probe.set_title("Probe %d viewer" %(probe_selecter+1))
+            plt.show()
+# =============================================================================
 #             cursor = mplcursors.cursor(fig_probe, hover=True)
 #             # Show the names of the regions
 #             def show_annotation(sel):
 #                 xi, yi = sel.target/pixdim
-#                 if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1)).size:
-#                     Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1))[0,0]]
-#                 else:
-#                     # display nothing
-#                     Text = ' '
+#                 if plane == 'c':
+#                     if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1)).size:
+#                         Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1))[0,0]]
+#                     else:
+#                         # display nothing
+#                         Text = ' '                
+#                 elif plane == 's':
+#                     if np.argwhere(np.all(labels_index == segmentation_data[tracker.ind,int(math.modf(xi)[1]),int(math.modf(yi)[1])], axis = 1)).size:
+#                         Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[tracker.ind,int(math.modf(xi)[1]),int(math.modf(yi)[1])], axis = 1))[0,0]]
+#                     else:
+#                         # display nothing
+#                         Text = ' '
+#                 elif plane == 'h':
+#                     if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),int(math.modf(yi)[1]),tracker.ind], axis = 1)).size:
+#                         Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),int(math.modf(yi)[1]),tracker.ind], axis = 1))[0,0]]
+#                     else:
+#                         # display nothing
+#                         Text = ' '                                     
 #                 sel.annotation.set_text(Text)
 #             cursor.connect('add', show_annotation)   
-#             mngr_probe = plt.get_current_fig_manager()
-#             mngr_probe.window.setGeometry(800,300,d2,d1)    
-#             # plot the clicked points
-#             plt.scatter(probe_x, probe_y, color=probe_colors[probe_selecter], s=2)#, marker='o', markersize=1)
-#             # plot the probe
-#             print(probe_x)
-#             plt.plot(np.array(sorted(probe_x)), m*np.array(sorted(probe_x)) + b,color=probe_colors[probe_selecter], linestyle='dashed', linewidth=0.8)
-#             probe_selecter +=1        
-#         except:
-#             print('No more probes to visualize')
-#             pass
 # =============================================================================
-
+            mngr_probe = plt.get_current_fig_manager()
+            mngr_probe.window.setGeometry(650,250,d2*1,d1*2)    
+            # plot the clicked points
+            plt.scatter(probe_x, probe_y, color=probe_colors[probe_selecter], s=2)#, marker='o', markersize=1)
+            # plot the probe
+            plt.plot(np.array(sorted(probe_x)), m*np.array(sorted(probe_x)) + b,color=probe_colors[probe_selecter], linestyle='dashed', linewidth=0.8)
+            probe_selecter +=1   
+            
+        except:
+            print('No more probes to visualize')
+            pass
         
             
 fig.canvas.mpl_connect('key_press_event', on_key)
 
 
-
-        
-
-
-
-# =============================================================================
-# 
-# 
-# # Probe colors
-# probe_colors = ['green', 'purple', 'blue', 'yellow', 'orange', 'red']
-# 
-# # Windows
-# # =============================================================================
-# # processed_histology_folder = r'C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\histology\processed'
-# # path_probes = os.path.join(processed_histology_folder, 'probes')
-# # path_transformed = os.path.join(processed_histology_folder, 'transformations')
-# # =============================================================================
-# 
-# # Mac
-# processed_histology_folder = r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed'
-# path_probes = r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes'
-# path_transformed = '/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/transformations'
-# 
-# # get the all the files in the probe folder
-# files_probe = os.listdir(path_probes)
-# files_transformed = os.listdir(path_transformed)
-# 
-# L = probe_obj()
-# LINE_FIT = probe_obj() 
-# pr = probe_obj()
-# xyz = probe_obj()
-# P = []
-# color_used_t = []
-# # =============================================================================
-# # for f in files_probe:
-# #     # WINDOWS
-# #     P.append(pickle.load(open(os.path.join(path_probes, f), "rb")))
-# # =============================================================================
-#     # MAC
-# P.append(pickle.load(open(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes/1probes.pkl', "rb")))
-# P.append(pickle.load(open(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes/2probes.pkl', "rb")))
-# # LL = pickle.load(open(os.path.join(path_probes, '1probes.pkl'), "rb"))    
-# probe_counter = P[0].Counter
-# 
-# # If I have several probes
-# for j in range(len(probe_colors)):    
-#     # get the probe coordinates and the region's names
-#     probe_x = []
-#     probe_y = []
-#     probe_z = []
-#     for k in range(len(P)):
-#         try:
-#             PC = getattr(P[k].Probe, probe_colors[j])
-#             if P[k].Plane == 'c':
-#                 for i in range(len(PC)):
-#                     probe_x.append(PC[i][0])
-#                     probe_y.append(P[k].Slice)
-#                     probe_z.append(PC[i][1])
-#             elif P[k].Plane == 'c':
-#                 for i in range(len(PC)):
-#                     probe_x.append(P[k].Slice)
-#                     probe_y.append(PC[i][0])
-#                     probe_z.append(PC[i][1])  
-#             elif P[k].Plane == 'c':
-#                 for i in range(len(PC)):        
-#                     probe_x.append(PC[i][0])
-#                     probe_y.append(PC[i][1])        
-#                     probe_z.append(P[k].Slice)
-#             pts = np.array((probe_x, probe_y, probe_z)).T
-# 
-#             # fit the probe
-#             line_fit = Line.best_fit(pts)
-#             # line equations, to derive the starting and end point of the line (aka probe)
-#             z1 = max(pts[:,2])
-#             x1 = line_fit.point[0]+((z1-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[0]
-#             y1 = line_fit.point[1]+((z1-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[1]
-#             z2 = min(pts[:,2])
-#             x2 = line_fit.point[0]+((z2-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[0]
-#             y2= line_fit.point[1]+((z2-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[1]
-#             # get the line to plot
-#             l = vedo.Line([x1, y1, z1],[x2, y2, z2],c = probe_colors[j], lw = 2)
-#             # clicked points to display
-#             pp = vedo.Points(pts, c = probe_colors[j]) #fast    
-#             setattr(xyz,probe_colors[j], [[x1, y1, z1], [x2, y2, z2]])
-#             setattr(pr, probe_colors[j], pp)
-#             setattr(L, probe_colors[j], l)
-#             setattr(LINE_FIT, probe_colors[j], line_fit)
-#             color_used_t.append(probe_colors[j])
-#         except:
-#             pass  
-# 
-# # get only the unique color in order                  
-# color_used = list(OrderedDict.fromkeys(color_used_t))
-# n = len(color_used)
-# 
-# # load the brain regions
-# Edges = np.load('Edges.npy')
-# edges = Edges.T
-# coords = np.array(np.where(edges == 255))
-# # Manage Points cloud
-# points = vedo.pointcloud.Points(coords)
-# # Create the mesh
-# mesh = Mesh(points)
-# 
-# # create some dummy data array to be associated to points
-# data = mesh.points()[:,2]  # pick z-coords, use them as scalar data
-# # build a custom LookUp Table of colors:
-# lut = buildLUT([
-#                 (512, 'lightgrey', 0.01 ),
-#                ],
-#                vmin=0, belowColor='lightblue',
-#                vmax= 512, aboveColor='grey',
-#                nanColor='red',
-#                interpolate=False,
-#               )
-# mesh.cmap(lut, data)
-# 
-# dist = []
-# 
-# # To plot the probe with colors
-# 
-# fig1 = plt.figure()
-# ax1 = fig1.add_subplot(111, aspect='equal')
-# # compute and display the insertion angle for each probe
-# for i in range(0,n):
-#     line_fit = getattr(LINE_FIT, color_used[i])
-#     deg_lat = math.degrees(math.atan(line_fit.direction[0]))
-#     deg_ant = math.degrees(math.atan(line_fit.direction[1]))
-#     print('\n\nAnalyze %s probe: \n ' %color_used[i])
-#     print('Estimated %s probe insertion angle: ' %color_used[i])
-#     print('%.2f degrees in the anterior direction' %deg_ant)
-#     print('%.2f degrees in the lateral direction\n' %deg_lat)
-# 
-#     # Get the brain regions traversed by the probe
-#     X1 = getattr(xyz, color_used[i])[0]
-#     X2 = getattr(xyz, color_used[i])[1]
-#     s = min([int(math.modf(X1[2])[1]),int(math.modf(X2[2])[1])]) # starting point
-#     f = max([int(math.modf(X1[2])[1]),int(math.modf(X2[2])[1])]) # ending point
-#     # get lenght of the probe
-#     dist.append(np.linalg.norm(f-s))
-#     regions = []
-#     colori = []
-#     initials = []
-#     index = []
-#     channels = []
-#     for z in range(s,f):
-#         x = line_fit.point[0]+((z-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[0]
-#         y = line_fit.point[1]+((z-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[1]
-#         regions.append(labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(x)[1]),int(math.modf(y)[1]),int(math.modf(z)[1])], axis = 1))[0,0]])
-#         colori.append(labels_color[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(x)[1]),int(math.modf(y)[1]),int(math.modf(z)[1])], axis = 1))[0,0]])
-#         initials.append(labels_initial[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(x)[1]),int(math.modf(y)[1]),int(math.modf(z)[1])], axis = 1))[0,0]])
-#         index.append(segmentation_data[int(math.modf(x)[1]),int(math.modf(y)[1]),int(math.modf(z)[1])])
-#         #channels.append(0)
-#         # count the number of elements in each region to 
-#     counter_regions = dict(Counter(regions))    
-#     regioni = list(OrderedDict.fromkeys(regions))
-#     iniziali = list(OrderedDict.fromkeys(initials))
-#     indici = list(OrderedDict.fromkeys(index))
-#     
-#     LL = [regioni,  iniziali]
-#     headers = [' Regions traversed', 'Initials']
-#     numpy_array = np.array(LL)
-#     transpose = numpy_array.T
-#     transpose_list = transpose.tolist()
-#     print(tabulate(transpose_list, headers, floatfmt=".2f"))
-#     cc = 0
-#     jj = 0
-#     for re in regioni:
-#         #print(re)
-#         # proportion of the probe in the given region
-#         dist_prop = counter_regions[re]/dist[i]
-#         color_prop = labels_color[np.argwhere(np.array(labels_name)== re)]
-#         # plot the probe with the colors of the region traversed
-#         ax1.add_patch(patches.Rectangle((70*i+20, cc), 20, dist_prop*dist[i], color=color_prop[0][0]/255))
-#         plt.text(70*i+20, max(dist)+2, 'Probe %d (%s)'%(i+1, color_used[i]), fontsize=7.5)
-#         plt.text(70*i+45, cc+round(dist_prop*dist[i]/2), '%s %d'%(iniziali[jj], indici[jj]), fontsize=5.5)        
-#         jj +=1
-#         cc = dist_prop*dist[i] + cc    
-# lims = (0,max(dist))
-# plt.ylim(lims)
-# plt.xlim((0,70*n+20))
-# plt.axis('off')
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# # plot all the probes together
-# if n==1:
-#      show(mesh, getattr(pr,color_used[0]), getattr(L, color_used[0]), __doc__,
-#      axes=0, viewup="z", bg='white',
-#      )        
-# elif n==2:     
-#      show(mesh, getattr(pr,color_used[0]), getattr(pr,color_used[1]), getattr(L, color_used[0]), getattr(L, color_used[1]), __doc__,
-#      axes=0, viewup="z", bg='white',
-#      )
-# elif n == 3:
-#      show(mesh, getattr(pr,color_used[0]), getattr(pr,color_used[1]), getattr(pr,color_used[2]), getattr(L, color_used[0]),getattr(L, color_used[1]), getattr(L, color_used[2]), __doc__,
-#      axes=0, viewup="z",
-#      bg='white', 
-#      )
-# elif n == 4:
-#      show(mesh, getattr(pr,color_used[0]), getattr(pr,color_used[1]), getattr(pr,color_used[2]), getattr(pr,color_used[3]), getattr(L, color_used[0]), getattr(L, color_used[1]), getattr(L, color_used[2]), getattr(L, color_used[3]), __doc__,
-#      axes=0, viewup="z", bg='white',
-#      )
-# elif n==5:
-#      show(mesh, getattr(pr,color_used[0]), getattr(pr,color_used[1]), getattr(pr,color_used[2]), getattr(pr,color_used[3]), getattr(pr,color_used[4]), getattr(L, color_used[0]), getattr(L, color_used[1]), getattr(L, color_used[2]), getattr(L, color_used[3]), getattr(L, color_used[4]),  __doc__,
-#      axes=0, viewup="z", bg='white',
-#      )
-# elif n == 6:
-#      show(mesh, getattr(pr,color_used[0]), getattr(pr,color_used[1]), getattr(pr,color_used[2]), getattr(pr,color_used[3]), getattr(pr,color_used[4]), getattr(pr,color_used[5]), getattr(L, color_used[0]), getattr(L, color_used[1]), getattr(L, color_used[2]), getattr(L, color_used[3]), getattr(L, color_used[4]), getattr(L, color_used[5]), __doc__,
-#      axes=0, viewup="z", bg='white',
-#      )
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-# =============================================================================

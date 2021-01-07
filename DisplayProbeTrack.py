@@ -232,19 +232,6 @@ plt.ylim(lims)
 plt.xlim((0,70*n+20))
 plt.axis('off')
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 # plot all the probes together
 if n==1:
      show(mesh, getattr(pr,color_used[0]), getattr(L, color_used[0]), __doc__,

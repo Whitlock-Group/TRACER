@@ -15,16 +15,12 @@ import numpy as np
 import nibabel as nib
 import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 matplotlib.use('Qt5Agg')
-from scipy import ndimage
-from mpl_toolkits.mplot3d import Axes3D
 from PIL import Image
 import cv2
 import math 
 import mplcursors
 from nilearn.image import resample_img
-from nibabel.affines import apply_affine
 from skimage import io, transform
 import pickle 
 
@@ -78,7 +74,7 @@ segmentation_path = os.path.join(r'C:\Users\jacopop\Box Sync\macbook\Documents\K
 labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
 # Windows
 # labels_item = open(r"C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas\WHS_SD_rat_atlas_v4_beta.label", "r")
-labels_index, labels_name, labels_color = readlabel( labels_item )  
+labels_index, labels_name, labels_color, labels_initials = readlabel( labels_item )  
 
 # Load the atlas, mask, color and segmentation
 # Mac
@@ -254,11 +250,13 @@ print('t: toggle mode where clicks are logged for transform \n')
 print('h: toggle overlay of current histology slice \n')
 print('x: save transform and current atlas location')
 image_name = str(input('Enter transformed image name: '))
-print('\nr: toggle mode where clicks are logged for probe or switch probes \n')
+print('\nr: toggle mode where clicks are logged for probe \n')
 print('n: add a new probe \n')
 print('e: save current probe \n')
-print('p: switch probe \n')
-print('w: enable/disable probe viewer mode for current probe  \n')
+# =============================================================================
+# print('p: switch probe \n')
+# =============================================================================
+print('w: enable probe viewer mode for current probe  \n')
 # =============================================================================
 # print('l: load transform for current slice; press again to load probe points \n');
 # ============================================================================
@@ -441,7 +439,7 @@ def on_key(event):
         plt.show()
         
     elif event.key == 'r':     
-        print('Register probe 1 (green)')
+        print('Register probe 1 (purple)')
         try:
             plt.close(fig_g)
         except:
@@ -452,7 +450,7 @@ def on_key(event):
             pass
         # probes have different colors 
         global probe_colors                            
-        probe_colors = ['green', 'purple', 'blue', 'yellow', 'orange', 'red']
+        probe_colors = ['purple', 'blue', 'yellow', 'orange', 'red', 'green']
         # plot  point and register all the clicked points
         def onclick_probe(event):
             global px, py
@@ -499,7 +497,7 @@ def on_key(event):
             if event.key == 'n':
                 # add a new probe, the function in defined in onclick_probe
                 global probe_counter
-                if probe_counter+1 <=len(probe_colors):
+                if probe_counter+1 <len(probe_colors):
                     probe_counter +=  1                                                                                                 
                     print('probe %d added (%s)' %(probe_counter, probe_colors[probe_counter]))
                 else:
@@ -582,11 +580,24 @@ def on_key(event):
             # Show the names of the regions
             def show_annotation(sel):
                 xi, yi = sel.target/pixdim
-                if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1)).size:
-                    Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1))[0,0]]
-                else:
-                    # display nothing
-                    Text = ' '
+                if plane == 'c':
+                    if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1)).size:
+                        Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1))[0,0]]
+                    else:
+                        # display nothing
+                        Text = ' '                
+                elif plane == 's':
+                    if np.argwhere(np.all(labels_index == segmentation_data[tracker.ind,int(math.modf(xi)[1]),int(math.modf(yi)[1])], axis = 1)).size:
+                        Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[tracker.ind,int(math.modf(xi)[1]),int(math.modf(yi)[1])], axis = 1))[0,0]]
+                    else:
+                        # display nothing
+                        Text = ' '
+                elif plane == 'h':
+                    if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),int(math.modf(yi)[1]),tracker.ind], axis = 1)).size:
+                        Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),int(math.modf(yi)[1]),tracker.ind], axis = 1))[0,0]]
+                    else:
+                        # display nothing
+                        Text = ' '                                     
                 sel.annotation.set_text(Text)
             cursor.connect('add', show_annotation)   
             mngr_probe = plt.get_current_fig_manager()
@@ -594,7 +605,8 @@ def on_key(event):
             # plot the clicked points
             plt.scatter(probe_x, probe_y, color=probe_colors[probe_selecter], s=2)#, marker='o', markersize=1)
             # plot the probe
-            plt.plot(np.array(probe_x), m*np.array(probe_x) + b,color=probe_colors[probe_selecter], linestyle='dashed', linewidth=0.8)
+            print(probe_x)
+            plt.plot(np.array(sorted(probe_x)), m*np.array(sorted(probe_x)) + b,color=probe_colors[probe_selecter], linestyle='dashed', linewidth=0.8)
             probe_selecter +=1        
         except:
             print('No more probes to visualize')

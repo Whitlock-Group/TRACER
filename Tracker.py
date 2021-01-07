@@ -12,7 +12,7 @@ class IndexTracker(object):
         self.ax = ax
         self.plane = p.lower()
         ax.set_title('Atlas viewer')
-        print('use scroll wheel to navigate the atlas \n')
+        print('\nuse scroll wheel to navigate the atlas \n')
 
         self.X = X
         if self.plane == 'c':
@@ -52,7 +52,7 @@ class IndexTracker_g(object):
         self.ax = ax
         self.plane = p.lower()
         ax.set_title('Atlas viewer')
-        print('use scroll wheel to navigate the atlas \n')
+        print('\nuse scroll wheel to navigate the atlas \n')
         
         self.X = X
         if self.plane == 'c':
@@ -92,7 +92,7 @@ class IndexTracker_p(object):
         self.ax = ax
         self.plane = p.lower()
         ax.set_title('Atlas viewer')
-        print('use scroll wheel to navigate the atlas \n')
+        print('\nuse scroll wheel to navigate the atlas \n')
 
         self.X = X
         if self.plane == 'c':
@@ -133,7 +133,7 @@ class IndexTracker_b(object):
         self.ax = ax
         self.plane = p.lower()
         ax.set_title('Atlas viewer')
-        print('use scroll wheel to navigate the atlas \n')
+        print('\nuse scroll wheel to navigate the atlas \n')
         
         self.X = X
         if self.plane == 'c':
@@ -174,7 +174,7 @@ class IndexTracker_c(object):
         self.ax = ax
         self.plane = p.lower()
         ax.set_title('Atlas viewer')
-        print('use scroll wheel to navigate the atlas \n')
+        print('\nuse scroll wheel to navigate the atlas \n')
         
         self.X = X
         if self.plane == 'c':
