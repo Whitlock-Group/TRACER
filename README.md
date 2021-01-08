@@ -1,7 +1,7 @@
 # RatBrain
 
 
-To change colors of the barin region modify directly the label file. Be careful with this operetion, and always keep a copy of the orginal file. When the file is modeified remeber to put the right name of the file in the scripts.
+To change colors of the brain regions modify directly the label file. Be careful with this operation, and always keep a copy of the orginal file. When the file is modified remember to put the right name of the file in the scripts.
 
 When registering probes, it is important that the first and the last point clicked correspond to the entry point and to the last visible point of the probe.
 
