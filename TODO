@@ -1,11 +1,12 @@
 TO DO
 
-FIND INSERTION ANGLE
-	name of the saved probes
-	chek how to save probes over several slices
+Display Probe Track
+	better way to represent the brain in 3D
 
-NUMBER OF CHANNELS
-	study the neuropixel probes and ask Tuce
+NAVIGATE ATLAS
+	possibliti of navigating through strange angles
+GUI
+	a nice graphical user interfact (maybe too long)
 
 Register histology
 	chek how to save probes over several slices, by just scrolling the atlas. look again at the matlab code
