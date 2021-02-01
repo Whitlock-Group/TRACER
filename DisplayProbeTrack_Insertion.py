@@ -287,13 +287,16 @@ for i in range(0,n):
         num_el.append(round(regional_dist/vert_el_dist)*2)                                 
         #print(re)
         # proportion of the probe in the given region
-        dist_prop = counter_regions[re]/dist[i]
+        dist_prop = dist[i]/len(regioni)
         color_prop = labels_color[np.argwhere(np.array(labels_name)== re)]
         # plot the probe with the colors of the region traversed       
-        ax1.add_patch(patches.Rectangle((70*i+20, cc), 15, dist_prop*dist[i], color=color_prop[0][0]/255))
-        plt.text(70*i+20, max(dist)+2, 'Probe %d\n(%s)'%(i+1, color_used[i]), color = color_used[i], fontsize=7.5, fontweight='bold')
-        plt.text(70*i-5, cc+round(dist_prop*dist[i]/2), '%s'%(iniziali[jj]), fontsize=5.5)
-        plt.text(70*i+41, cc+round(dist_prop*dist[i]/2), '%d'%(num_el[jj]), fontsize=5.5)
+        ax1.add_patch(patches.Rectangle((100*i+5, cc), 17, dist_prop, color=color_prop[0][0]/255))
+        plt.text(100*i, max(dist)+10, 'Probe %d\n(%s)'%(i+1, color_used[i]), color = color_used[i], fontsize=9, fontweight='bold')
+        if len(iniziali[jj])>7:
+            plt.text(100*i-2, cc+2, '%s-\n%s'%(iniziali[jj][0:5], iniziali[jj][6:]), fontsize=5.6)
+        else:    
+            plt.text(100*i-2, cc+4, '%s'%(iniziali[jj]), fontsize=6)
+        plt.text(100*i+28, cc+4, '%d'%(num_el[jj]), fontsize=6.5)
         jj +=1
         cc = dist_prop*dist[i] + cc    
     #indici = list(OrderedDict.fromkeys(index))
@@ -305,7 +308,7 @@ for i in range(0,n):
     print(tabulate(transpose_list, headers, floatfmt=".2f"))
 lims = (0,max(dist))
 plt.ylim(lims)
-plt.xlim((0,70*n+20))
+plt.xlim((0,100*n+20))
 plt.axis('off')
 
 

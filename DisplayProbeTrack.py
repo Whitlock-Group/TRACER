@@ -266,7 +266,7 @@ for i in range(0,n):
             colori.append(labels_color[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(x)[1]),int(math.modf(y)[1]),int(math.modf(z)[1])], axis = 1))[0,0]])
             initials.append(labels_initial[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(x)[1]),int(math.modf(y)[1]),int(math.modf(z)[1])], axis = 1))[0,0]])
             #index.append(segmentation_data[int(math.modf(x)[1]),int(math.modf(y)[1]),int(math.modf(z)[1])])
-            #channels.append(0)       
+            #channels.append(0)
     # get lenght of the probe
     if Length[0] > max_probe_length+probe_tip_length:
         print('ERROR: probe %d (%s) exceed the maximum probe length (10mm)!\n' %(i+1, color_used[i]))    
@@ -302,15 +302,24 @@ for i in range(0,n):
         num_el.append(round(regional_dist/vert_el_dist)*2)               
         #print(re)
         # proportion of the probe in the given region
-        dist_prop = counter_regions[re]/Length[1]
+        dist_prop = Length[1]/len(regioni)
         color_prop = labels_color[np.argwhere(np.array(labels_name)== re)]
+        # length of the longest probe
+        m = []
+        for k in range(0,n):
+            mt = getattr(LENGTH, color_used[k])
+            m.append(mt[1])
+        M = max(m) 
         # plot the probe with the colors of the region traversed
-        ax1.add_patch(patches.Rectangle((70*i+20, cc), 15, dist_prop*Length[1]*1.2, color=color_prop[0][0]/255))
-        plt.text(70*i+20, max_probe_length/pixdim+2, 'Probe %d\n(%s)'%(i+1, color_used[i]), color = color_used[i], fontsize=7.5, fontweight='bold')
-        plt.text(70*i-3, cc+round(dist_prop*Length[1]*1.2/2), '%s'%(iniziali[jj]), fontsize=5.5)
-        plt.text(70*i+41, cc+round(dist_prop*Length[1]*1.2/2), '%d'%(num_el[jj]), fontsize=5.5)
+        ax1.add_patch(patches.Rectangle((100*i+20, cc), 17, dist_prop, color=color_prop[0][0]/255))
+        plt.text(100*i, (M+10), 'Probe %d\n(%s)'%(i+1, color_used[i]), color = color_used[i], fontsize=9, fontweight='bold')
+        if len(iniziali[jj])>7:
+            plt.text(100*i-12, cc+2, '%s-\n%s'%(iniziali[jj][0:5], iniziali[jj][6:]), fontsize=5.6)
+        else:    
+            plt.text(100*i-12, cc+4, '%s'%(iniziali[jj]), fontsize=6)
+        plt.text(100*i+48, cc+4, '%d'%(num_el[jj]), fontsize=6.5)
         jj +=1
-        cc = dist_prop*Length[1] + cc    
+        cc = dist_prop + cc    
         del regional_dist, position 
         
     #indici = list(OrderedDict.fromkeys(index))    
@@ -320,9 +329,9 @@ for i in range(0,n):
     transpose = numpy_array.T
     transpose_list = transpose.tolist()
     print(tabulate(transpose_list, headers, floatfmt=".2f"))
-lims = (0,max_probe_length/pixdim)
+lims = (0,M)
 plt.ylim(lims)
-plt.xlim((0,70*n+20))
+plt.xlim((0,100*n+20))
 plt.axis('off')
 
 # plot all the probes together
