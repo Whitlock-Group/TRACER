@@ -91,7 +91,7 @@ pixdim = atlas_header.get('pixdim')[1]
 # mac
 atlas_data = np.load('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Rat/RatBrain/atlas_data_masked.npy')
 # Mac
-#mask = nib.load(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_brainmask_v1.01.nii.gz')
+mask = nib.load(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_brainmask_v1.01.nii.gz')
 # Windows
 #mask = nib.load(mask_path)
 #mask_data = mask.get_fdata()[:,:,:,0]
@@ -140,8 +140,8 @@ if plane == 'c':
     # display the coordinates relative to the bregma when hovering with the cursor
     def format_coord(x, y):
         AP = tracker.ind*pixdim - 653*pixdim
-        ML = y - 246*pixdim
-        Z = x - 440*pixdim
+        ML = x - 246*pixdim
+        Z = y - 440*pixdim
         if ML >0:        
             return 'AP=%1.4f, ML=R%1.4f, z=%1.4f'%(AP, abs(ML), Z)
         else:
@@ -167,9 +167,9 @@ elif plane == 's':
     d3 = 512
     # display the coordinates relative to the bregma when hovering with the cursor
     def format_coord(x, y):
-        AP = y - 653*pixdim
+        AP = x - 653*pixdim
         ML = tracker.ind*pixdim - 246*pixdim
-        Z = x - 440*pixdim
+        Z = y - 440*pixdim
         if ML >0:        
             return 'AP=%1.4f, ML=R%1.4f, z=%1.4f'%(AP, abs(ML), Z)
         else:
@@ -195,8 +195,8 @@ elif plane == 'h':
     d3 = 512    
     # display the coordinates relative to the bregma when hovering with the cursor
     def format_coord(x, y):
-        AP = x - 653*pixdim
-        ML = y - 246*pixdim        
+        AP = y - 653*pixdim
+        ML = x - 246*pixdim        
         Z = tracker.ind*pixdim - 440*pixdim
         if ML >0:        
             return 'AP=%1.4f, ML=R%1.4f, z=%1.4f'%(AP, abs(ML), Z)
@@ -582,7 +582,7 @@ def on_key(event):
                 xi, yi = sel.target/pixdim
                 if plane == 'c':
                     if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1)).size:
-                        Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1))[0,0]]
+                         Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1))[0,0]]
                     else:
                         # display nothing
                         Text = ' '                
