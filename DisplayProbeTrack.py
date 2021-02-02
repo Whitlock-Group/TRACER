@@ -1,8 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jan 19 11:33:32 2021
-@author: jacopop
-"""
+"""Brain viewer"""
 from __future__ import print_function
 
 # Import libraries
