@@ -5,6 +5,7 @@ from __future__ import print_function
 import math 
 import os
 import os.path
+from pathlib import Path
 import nibabel as nib
 import numpy as np
 import matplotlib
@@ -47,38 +48,28 @@ electrode = 0.012 # Electrode size is 12x12 micron
 vert_el_dist = 0.02 
 # There are 2 electrodes every 0.02 mm
 
-# Mac
-atlas = nib.load(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack/WHS_SD_rat_T2star_v1.01.nii.gz')
-# Windows
-# =============================================================================
-# atlas_path = os.path.join(r'C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas\WHS_SD_rat_atlas_v2_pack', 'WHS_SD_rat_T2star_v1.01.nii.gz')
-# atlas = nib.load(atlas_path)
-# =============================================================================
+# Paths of the atlas, segmentation and labels
+## Atlas ##
+atlas_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack')
+atlas_path =  atlas_folder/'WHS_SD_rat_T2star_v1.01.nii.gz'
+atlas = nib.load(atlas_path)
 atlas_header = atlas.header
-# get pixel dimension
 pixdim = atlas_header.get('pixdim')[1]
-
-# Labels
-# Mac
-labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
-# Windows
-# labels_item = open(r"C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas\WHS_SD_rat_atlas_v4_beta.label", "r")
-labels_index, labels_name, labels_color, labels_initial = readlabel( labels_item )   
-
-# Segmentation
-# Mac
-segmentation = nib.load('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.nii.gz')
-# Windows
-#segmentation = nib.load(segmentation_path)
+#atlas_data = atlas.get_fdata()
+atlas_data = np.load(path_files/'atlas_data_masked.npy')
+## Segmentation ##
+segmentation_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
+segmentation_path = segmentation_folder/'WHS_SD_rat_atlas_v4_beta.nii.gz'
+segmentation = nib.load(segmentation_path)
 segmentation_data = segmentation.get_fdata()
+## Labels ##
+labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
+labels_index, labels_name, labels_color, labels_initials = readlabel( labels_item )  
 
 # Probe colors
 probe_colors = ['purple', 'blue', 'yellow', 'orange', 'red', 'green']
 
-
-
 path_probe_insertion = '/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Probe_Insertion'
-
 # get the all the files in the probe folder
 files_probe = os.listdir(path_probe_insertion)
 
