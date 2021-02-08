@@ -22,6 +22,7 @@ from collections import OrderedDict, Counter
 from tabulate import tabulate
 import mplcursors
 from scipy.spatial import distance
+from six.moves import input 
     
 # 3d Brain
 from vedo import Volume as VedoVolume
@@ -71,6 +72,8 @@ print('--------------------------- \n')
 
 flag = 0
 
+path_files = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Files')
+
 # Directory of the processed histology
 path_probe_insertion = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Probe_Insertion')
 if not path.exists(path_probe_insertion):
@@ -84,20 +87,20 @@ while plane != 'c' and plane != 's' and plane != 'h':
 
 # Paths of the atlas, segmentation and labels
 ## Atlas ##
-atlas_folder = Path(r'\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas\WHS_SD_rat_atlas_v2_pack')
+atlas_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack')
 atlas_path =  atlas_folder/'WHS_SD_rat_T2star_v1.01.nii.gz'
 atlas = nib.load(atlas_path)
 atlas_header = atlas.header
 pixdim = atlas_header.get('pixdim')[1]
 #atlas_data = atlas.get_fdata()
-atlas_data = np.load('atlas_data_masked.npy')
+atlas_data = np.load(path_files/'atlas_data_masked.npy')
 ## Mask ##
-mask_folder = Path(r'\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas')
+mask_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
 mask_path = mask_folder/'WHS_SD_rat_brainmask_v1.01.nii.gz'
 #mask = nib.load(mask_path)
 #mask_data = mask.get_fdata()[:,:,:,0]
 ## Segmentation ##
-segmentation_folder = Path(r'\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas')
+segmentation_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
 segmentation_path = segmentation_folder/'WHS_SD_rat_atlas_v4_beta.nii.gz'
 segmentation = nib.load(segmentation_path)
 segmentation_data = segmentation.get_fdata()
@@ -106,8 +109,7 @@ labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atl
 labels_index, labels_name, labels_color, labels_initials = readlabel( labels_item )  
 
 # Atlas in RGB colors according with the label file
-cv_plot_path = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Rat/RatBrain/cv_plot.npy')
-cv_plot = np.load(cv_plot_path)/255
+cv_plot = np.load(path_files/'cv_plot.npy')/255
 
 # here I create the array to plot the brain regions in the RGB
 # of the label file
@@ -190,8 +192,7 @@ mngr = plt.get_current_fig_manager()
 mngr.window.setGeometry(600,200,d2*2,d1*2)      
 
 # get the edges of the colors defined in the label
-Edges_path = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Rat/RatBrain/Edges.npy')
-Edges = np.load(Edges_path)
+Edges = np.load(path_files/'Edges.npy')
 # =============================================================================
 # Edges = np.empty((512,1024,512))
 # for sl in range(0,1024):
@@ -251,7 +252,6 @@ def on_key(event):
             global tracker3
             tracker3 = IndexTracker_c(ax, cv_plot, pixdim, plane, tracker.ind)        
             fig.canvas.mpl_connect('scroll_event', tracker3.onscroll)  
-            #ax_g.format_coord = format_coord 
             plt.show()
             flag_color = 1
         elif flag_color == 1:
@@ -374,15 +374,16 @@ def on_key(event):
         # Create and save slice, clicked probes
         P = save_probe_insertion(coords_probe, plane, probe_counter)        # Saving the object
         save_path = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Probe_Insertion')
-        probe_name = '1probes.pkl'
-        # MAC    
+        probe_n = input('Probe ame: ')
+        probe_name = probe_n+'.pkl'
         with open(save_path/probe_name, 'wb') as F: 
             pickle.dump(P, F)# Create and save slice, clicked points, and image info 
+            
     elif event.key == 'u':        
         print('Load probe')
         save_path = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Probe_Insertion')
-        probe_name = '1probes.pkl'
-        # MAC
+        probe_n = input('Probe ame: ')
+        probe_name = probe_n+'.pkl'
         Pp.append(pickle.load(open(save_path/probe_name, "rb")))
         global flag
         flag = 1   
@@ -661,7 +662,7 @@ def on_key(event):
                                 ax_probe.text(0.17, 0.22, testo, transform=ax_probe.transAxes, fontsize=9 ,verticalalignment='top', color = 'w')   
                                 ax_probe.text(0.17, 0.13, "\n".join(regioni), transform=ax_probe.transAxes, fontsize=9 ,verticalalignment='top', color = 'w') 
                         # here I only color the region of interest              
-                        cv_plot_display = np.load('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Rat/RatBrain/cv_plot_display.npy')
+                        cv_plot_display = np.load(path_files/'cv_plot_display.npy')
                         for i in range(len(labels_index)):
                             if i in indici:
                                 coord = np.where(segmentation_data == labels_index[i][0])        
@@ -946,7 +947,7 @@ def on_key(event):
                         ax_probe.text(0.17, 0.22, testo, transform=ax_probe.transAxes, fontsize=9 ,verticalalignment='top', color = 'w')   
                         ax_probe.text(0.17, 0.13, "\n".join(regioni), transform=ax_probe.transAxes, fontsize=9 ,verticalalignment='top', color = 'w')   
                 # here I only color the region of interest              
-                cv_plot_display = np.load('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Rat/RatBrain/cv_plot_display.npy')
+                cv_plot_display = np.load(path_files/'cv_plot_display.npy')
                 for i in range(len(labels_index)):
                     if i in indici:
                         coord = np.where(segmentation_data == labels_index[i][0])        
