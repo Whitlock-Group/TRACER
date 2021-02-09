@@ -5,6 +5,7 @@ from __future__ import print_function
 import math 
 import os
 import os.path
+from pathlib import Path
 import nibabel as nib
 import numpy as np
 import matplotlib
@@ -33,6 +34,7 @@ from skspatial.objects import Line
 #from skspatial.plotting import plot_3d
 
 from ObjSave import  probe_obj, save_probe
+from Tracker import IndexTracker_pi_col
 
 # read label file
 from Readlabel import readlabel
@@ -44,54 +46,34 @@ probe_thickness = 0.024
 probe_tip_length = 0.175  
 total_electrodes = 960 # total number of recording sites
 electrode = 0.012 # Electrode size is 12x12 micron
-vert_el_dist = 0.02 
-# There are 2 electrodes every 0.02 mm
+vert_el_dist = 0.02  # There are 2 electrodes every 0.02 mm
 
+path_files = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Files')
 
-# Mac
-atlas = nib.load(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack/WHS_SD_rat_T2star_v1.01.nii.gz')
-# Windows
-# =============================================================================
-# atlas_path = os.path.join(r'C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas\WHS_SD_rat_atlas_v2_pack', 'WHS_SD_rat_T2star_v1.01.nii.gz')
-# atlas = nib.load(atlas_path)
-# =============================================================================
+# Paths of the atlas, segmentation and labels
+## Atlas ##
+atlas_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack')
+atlas_path =  atlas_folder/'WHS_SD_rat_T2star_v1.01.nii.gz'
+atlas = nib.load(atlas_path)
 atlas_header = atlas.header
-# get pixel dimension
 pixdim = atlas_header.get('pixdim')[1]
-
-# Labels
-# Mac
-labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
-# =============================================================================
-# # Windows
-# labels_item = open(r"C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas\WHS_SD_rat_atlas_v4_beta.label", "r")
-# =============================================================================
-labels_index, labels_name, labels_color, labels_initial = readlabel( labels_item )   
-
-# Segmentation
-# Mac
-segmentation = nib.load('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.nii.gz')
-# Windows
-# =============================================================================
-# segmentation_path = os.path.join(r'C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas', 'WHS_SD_rat_atlas_v4_beta.nii.gz')
-# segmentation = nib.load(segmentation_path)
-# =============================================================================
+#atlas_data = atlas.get_fdata()
+atlas_data = np.load(path_files/'atlas_data_masked.npy')
+## Segmentation ##
+segmentation_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
+segmentation_path = segmentation_folder/'WHS_SD_rat_atlas_v4_beta.nii.gz'
+segmentation = nib.load(segmentation_path)
 segmentation_data = segmentation.get_fdata()
+## Labels ##
+labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
+labels_index, labels_name, labels_color, labels_initial = readlabel( labels_item ) 
 
 # Probe colors
 probe_colors = ['purple', 'blue', 'yellow', 'orange', 'red', 'green']
 
-# =============================================================================
-# # Windows
-# processed_histology_folder = r'C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\histology\processed'
-# path_probes = os.path.join(processed_histology_folder, 'probes')
-# path_transformed = os.path.join(processed_histology_folder, 'transformations')
-# =============================================================================
-
-# Mac
-processed_histology_folder = r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed'
-path_probes = r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes'
-path_transformed = '/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/transformations'
+processed_histology_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed')
+path_probes = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes')
+path_transformed = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/transformations')
 
 # get the all the files in the probe folder
 files_probe = os.listdir(path_probes)
@@ -161,13 +143,28 @@ for j in range(len(probe_colors)):
                 z2 = pts[-1,2]
                 x2 = line_fit.point[0]+((z2-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[0]
                 y2 = line_fit.point[1]+((z2-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[1]
+                # end point minus tip length
+                dq = (probe_tip_length)**2
+                div = 1 + (line_fit.direction[0]/line_fit.direction[2])**2 + (line_fit.direction[1]/line_fit.direction[2])**2
+                zt = z2 + math.sqrt(dq/div)
+                xt = line_fit.point[0]+((zt-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[0]
+                yt = line_fit.point[1]+((zt-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[1]
+                # get lenght of the probe
+                dista = np.linalg.norm(np.array([x1,y1,z1])-np.array([x2,y2,z2])) 
+                dist_check = np.linalg.norm(np.array([x1,y1,z1])-np.array([xt,yt,zt])) 
+                # check kthat the new end point is before the end of the tip and not after
+                if dist_check > dista:
+                    zt = z2 - math.sqrt(dq/div)
+                    xt = line_fit.point[0]+((zt-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[0]
+                    yt = line_fit.point[1]+((zt-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[1]                
+
             dist = distance.euclidean((x1, y1, z1), (x2, y2, z2)) # probe length
             dist_mm = dist*pixdim # probe length in mm              
             # get the line to plot                
             l = vedo.Line([x1, y1, z1],[x2, y2, z2],c = probe_colors[j], lw = 2)
             # clicked points to display
             pp = vedo.Points(pts, c = probe_colors[j]) #fast    
-            setattr(xyz, probe_colors[j], [[x1, y1, z1], [x2, y2, z2]])
+            setattr(xyz, probe_colors[j], [[x1, y1, z1], [xt, yt, zt]])
             setattr(LENGTH, probe_colors[j], [dist_mm, dist])
             setattr(pr, probe_colors[j], pp)
             setattr(L, probe_colors[j], l)
@@ -281,7 +278,10 @@ for i in range(0,n):
     cc = 0
     jj = 0
     num_el = []
+    indici = []
     for re in regioni:
+        # store the index o the region to print only the color of the regions of interest
+        indici.append(labels_name.index(re))
         # in the case in dont exit and then enter again the region
         position = [i for i,x in enumerate(regions) if x==re]
         # if there is only one point in the region
@@ -318,6 +318,17 @@ for i in range(0,n):
         cc = dist_prop + cc    
         del regional_dist, position 
         
+    # here I only color the region of interest              
+    cv_plot_display = np.load(path_files/'cv_plot_display.npy')
+    for i in range(len(labels_index)):
+        if i in indici:
+            coord = np.where(segmentation_data == labels_index[i][0])        
+            cv_plot_display[coord[0],coord[1],coord[2],:] =  labels_color[i]                
+    # Plot
+    fig_color_probe, ax_color_probe = plt.subplots(1, 1) # to plot the region interested with colors
+    IndexTracker_pi_col(ax_color_probe, cv_plot_display/255, Edges, pixdim, P[i].Plane, tracker.ind, unique_slice, p_x, p_y, line_fit)
+    plt.show()
+            
     #indici = list(OrderedDict.fromkeys(index))    
     LL = [regioni,  iniziali, num_el]
     headers = [' Regions traversed', 'Initials', 'Channels']
@@ -329,6 +340,7 @@ lims = (0,M)
 plt.ylim(lims)
 plt.xlim((0,100*n+20))
 plt.axis('off')
+
 
 # plot all the probes together
 if n==1:

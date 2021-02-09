@@ -5,6 +5,7 @@ import math
 import os
 import os.path
 from os import path
+from pathlib import Path
 import nibabel as nib
 import numpy as np
 import matplotlib
@@ -21,6 +22,7 @@ from collections import OrderedDict, Counter
 from tabulate import tabulate
 import mplcursors
 from scipy.spatial import distance
+from six.moves import input 
     
 # 3d Brain
 from vedo import Volume as VedoVolume
@@ -70,8 +72,10 @@ print('--------------------------- \n')
 
 flag = 0
 
+path_files = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Files')
+
 # Directory of the processed histology
-path_probe_insertion = '/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Probe_Insertion'
+path_probe_insertion = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Probe_Insertion')
 if not path.exists(path_probe_insertion):
     os.mkdir(path_probe_insertion)
 
@@ -82,48 +86,30 @@ while plane != 'c' and plane != 's' and plane != 'h':
     plane = str(input('Select the plane: coronal (c), sagittal (s), or horizontal (h): ')).lower()
 
 # Paths of the atlas, segmentation and labels
-# Atlas
-atlas_path = os.path.join(r'C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas\WHS_SD_rat_atlas_v2_pack', 'WHS_SD_rat_T2star_v1.01.nii.gz')
-# Mask
-mask_path = os.path.join(r'C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas', 'WHS_SD_rat_brainmask_v1.01.nii.gz')
-# Segmentation
-segmentation_path = os.path.join(r'C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas', 'WHS_SD_rat_atlas_v4_beta.nii.gz')
-# Labels
-# Mac
-labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
-# Windows
-# labels_item = open(r"C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas\WHS_SD_rat_atlas_v4_beta.label", "r")
-labels_index, labels_name, labels_color, labels_initials = readlabel( labels_item )  
-
-# Load the atlas, mask, color and segmentation
-# Mac
-atlas = nib.load(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack/WHS_SD_rat_T2star_v1.01.nii.gz')
-# Windows
-#atlas = nib.load(atlas_path)
+## Atlas ##
+atlas_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack')
+atlas_path =  atlas_folder/'WHS_SD_rat_T2star_v1.01.nii.gz'
+atlas = nib.load(atlas_path)
 atlas_header = atlas.header
-# get pixel dimension
 pixdim = atlas_header.get('pixdim')[1]
 #atlas_data = atlas.get_fdata()
-#atlas_affine = atlas.affine
-# Windows
-# atlas_data = np.load('atlas_data_masked.npy')
-# mac
-atlas_data = np.load('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Rat/RatBrain/atlas_data_masked.npy')
-# Mac
-#mask = nib.load(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_brainmask_v1.01.nii.gz')
-# Windows
+atlas_data = np.load(path_files/'atlas_data_masked.npy')
+## Mask ##
+mask_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
+mask_path = mask_folder/'WHS_SD_rat_brainmask_v1.01.nii.gz'
 #mask = nib.load(mask_path)
 #mask_data = mask.get_fdata()[:,:,:,0]
-# Mac
-segmentation = nib.load('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.nii.gz')
-# Windows
-#segmentation = nib.load(segmentation_path)
+## Segmentation ##
+segmentation_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
+segmentation_path = segmentation_folder/'WHS_SD_rat_atlas_v4_beta.nii.gz'
+segmentation = nib.load(segmentation_path)
 segmentation_data = segmentation.get_fdata()
+## Labels ##
+labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
+labels_index, labels_name, labels_color, labels_initials = readlabel( labels_item )  
 
 # Atlas in RGB colors according with the label file
-# cv_plot = np.load('cv_plot.npy')/255
-# mac
-cv_plot = np.load('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Rat/RatBrain/cv_plot.npy')/255
+cv_plot = np.load(path_files/'cv_plot.npy')/255
 
 # here I create the array to plot the brain regions in the RGB
 # of the label file
@@ -201,22 +187,18 @@ elif plane == 'h':
             return 'AP=%1.2f, ML=L%1.2f, z=%1.2f'%(AP, abs(ML), Z)    
     ax.format_coord = format_coord
 plt.show()    
-
 # Fix size and location of the figure window
 mngr = plt.get_current_fig_manager()
 mngr.window.setGeometry(600,200,d2*2,d1*2)      
+
 # get the edges of the colors defined in the label
-# Windows
-# Edges = np.load('Edges.npy')
-# mac
-Edges = np.load('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Rat/RatBrain/Edges.npy')
+Edges = np.load(path_files/'Edges.npy')
 # =============================================================================
 # Edges = np.empty((512,1024,512))
 # for sl in range(0,1024):
 #     Edges[:,sl,:] = cv2.Canny(np.uint8((cv_plot[:,sl,:]*255).transpose((1,0,2))),100,200)  
 # 
 # =============================================================================
-
 
 # Lists for the points clicked in atlas and histology
 coords_atlas = []
@@ -270,7 +252,6 @@ def on_key(event):
             global tracker3
             tracker3 = IndexTracker_c(ax, cv_plot, pixdim, plane, tracker.ind)        
             fig.canvas.mpl_connect('scroll_event', tracker3.onscroll)  
-            #ax_g.format_coord = format_coord 
             plt.show()
             flag_color = 1
         elif flag_color == 1:
@@ -327,7 +308,7 @@ def on_key(event):
         # plot  point and register all the clicked points
         def onclick_probe(event):
             global px, py
-            px, py = event.xdata/pixdim, event.ydata/pixdim
+            px, py = event.xdata, event.ydata
             # assign global variable to access outside of function
             global coords_probe_temp_w, coords_probe_temp_g, coords_probe_temp_p, coords_probe_temp_b, coords_probe_temp_y, coords_probe_temp_o, coords_probe_temp_r,  p_probe_grid, p_probe_trans
             if probe_counter == 0:
@@ -387,40 +368,23 @@ def on_key(event):
 
                         except:
                             pass
-# =============================================================================
-#             elif event.key == 'p':
-#                 print( 'Change probe' )
-#                 if probe_counter-1 > 0:
-#                     probe_counter -=  1                                                                                                 
-#                     print('probe %d selected (%s)' %(probe_counter+1, probe_colors[probe_counter]))
-#                 elif probe_counter == 0:
-#                     probe_counter +=1 
-#                     print('probe %d selected (%s)' %(probe_counter+1, probe_colors[probe_counter]))
-# =============================================================================
         fig.canvas.mpl_connect('key_press_event', on_key2)        
     elif event.key == 'e':
-        print('Probe points saved')        
-        #num = input('If the probe goes over several slices insert the slice number, otherwise enter 0: ')        
+        print('\n Save probe')        
         # Create and save slice, clicked probes
-        
         P = save_probe_insertion(coords_probe, plane, probe_counter)        # Saving the object
-# =============================================================================
-#         with open(os.path.join(path_probe_insertion, num+'probes.pkl'), 'wb') as F: 
-#             pickle.dump(P, F)# Create and save slice, clicked points, and image info    
-# =============================================================================  
-        # MAC    
-        with open('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Probe_Insertion/0probes.pkl', 'wb') as F: 
+        save_path = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Probe_Insertion')
+        probe_n = input('Probe name: ')
+        probe_name = probe_n+'.pkl'
+        with open(save_path/probe_name, 'wb') as F: 
             pickle.dump(P, F)# Create and save slice, clicked points, and image info 
+            
     elif event.key == 'u':        
-        print('Load probe')
-        files_probe = os.listdir(path_probe_insertion)
-        # =============================================================================
-        # for f in files_probe:
-        #     # WINDOWS
-        #     P.append(pickle.load(open(os.path.join(path_probes, f), "rb")))
-        # =============================================================================
-        # MAC
-        Pp.append(pickle.load(open(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Probe_Insertion/0probes.pkl', "rb")))
+        print('\nLoad probe')
+        save_path = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Probe_Insertion')
+        probe_n = input('Probe name: ')
+        probe_name = probe_n+'.pkl'
+        Pp.append(pickle.load(open(save_path/probe_name, "rb")))
         global flag
         flag = 1   
             
@@ -439,8 +403,8 @@ def on_key(event):
                         p_y = []
                         probe_slice = []
                         for i in range(len(PC)):
-                            p_x.append(PC[i][0]*pixdim)
-                            p_y.append(PC[i][1]*pixdim)
+                            p_x.append(PC[i][0])
+                            p_y.append(PC[i][1])
                             probe_slice.append(PC[i][2])
                         unique_slice = list(OrderedDict.fromkeys(probe_slice))
                         # get the probe coordinates and the region's names
@@ -449,18 +413,18 @@ def on_key(event):
                         probe_z = []                    
                         if Pp[k].Plane == 'c':
                             for i in range(len(PC)):
-                                probe_x.append(PC[i][0]*pixdim)
+                                probe_x.append(PC[i][0])
                                 probe_y.append(PC[i][2]*pixdim)
-                                probe_z.append(PC[i][1]*pixdim)
+                                probe_z.append(PC[i][1])
                         elif Pp[k].Plane == 's':
                             for i in range(len(PC)):
                                 probe_x.append(PC[i][2]*pixdim)
-                                probe_y.append(PC[i][0]*pixdim)
-                                probe_z.append(PC[i][1]*pixdim)  
+                                probe_y.append(PC[i][0])
+                                probe_z.append(PC[i][1])  
                         elif Pp[k].Plane == 'h':
                             for i in range(len(PC)):        
-                                probe_x.append(PC[i][0]*pixdim)
-                                probe_y.append(PC[i][1]*pixdim)        
+                                probe_x.append(PC[i][0])
+                                probe_y.append(PC[i][1])        
                                 probe_z.append(PC[i][2]*pixdim)
                         pts = np.array((probe_x, probe_y, probe_z)).T
                         line_fit = Line.best_fit(pts)
@@ -608,7 +572,7 @@ def on_key(event):
                             dist_check = np.linalg.norm(X0-Xt) 
                             # check kthat the new end point is before the end of the tip and not after
                             if dist_check > dist:
-                                zt = z2 + math.sqrt(dq/div)
+                                zt = z2 - math.sqrt(dq/div)
                                 xt = line_fit.point[0]+((zt-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[0]
                                 yt = line_fit.point[1]+((zt-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[1]
                                 Xt = np.array([xt,yt,zt])                
@@ -642,8 +606,8 @@ def on_key(event):
                                 end = [element * pixdim for element in point_along_line[position[-1]]]
                                 # length of the part of the probe in the region
                                 regional_dist = distance.euclidean(start,end)  
-                                # Number of electrodes in the region                
-                                num_el.append(round(regional_dist/vert_el_dist)*2)                                 
+                            # Number of electrodes in the region                
+                            num_el.append(round(regional_dist/vert_el_dist)*2)                                 
                         # print insertion coordinates    
                         print('\n---Estimated probe insertion---')
                         if ML_position>0:
@@ -698,7 +662,7 @@ def on_key(event):
                                 ax_probe.text(0.17, 0.22, testo, transform=ax_probe.transAxes, fontsize=9 ,verticalalignment='top', color = 'w')   
                                 ax_probe.text(0.17, 0.13, "\n".join(regioni), transform=ax_probe.transAxes, fontsize=9 ,verticalalignment='top', color = 'w') 
                         # here I only color the region of interest              
-                        cv_plot_display = np.load('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Rat/RatBrain/cv_plot_display.npy')
+                        cv_plot_display = np.load(path_files/'cv_plot_display.npy')
                         for i in range(len(labels_index)):
                             if i in indici:
                                 coord = np.where(segmentation_data == labels_index[i][0])        
@@ -721,8 +685,8 @@ def on_key(event):
                 p_y = []
                 probe_slice = []
                 for i in range(len(L)):
-                    p_x.append(L[i][0]*pixdim)
-                    p_y.append(L[i][1]*pixdim)
+                    p_x.append(L[i][0])
+                    p_y.append(L[i][1])
                     probe_slice.append(L[i][2])
                 unique_slice = list(OrderedDict.fromkeys(probe_slice))                                  
                 # get the probe coordinates and the region's names
@@ -731,18 +695,18 @@ def on_key(event):
                 probe_z = []            
                 if plane == 'c':
                     for i in range(len(L)):
-                        probe_x.append(L[i][0]*pixdim)
+                        probe_x.append(L[i][0])
                         probe_y.append(L[i][2]*pixdim)
-                        probe_z.append(L[i][1]*pixdim)
+                        probe_z.append(L[i][1])
                 elif plane == 's':
                     for i in range(len(L)):
                         probe_x.append(L[i][2]*pixdim)
-                        probe_y.append(L[i][0]*pixdim)
-                        probe_z.append(L[i][1]*pixdim)  
+                        probe_y.append(L[i][0])
+                        probe_z.append(L[i][1])  
                 elif plane == 'h':
                     for i in range(len(L)):        
-                        probe_x.append(L[i][0]*pixdim)
-                        probe_y.append(L[i][1]*pixdim)        
+                        probe_x.append(L[i][0])
+                        probe_y.append(L[i][1])        
                         probe_z.append(L[i][2]*pixdim)
                 pts = np.array((probe_x, probe_y, probe_z)).T
                 # fit the probe
@@ -890,7 +854,7 @@ def on_key(event):
                     dist_check = np.linalg.norm(X0-Xt) 
                     # check kthat the new end point is before the end of the tip and not after
                     if dist_check > dist:
-                        zt = z2 + math.sqrt(dq/div)
+                        zt = z2 - math.sqrt(dq/div)
                         xt = line_fit.point[0]+((zt-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[0]
                         yt = line_fit.point[1]+((zt-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[1]
                         Xt = np.array([xt,yt,zt])
@@ -983,7 +947,7 @@ def on_key(event):
                         ax_probe.text(0.17, 0.22, testo, transform=ax_probe.transAxes, fontsize=9 ,verticalalignment='top', color = 'w')   
                         ax_probe.text(0.17, 0.13, "\n".join(regioni), transform=ax_probe.transAxes, fontsize=9 ,verticalalignment='top', color = 'w')   
                 # here I only color the region of interest              
-                cv_plot_display = np.load('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Rat/RatBrain/cv_plot_display.npy')
+                cv_plot_display = np.load(path_files/'cv_plot_display.npy')
                 for i in range(len(labels_index)):
                     if i in indici:
                         coord = np.where(segmentation_data == labels_index[i][0])        

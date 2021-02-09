@@ -48,6 +48,8 @@ electrode = 0.012 # Electrode size is 12x12 micron
 vert_el_dist = 0.02 
 # There are 2 electrodes every 0.02 mm
 
+path_files = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Files')
+
 # Paths of the atlas, segmentation and labels
 ## Atlas ##
 atlas_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack')
@@ -57,6 +59,11 @@ atlas_header = atlas.header
 pixdim = atlas_header.get('pixdim')[1]
 #atlas_data = atlas.get_fdata()
 atlas_data = np.load(path_files/'atlas_data_masked.npy')
+## Mask ##
+mask_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
+mask_path = mask_folder/'WHS_SD_rat_brainmask_v1.01.nii.gz'
+mask = nib.load(mask_path)
+mask_data = mask.get_fdata()[:,:,:,0].transpose((2,1,0))
 ## Segmentation ##
 segmentation_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
 segmentation_path = segmentation_folder/'WHS_SD_rat_atlas_v4_beta.nii.gz'
@@ -64,12 +71,13 @@ segmentation = nib.load(segmentation_path)
 segmentation_data = segmentation.get_fdata()
 ## Labels ##
 labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
-labels_index, labels_name, labels_color, labels_initials = readlabel( labels_item )  
+labels_index, labels_name, labels_color, labels_initial = readlabel( labels_item ) 
 
 # Probe colors
 probe_colors = ['purple', 'blue', 'yellow', 'orange', 'red', 'green']
 
 path_probe_insertion = '/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Probe_Insertion'
+
 # get the all the files in the probe folder
 files_probe = os.listdir(path_probe_insertion)
 
@@ -85,7 +93,7 @@ color_used_t = []
     #     P.append(pickle.load(open(os.path.join(path_probes, f), "rb")))
     # =============================================================================
     # MAC
-P.append(pickle.load(open(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Probe_Insertion/0probes.pkl', "rb")))
+P.append(pickle.load(open(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Probe_Insertion/00.pkl', "rb")))
 # LL = pickle.load(open(os.path.join(path_probes, '1probes.pkl'), "rb"))    
 probe_counter = P[0].Counter
 
@@ -101,20 +109,19 @@ for j in range(len(probe_colors)):
             if P[k].Plane == 'c':
                 for i in range(len(PC)):
                     probe_x.append(PC[i][0])
-                    probe_y.append(PC[i][2])
+                    probe_y.append(PC[i][2]*pixdim)
                     probe_z.append(PC[i][1])
             elif P[k].Plane == 'c':
                 for i in range(len(PC)):
-                    probe_x.append(PC[i][2])
+                    probe_x.append(PC[i][2]*pixdim)
                     probe_y.append(PC[i][0])
                     probe_z.append(PC[i][1])  
             elif P[k].Plane == 'c':
                 for i in range(len(PC)):        
                     probe_x.append(PC[i][0])
                     probe_y.append(PC[i][1])        
-                    probe_z.append(PC[i][2])
+                    probe_z.append(PC[i][2]*pixdim)
             pts = np.array((probe_x, probe_y, probe_z)).T
-
             # fit the probe
             line_fit = Line.best_fit(pts)            
             # if no inclination in z direction
@@ -125,7 +132,7 @@ for j in range(len(probe_colors)):
                 x1 = pts[0,0]
                 y1 = line_fit.point[1]+((x1-line_fit.point[0])/line_fit.direction[0])*line_fit.direction[1]
                 z2 = pts[0,2]
-                x2 = x2 = pts[-1,0]
+                x2 = pts[-1,0]
                 y2 = line_fit.point[1]+((x2-line_fit.point[0])/line_fit.direction[0])*line_fit.direction[1]               
             else:
                 # line equations, to derive the starting and end point of the line (aka probe)
@@ -136,12 +143,25 @@ for j in range(len(probe_colors)):
                 z2 = pts[-1,2]
                 x2 = line_fit.point[0]+((z2-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[0]
                 y2 = line_fit.point[1]+((z2-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[1]
-                # get the line to plot                
+                # end point minus tip length
+                dq = (probe_tip_length)**2
+                div = 1 + (line_fit.direction[0]/line_fit.direction[2])**2 + (line_fit.direction[1]/line_fit.direction[2])**2
+                zt = z2 + math.sqrt(dq/div)
+                xt = line_fit.point[0]+((zt-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[0]
+                yt = line_fit.point[1]+((zt-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[1]
+                # get lenght of the probe
+                dista = np.linalg.norm(np.array([x1,y1,z1])-np.array([x2,y2,z2])) 
+                dist_check = np.linalg.norm(np.array([x1,y1,z1])-np.array([xt,yt,zt])) 
+                # check kthat the new end point is before the end of the tip and not after
+                if dist_check > dista:
+                    zt = z2 - math.sqrt(dq/div)
+                    xt = line_fit.point[0]+((zt-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[0]
+                    yt = line_fit.point[1]+((zt-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[1]
             # get the line to plot
-            l = vedo.Line([x1, y1, z1],[x2, y2, z2],c = probe_colors[j], lw = 2)
+            l = vedo.Line([x1, y1, z1]/pixdim,[x2, y2, z2]/pixdim,c = probe_colors[j], lw = 2)
             # clicked points to display
-            pp = vedo.Points(pts, c = probe_colors[j]) #fast    
-            setattr(xyz,probe_colors[j], [[x1, y1, z1], [x2, y2, z2]])
+            pp = vedo.Points(pts/pixdim, c = probe_colors[j]) #fast    
+            setattr(xyz,probe_colors[j], [[x1, y1, z1], [xt, yt, zt]])
             setattr(pr, probe_colors[j], pp)
             setattr(L, probe_colors[j], l)
             setattr(LINE_FIT, probe_colors[j], line_fit)
@@ -153,12 +173,6 @@ for j in range(len(probe_colors)):
 color_used = list(OrderedDict.fromkeys(color_used_t))
 n = len(color_used)
 
-# load the brain regions
-# =============================================================================
-# Edges = np.load('Edges.npy')
-# =============================================================================
-mask = nib.load(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_brainmask_v1.01.nii.gz')
-mask_data = mask.get_fdata()[:,:,:,0].transpose((2,1,0))
 Edges = np.empty((512,1024,512))
 for sl in range(0,1024):
     Edges[:,sl,:] = cv2.Canny(np.uint8((mask_data[:,sl,:])*255),100,200)  
@@ -207,8 +221,8 @@ for i in range(0,n):
     # Get the brain regions traversed by the probe
     X1 = getattr(xyz, color_used[i])[0]
     X2 = getattr(xyz, color_used[i])[1]
-    s = int(math.modf(X1[2])[1]) # starting point
-    f = int(math.modf(X2[2])[1]) # ending point
+    s = int(math.modf(X1[2]/pixdim)[1]) # starting point
+    f = int(math.modf(X2[2]/pixdim)[1]) # ending point
     # get lenght of the probe
     dist.append(np.linalg.norm(f-s))
     regions = []
@@ -218,7 +232,7 @@ for i in range(0,n):
     point_along_line = []
     if line_fit.direction[2] == 0:                
         for x in range(min(s,f), max(s,f)):                        
-            y = line_fit.point[1]+((x-line_fit.point[0])/line_fit.direction[0])*line_fit.direction[1]
+            y = line_fit.point[1]/pixdim+((x-line_fit.point[0]/pixdim)/line_fit.direction[0])*line_fit.direction[1]
             z = pts[0,2]
             point_along_line.append([x,y,z])            
             if int(math.modf(x)[1])>512 or int(math.modf(y)[1])>1024 or int(math.modf(z)[1])>512:
@@ -231,8 +245,8 @@ for i in range(0,n):
                 initials.append(labels_initial[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(x)[1]),int(math.modf(y)[1]),int(math.modf(z)[1])], axis = 1))[0,0]])
     else:
         for z in range(min(s,f),max(s,f)):
-            x = line_fit.point[0]+((z-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[0]
-            y = line_fit.point[1]+((z-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[1]
+            x = line_fit.point[0]/pixdim+((z-line_fit.point[2]/pixdim)/line_fit.direction[2])*line_fit.direction[0]
+            y = line_fit.point[1]/pixdim+((z-line_fit.point[2]/pixdim)/line_fit.direction[2])*line_fit.direction[1]
             point_along_line.append([x,y,z])
             if int(math.modf(x)[1])>512 or int(math.modf(y)[1])>1024 or int(math.modf(z)[1])>512:
                 regions.append('Clear Label')
@@ -248,8 +262,8 @@ for i in range(0,n):
     regioni = list(OrderedDict.fromkeys(regions))
     iniziali = list(OrderedDict.fromkeys(initials))
     if 'Clear Label' in regioni:
-        regioni.pop(regioni.index('Clear Label'))
         iniziali.pop(regioni.index('Clear Label'))
+        regioni.pop(regioni.index('Clear Label'))
     cc = 0
     jj = 0
     num_el = []
@@ -281,7 +295,7 @@ for i in range(0,n):
             plt.text(100*i-2, cc+4, '%s'%(iniziali[jj]), fontsize=6)
         plt.text(100*i+28, cc+4, '%d'%(num_el[jj]), fontsize=6.5)
         jj +=1
-        cc = dist_prop*dist[i] + cc    
+        cc = dist_prop + cc    
     #indici = list(OrderedDict.fromkeys(index))
     LL = [regioni,  iniziali, num_el]
     headers = [' Regions traversed', 'Initials', 'Channels']

@@ -1,16 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Nov 26 09:33:18 2020
-
-@author: jacopop
-"""
-
 from __future__ import print_function
 
 # Import libraries
 import os
 import os.path
 from os import path
+from pathlib import Path
 import numpy as np
 import nibabel as nib
 import matplotlib
@@ -23,6 +17,7 @@ import mplcursors
 from nilearn.image import resample_img
 from skimage import io, transform
 import pickle 
+from six.moves import input 
 
 # Functions defined in separate files
 # read label file
@@ -32,29 +27,19 @@ from Readlabel import readlabel
 from Tracker import IndexTracker, IndexTracker_g, IndexTracker_p
 # create objects to svae transformations and probes
 from ObjSave import  save_transform, probe_obj, save_probe
-        
-    
-        
+  
+path_files = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Files')      
+
 # Directory of the processed histology
-# for mac user 
-processed_histology_folder = '/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed'
-# For windows users
-# processed_histology_folder = r'C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\histology\processed'
-# for mac user 
-# histology = Image.open(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/rat_processed.tif').copy()
-# For windows users
-file_name = str(input('Histology file name: '))
-# Mac
-img_hist_temp = Image.open(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/rat_processed.jpeg').copy()
-# Windows
-# img_hist_temp = Image.open(os.path.join(processed_histology_folder, file_name+'_processed.jpeg')).copy()
+processed_histology_folder = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed')
+file_n = str(input('Histology file name: '))
+file_name = file_n+'_processed.jpeg'
+img_hist_temp = Image.open(processed_histology_folder/file_name).copy()
 # get the pixel dimension
 dpi_hist = img_hist_temp.info['dpi'][1]
 pixdim_hist = 25.4/dpi_hist # 1 inch = 25,4 mm
-# Windows
-# img_hist = cv2.imread(os.path.join(processed_histology_folder, file_name+'_processed.jpeg'),cv2.IMREAD_GRAYSCALE)
-# Mac
-img_hist = cv2.imread(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/rat_processed.jpeg',cv2.IMREAD_GRAYSCALE)
+img_hist = cv2.imread(str(processed_histology_folder/file_name),cv2.IMREAD_GRAYSCALE)
+
 # Insert the plane of interest
 plane = str(input('Select the plane: coronal (c), sagittal (s), or horizontal (h): ')).lower()
 # Check if the input is correct
@@ -63,60 +48,50 @@ while plane != 'c' and plane != 's' and plane != 'h':
     plane = str(input('Select the plane: coronal (c), sagittal (s), or horizontal (h): ')).lower()
 
 # Paths of the atlas, segmentation and labels
-# Atlas
-atlas_path = os.path.join(r'C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas\WHS_SD_rat_atlas_v2_pack', 'WHS_SD_rat_T2star_v1.01.nii.gz')
-# Mask
-mask_path = os.path.join(r'C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas', 'WHS_SD_rat_brainmask_v1.01.nii.gz')
-# Segmentation
-segmentation_path = os.path.join(r'C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas', 'WHS_SD_rat_atlas_v4_beta.nii.gz')
-# Labels
-# Mac
-labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
-# Windows
-# labels_item = open(r"C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas\WHS_SD_rat_atlas_v4_beta.label", "r")
-labels_index, labels_name, labels_color, labels_initials = readlabel( labels_item )  
-
-# Load the atlas, mask, color and segmentation
-# Mac
-atlas = nib.load(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack/WHS_SD_rat_T2star_v1.01.nii.gz')
-# Windows
-#atlas = nib.load(atlas_path)
+## Atlas ##
+atlas_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack')
+atlas_path =  atlas_folder/'WHS_SD_rat_T2star_v1.01.nii.gz'
+atlas = nib.load(atlas_path)
 atlas_header = atlas.header
-# get pixel dimension
 pixdim = atlas_header.get('pixdim')[1]
 #atlas_data = atlas.get_fdata()
-#atlas_affine = atlas.affine
-# Windows
-# atlas_data = np.load('atlas_data_masked.npy')
-# mac
-atlas_data = np.load('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Rat/RatBrain/atlas_data_masked.npy')
-# Mac
-mask = nib.load(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_brainmask_v1.01.nii.gz')
-# Windows
-#mask = nib.load(mask_path)
-#mask_data = mask.get_fdata()[:,:,:,0]
-# Mac
-segmentation = nib.load('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.nii.gz')
-# Windows
-#segmentation = nib.load(segmentation_path)
+atlas_data = np.load(path_files/'atlas_data_masked.npy')
+## Mask ##
+mask_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
+mask_path = mask_folder/'WHS_SD_rat_brainmask_v1.01.nii.gz'
+mask = nib.load(mask_path)
+mask_data = mask.get_fdata()[:,:,:,0].transpose((2,1,0))
+## Segmentation ##
+segmentation_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
+segmentation_path = segmentation_folder/'WHS_SD_rat_atlas_v4_beta.nii.gz'
+segmentation = nib.load(segmentation_path)
 segmentation_data = segmentation.get_fdata()
+## Labels ##
+labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
+labels_index, labels_name, labels_color, labels_initial = readlabel( labels_item ) 
 
 # Atlas in RGB colors according with the label file
-# cv_plot = np.load('cv_plot.npy')/255
-# mac
-cv_plot = np.load('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Rat/RatBrain/cv_plot.npy')/255
-#cv_plot = np.zeros(shape = (atlas_data.shape[0],atlas_data.shape[1],atlas_data.shape[2],3))
-# here I create the array to plot the brain regions in the RGB
-# of the label file
-#for i in range(len(labels_index)):
-#    coord = np.where(segmentation_data == labels_index[i][0])        
-#    cv_plot[coord[0],coord[1],coord[2],:] =  labels_color[i]
-
-##################
-# Remove skull and tissues from atlas_data
+cv_plot = np.load(path_files/'cv_plot.npy')/255
+# =============================================================================
+# cv_plot = np.zeros(shape = (atlas_data.shape[0],atlas_data.shape[1],atlas_data.shape[2],3))
+# # here I create the array to plot the brain regions in the RGB
+# # of the label file
+# for i in range(len(labels_index)):
+#     coord = np.where(segmentation_data == labels_index[i][0])        
+#     cv_plot[coord[0],coord[1],coord[2],:] =  labels_color[i]
+# # Remove skull and tissues from atlas_data
 # CC = np.where(mask_data == 0)
 # atlas_data[CC] = 0
-##################
+# =============================================================================
+
+# get the edges of the colors defined in the label
+Edges = np.load(path_files/'Edges.npy')
+# =============================================================================
+# Edges = np.empty((512,1024,512))
+# for sl in range(0,1024):
+#     Edges[:,sl,:] = cv2.Canny(np.uint8((cv_plot[:,sl,:]*255).transpose((1,0,2))),100,200)  
+# 
+# =============================================================================
 
 # Display the ATLAS
 # resolution
@@ -249,7 +224,6 @@ print('\n Registration: \n')
 print('t: toggle mode where clicks are logged for transform \n')
 print('h: toggle overlay of current histology slice \n')
 print('x: save transform and current atlas location')
-image_name = str(input('Enter transformed image name: '))
 print('\nr: toggle mode where clicks are logged for probe \n')
 print('n: add a new probe \n')
 print('e: save current probe \n')
@@ -290,17 +264,6 @@ p_probe_grid = []
 probe_counter = 0
 probe_selecter = 0
 
-# get the edges of the colors defined in the label
-# Windows
-# Edges = np.load('Edges.npy')
-# mac
-Edges = np.load('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Rat/RatBrain/Edges.npy')
-# =============================================================================
-# Edges = np.empty((512,1024,512))
-# for sl in range(0,1024):
-#     Edges[:,sl,:] = cv2.Canny(np.uint8((cv_plot[:,sl,:]*255).transpose((1,0,2))),100,200)  
-# 
-# =============================================================================
 # Set up the figure    
 plt.ioff()
 fig_trans, ax_trans = plt.subplots(1, 1)
@@ -413,16 +376,19 @@ def on_key(event):
         
     elif event.key == 'x':
         print('Save image and slice')            
+        image_n = input('Image name: ')
+        image_name = image_n+'.pkl'
         # The Transformed images will be saved in a subfolder of process histology called transformations
         path_transformed = os.path.join(processed_histology_folder, 'transformations')
         if not path.exists(os.path.join(processed_histology_folder, 'transformations')):
             os.mkdir(path_transformed)
         # Create and save slice, clicked points, and image info                                 
         S = save_transform(tracker.ind, [coords_hist, coords_atlas], img2, img_warped)        # Saving the object
-        with open(os.path.join(path_transformed, image_name+'.pkl'), 'wb') as f: 
+        with open(os.path.join(path_transformed, image_name), 'wb') as f: 
             pickle.dump(S, f)
         # Save the images
-        fig_trans.savefig(os.path.join(path_transformed, image_name+'_Transformed_withoutlines.jpeg'))
+        fig_name = image_name+'_Transformed_withoutlines.jpeg'
+        fig_trans.savefig(os.path.join(path_transformed, fig_name))
                         
     elif event.key == 'v':
         print('Colored Atlas on')
@@ -550,12 +516,10 @@ def on_key(event):
             os.mkdir(path_probes)
         # Create and save slice, clicked probes
         P = save_probe(tracker.ind, coords_probe, plane, probe_counter)        # Saving the object
-# =============================================================================
-#         with open(os.path.join(path_probes, image_name+'probes.pkl'), 'wb') as F: 
-#             pickle.dump(P, F)# Create and save slice, clicked points, and image info    
-# =============================================================================  
+        probe_n = input('Probe name: ')
+        probe_name = probe_n+'probes.pkl'
         # MAC    
-        with open('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes/1probes.pkl', 'wb') as F: 
+        with open(path_probes/probe_name, 'wb') as F: 
             pickle.dump(P, F)# Create and save slice, clicked points, and image info 
             
     elif event.key == 'w':
@@ -605,7 +569,6 @@ def on_key(event):
             # plot the clicked points
             plt.scatter(probe_x, probe_y, color=probe_colors[probe_selecter], s=2)#, marker='o', markersize=1)
             # plot the probe
-            print(probe_x)
             plt.plot(np.array(sorted(probe_x)), m*np.array(sorted(probe_x)) + b,color=probe_colors[probe_selecter], linestyle='dashed', linewidth=0.8)
             probe_selecter +=1        
         except:
