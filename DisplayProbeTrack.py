@@ -318,15 +318,17 @@ for i in range(0,n):
         cc = dist_prop + cc    
         del regional_dist, position 
         
-    # here I only color the region of interest              
+        
+        
+            
     cv_plot_display = np.load(path_files/'cv_plot_display.npy')
-    for i in range(len(labels_index)):
-        if i in indici:
-            coord = np.where(segmentation_data == labels_index[i][0])        
-            cv_plot_display[coord[0],coord[1],coord[2],:] =  labels_color[i]                
+    for j in range(len(labels_index)):
+        if j in indici:
+            coord = np.where(segmentation_data == labels_index[j][0])        
+            cv_plot_display[coord[0],coord[1],coord[2],:] =  labels_color[j]                
     # Plot
     fig_color_probe, ax_color_probe = plt.subplots(1, 1) # to plot the region interested with colors
-    IndexTracker_pi_col(ax_color_probe, cv_plot_display/255, Edges, pixdim, P[i].Plane, tracker.ind, unique_slice, p_x, p_y, line_fit)
+    IndexTracker_pi_col(ax_color_probe, cv_plot_display/255, Edges, pixdim, P[i].Plane, P[k].Slice, PC[i][0], PC[i][1], line_fit)
     plt.show()
             
     #indici = list(OrderedDict.fromkeys(index))    

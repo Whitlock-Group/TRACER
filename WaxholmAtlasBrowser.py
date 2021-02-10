@@ -946,6 +946,8 @@ def on_key(event):
                     else:
                         ax_probe.text(0.17, 0.22, testo, transform=ax_probe.transAxes, fontsize=9 ,verticalalignment='top', color = 'w')   
                         ax_probe.text(0.17, 0.13, "\n".join(regioni), transform=ax_probe.transAxes, fontsize=9 ,verticalalignment='top', color = 'w')   
+                        
+                        
                 # here I only color the region of interest              
                 cv_plot_display = np.load(path_files/'cv_plot_display.npy')
                 for i in range(len(labels_index)):
@@ -954,7 +956,7 @@ def on_key(event):
                         cv_plot_display[coord[0],coord[1],coord[2],:] =  labels_color[i]                
                 # Plot
                 fig_color, ax_color = plt.subplots(1, 1) # to plot the region interested with colors
-                IndexTracker_pi_col(ax_color, cv_plot_display/255, Edges, pixdim, plane, tracker.ind, unique_slice, p_x, p_y, line_fit)
+                IndexTracker_pi_col(ax_color, cv_plot_display/255, Edges, pixdim, plane, tracker.ind, p_x, p_y, line_fit)
                 plt.show()
                 mngr_col = plt.get_current_fig_manager()
                 mngr_col.window.setGeometry(650,250,d2*2,d1*2)  
