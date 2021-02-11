@@ -322,8 +322,6 @@ class IndexTracker_pi_col(object):
         self.probe_x = probe_x
         self.probe_y = probe_y
         self.line_fit = line_fit
-        
-        ax.set_title('Atlas viewer')
 
         self.X = X
         self.edges =edges
@@ -344,7 +342,7 @@ class IndexTracker_pi_col(object):
             self.ind = S
             self.L = self.X.transpose((1,0,2,3)) 
             self.im = ax.imshow(self.L[:, :, self.ind], origin="lower", extent=[0, 512*pixdim, 0, 1024*pixdim]) 
-            self.im2 = ax.imshow(self.edges[:, :, self.ind], origin="lower", alpha=0.5, extent=[0, 512*pixdim, 0, 1024*pixdim], cmap='gray')
+            self.im2 = ax.imshow(self.edges[self.ind, :, :], origin="lower", alpha=0.5, extent=[0, 512*pixdim, 0, 1024*pixdim], cmap='gray')
         # plot the probe
         if self.line_fit.direction[0] == 0:
             self.line = plt.plot(np.array(sorted(self.probe_x)), np.array(sorted(self.probe_y)), linestyle='dashed', linewidth=0.8);        

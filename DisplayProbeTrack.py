@@ -81,10 +81,12 @@ files_transformed = os.listdir(path_transformed)
 
 L = probe_obj()
 LINE_FIT = probe_obj() 
+POINTS = probe_obj() 
 pr = probe_obj()
 xyz = probe_obj()
 LENGTH = probe_obj()
 P = []
+
 color_used_t = []
 for f in files_probe:
     # WINDOWS
@@ -102,7 +104,10 @@ for j in range(len(probe_colors)):
     # get the probe coordinates and the region's names
     probe_x = []
     probe_y = []
-    probe_z = []
+    probe_z = []    
+    # Needed to plot colors and probe
+    p_x = []
+    p_y = []
     for k in range(len(P)):
         try:
             PC = getattr(P[k].Probe, probe_colors[j])
@@ -111,16 +116,25 @@ for j in range(len(probe_colors)):
                     probe_x.append(PC[i][0])
                     probe_y.append(P[k].Slice)
                     probe_z.append(PC[i][1])
+                    # Needed to plot colors and probe
+                    p_x.append(PC[i][0]*pixdim)
+                    p_y.append(PC[i][1]*pixdim)
             elif P[k].Plane == 's':
                 for i in range(len(PC)):
                     probe_x.append(P[k].Slice)
                     probe_y.append(PC[i][0])
                     probe_z.append(PC[i][1])  
+                    # Needed to plot colors and probe
+                    p_x.append(PC[i][0]*pixdim)
+                    p_y.append(PC[i][1]*pixdim)                    
             elif P[k].Plane == 'h':
                 for i in range(len(PC)):        
                     probe_x.append(PC[i][0])
                     probe_y.append(PC[i][1])        
                     probe_z.append(P[k].Slice)
+                    # Needed to plot colors and probe
+                    p_x.append(PC[i][0]*pixdim)
+                    p_y.append(PC[i][1]*pixdim)                    
             pts = np.array((probe_x, probe_y, probe_z)).T
             # fit the probe
             line_fit = Line.best_fit(pts)
@@ -169,6 +183,7 @@ for j in range(len(probe_colors)):
             setattr(pr, probe_colors[j], pp)
             setattr(L, probe_colors[j], l)
             setattr(LINE_FIT, probe_colors[j], line_fit)
+            setattr(POINTS, probe_colors[j], [p_x, p_y])
             color_used_t.append(probe_colors[j])
         except:
             pass  
@@ -212,6 +227,8 @@ lut = buildLUT([
               )
 mesh.cmap(lut, data)
 
+
+Ed = np.load(path_files/'Edges.npy')
 # To plot the probe with colors
 fig1 = plt.figure()
 ax1 = fig1.add_subplot(111, aspect='equal')
@@ -308,19 +325,22 @@ for i in range(0,n):
         M = max(m) 
         # plot the probe with the colors of the region traversed
         ax1.add_patch(patches.Rectangle((100*i+20, cc), 17, dist_prop, color=color_prop[0][0]/255))
-        plt.text(100*i, (M+10), 'Probe %d\n(%s)'%(i+1, color_used[i]), color = color_used[i], fontsize=9, fontweight='bold')
+        ax1.text(100*i, (M+10), 'Probe %d\n(%s)'%(i+1, color_used[i]), color = color_used[i], fontsize=9, fontweight='bold')
         if len(iniziali[jj])>7:
-            plt.text(100*i-12, cc+2, '%s-\n%s'%(iniziali[jj][0:5], iniziali[jj][6:]), fontsize=5.6)
+            ax1.text(100*i-12, cc+2, '%s-\n%s'%(iniziali[jj][0:5], iniziali[jj][6:]), fontsize=5.6)
         else:    
-            plt.text(100*i-12, cc+4, '%s'%(iniziali[jj]), fontsize=6)
-        plt.text(100*i+48, cc+4, '%d'%(num_el[jj]), fontsize=6.5)
+            ax1.text(100*i-12, cc+4, '%s'%(iniziali[jj]), fontsize=6)
+        ax1.text(100*i+48, cc+4, '%d'%(num_el[jj]), fontsize=6.5)
         jj +=1
         cc = dist_prop + cc    
-        del regional_dist, position 
-        
-        
-        
-            
+        del regional_dist, position             
+    LL = [regioni,  iniziali, num_el]
+    headers = [' Regions traversed', 'Initials', 'Channels']
+    numpy_array = np.array(LL)
+    transpose = numpy_array.T
+    transpose_list = transpose.tolist()
+    print(tabulate(transpose_list, headers, floatfmt=".2f"))
+    punti = getattr(POINTS, color_used[i])        
     cv_plot_display = np.load(path_files/'cv_plot_display.npy')
     for j in range(len(labels_index)):
         if j in indici:
@@ -328,20 +348,19 @@ for i in range(0,n):
             cv_plot_display[coord[0],coord[1],coord[2],:] =  labels_color[j]                
     # Plot
     fig_color_probe, ax_color_probe = plt.subplots(1, 1) # to plot the region interested with colors
-    IndexTracker_pi_col(ax_color_probe, cv_plot_display/255, Edges, pixdim, P[i].Plane, P[k].Slice, PC[i][0], PC[i][1], line_fit)
-    plt.show()
-            
-    #indici = list(OrderedDict.fromkeys(index))    
-    LL = [regioni,  iniziali, num_el]
-    headers = [' Regions traversed', 'Initials', 'Channels']
-    numpy_array = np.array(LL)
-    transpose = numpy_array.T
-    transpose_list = transpose.tolist()
-    print(tabulate(transpose_list, headers, floatfmt=".2f"))
-lims = (0,M)
-plt.ylim(lims)
-plt.xlim((0,100*n+20))
-plt.axis('off')
+    IndexTracker_pi_col(ax_color_probe, cv_plot_display/255, Ed, pixdim, P[i].Plane, P[i].Slice, punti[0], punti[1], line_fit)
+    ax_color_probe.set_title('Probe %d\n(%s)'%(i+1, color_used[i]))
+    plt.show()    
+
+
+ax1.axis(xmin=0,xmax=100*n+20)
+ax1.axis(ymin=0,ymax=M)
+ax1.axis('off')
+
+
+
+
+
 
 
 # plot all the probes together
