@@ -7,11 +7,11 @@
 import os
 import os.path
 from os import path
+from pathlib import Path
 import numpy as np
 #import gzip  # needed to read .gz files of the Waxholm atlas
 #import nibabel as nib
 import matplotlib
-matplotlib.use('inline')
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import matplotlib.ticker as plticker
@@ -25,7 +25,7 @@ from scipy import ndimage
 #from resizeimage import resizeimage
 
 # Directory of histology images
-histology_folder = r'C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\histology'
+histology_folder = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology')
 
 # Find the histology files in the folder and save the name
 #i = 0
@@ -34,18 +34,13 @@ histology_folder = r'C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\histology
 #    if fnmatch.fnmatch(file, '*.tif'):
 #        file_name.append(file[0:-4])
 #        i+=1
-file_name = input('Histology file name: ')
-        
+file_n = input('Histology file name: ')
+file_name = file_n+'.jpg'
 # Open the histology
-# histology = Image.open(os.path.join(histology_folder, file_name[0]+'.tif'))
-# Windows
-histology = Image.open(os.path.join(histology_folder, file_name+'.jpg')).copy()
+histology = Image.open(histology_folder/file_name).copy()
 # histology = histology.resize((512, 512))
-# Mac
-# histology = Image.open('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/rat.jpg').copy()
-
-
 #histology = resizeimage.resize_crop(histology, [200, 200])
+
 my_dpi = histology.info['dpi'][1]
 pixdim_hist = 25.4/my_dpi # 1 inch = 25,4 mm
 # Set up figure
@@ -53,14 +48,14 @@ fig=plt.figure(figsize=(float(histology.size[0])/my_dpi,float(histology.size[1])
 ax=fig.add_subplot(111)
 # Remove whitespace from around the image
 fig.subplots_adjust(left=0,right=1,bottom=0,top=1)
-ax.set_title("Slice viewer")
+ax.set_title("Histology viewer")
 # Show the histology image  
 ax.imshow(histology)
 plt.tick_params(labelbottom=False, labelleft=False)
 plt.show()
 
 # The modified images will be saved in a subfolder called processed
-path_processed = os.path.join(histology_folder, 'processed')
+path_processed = histology_folder/'processed'
 if not path.exists(os.path.join(histology_folder, 'processed')):
     os.mkdir(path_processed)
 
@@ -78,18 +73,30 @@ elif plane.lower() == 's':
     atlas_reference_size = (512, 1024)
 elif plane.lower() == 'h':
     atlas_reference_size = (1024, 512)
+    
+print('\nThe image is ' + str(histology.size[0]) + ' x ' + str(histology.size[1]) + ' pixels')
+print('It is recommended to crop this image down to under ' + str(atlas_reference_size[0]) + ' x ' + str(atlas_reference_size[1]) + ' pixels\n' )            
 
 # Downsample and adjust histology image  
 # HistologyBrowser(path_processed,histology)
-print('Controls:')    
-print('a: adjust contrast of the image')
-print('r: reset to original')
-print('s: save image and continue')
-print('f: continue')
+print('\nControls: \n')
+print('--------------------------- \n')    
+print('a: adjust contrast of the image\n')
+print('r: reset to original\n')
+print('f: continue after contrast adjusting\n')
+print('t: flip figure of 10° anticlockwise\n') 
+print('y: flip figure of 10° clockwise\n')
+print('g: Add grid\n')
+print('h: Remove grid\n')
+print('n: set grey scale on\n')
+print('c: crop slice\n')
+print('s: terminate figure editing and save\n')
+print('--------------------------- \n')   
 
 # The original istology if needed to be restored
 histology_old = histology.copy()
-
+F = 0
+histology_copy = histology
 factor = 1
 while True:
     if keyboard.is_pressed('a'):  # if key 'a' is pressed 
@@ -134,42 +141,10 @@ while True:
                 ax.imshow(histology)
                 plt.tick_params(labelbottom=False, labelleft=False)
                 plt.show()
-                print('Original histology restored')
-            elif keyboard.is_pressed('s'):
-                histology.save(os.path.join(path_processed, file_name+'_processed.jpeg'),dpi=(my_dpi,my_dpi))
-                print('Histology saved')
-                break                          
+                print('Original histology restored')                        
             elif keyboard.is_pressed('f'):
-                break        
-            elif keyboard.is_pressed('r'):
-                histology = histology_old
-                print('Original histology restored')
+                print('Continue editing')
                 break
-    elif keyboard.is_pressed('s'):
-        histology.save(os.path.join(path_processed, file_name+'_processed.jpeg'),dpi=(my_dpi,my_dpi))
-        print('Histology saved')
-        break
-    elif keyboard.is_pressed('f'):
-        break            
-    
-print('The image is ' + str(histology.size[0]) + ' x ' + str(histology.size[1]) + ' pixels')
-print('It is recommended to crop this image down to under ' + str(atlas_reference_size[0]) + ' x ' + str(atlas_reference_size[1]) + ' pixels' )        
-
-# Automatically save the changes from now on
-print('Controls:')   
-print('t: flip figure of 10° anticlockwise') 
-print('y: flip figure of 10° clockwise')
-print('g: Add/remove grid')
-print('h: Remove grid')
-print('n: set grey scale on')
-print('c: crop slice')
-print('r: reset to original')
-print('s: save image and continue')
-print('e: terminate figure editing and save')
-
-F = 0
-histology_copy = histology
-while True:
     if keyboard.is_pressed('t'):  # if key 'q' is pressed 
         #histology = histology.rotate(10)
         F += 10
@@ -242,7 +217,7 @@ while True:
         ax.imshow(histology)
         plt.tick_params(labelbottom=False, labelleft=False)
         plt.show()
-        print('Histology in greyscale')
+        print('Histology in greyscale')            
     elif keyboard.is_pressed('r'):  
         F = 0
         histology = histology_old # restore the original histology
@@ -275,15 +250,12 @@ while True:
         ax.imshow(histology)
         plt.tick_params(labelbottom=False, labelleft=False)
         plt.show()
-        print('the image is now: ' + str(histology.size[0]) + ' x ' + str(histology.size[1]) + ' pixels')
+        print('the image is now: ' + str(histology.size[0]) + ' x ' + str(histology.size[1]) + ' pixels')        
     elif keyboard.is_pressed('s'):
         histology.save(os.path.join(path_processed, file_name+'_processed.jpeg'),dpi=(my_dpi,my_dpi))
         print('Histology saved')
-        break        
-    elif keyboard.is_pressed('e'):  
-        histology.save(os.path.join(path_processed, file_name+'_processed.jpeg'),dpi=(my_dpi,my_dpi))
-        print('Histology saved')
         break
+
 
         
         
