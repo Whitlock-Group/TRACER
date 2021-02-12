@@ -72,26 +72,10 @@ labels_index, labels_name, labels_color, labels_initial = readlabel( labels_item
 
 # Atlas in RGB colors according with the label file
 cv_plot = np.load(path_files/'cv_plot.npy')/255
-# =============================================================================
-# cv_plot = np.zeros(shape = (atlas_data.shape[0],atlas_data.shape[1],atlas_data.shape[2],3))
-# # here I create the array to plot the brain regions in the RGB
-# # of the label file
-# for i in range(len(labels_index)):
-#     coord = np.where(segmentation_data == labels_index[i][0])        
-#     cv_plot[coord[0],coord[1],coord[2],:] =  labels_color[i]
-# # Remove skull and tissues from atlas_data
-# CC = np.where(mask_data == 0)
-# atlas_data[CC] = 0
-# =============================================================================
 
 # get the edges of the colors defined in the label
 Edges = np.load(path_files/'Edges.npy')
-# =============================================================================
-# Edges = np.empty((512,1024,512))
-# for sl in range(0,1024):
-#     Edges[:,sl,:] = cv2.Canny(np.uint8((cv_plot[:,sl,:]*255).transpose((1,0,2))),100,200)  
-# 
-# =============================================================================
+
 
 # Display the ATLAS
 # resolution
@@ -219,29 +203,24 @@ plt.show()
 mngr_hist = plt.get_current_fig_manager()
 mngr_hist.window.setGeometry(150,300,d2,d1)
         
-# User controls 
-print('\n Registration: \n')
-print('t: toggle mode where clicks are logged for transform \n')
-print('h: toggle overlay of current histology slice \n')
-print('x: save transform and current atlas location')
-print('\nr: toggle mode where clicks are logged for probe \n')
+print('\nControls: \n')
+print('--------------------------- \n')
+print('t: activate mode where clicks are logged for transform \n')
+print('d: delete most recent transform point \n')
+print('h: overlay of current histology slice \n')
+print('x: save transform and current atlas location \n')
+# =============================================================================
+# print("b: display region's boundaries \n")
+# =============================================================================
+print('a: visualization of boundaries \n')
+print('g: activate gridlines \n')
+print('v: activate color atlas mode \n\n')
+print('r: activate mode where clicks are logged for probe \n')
+print('c: delete most recent probe point \n')
 print('n: add a new probe \n')
 print('e: save current probe \n')
-# =============================================================================
-# print('p: switch probe \n')
-# =============================================================================
 print('w: enable probe viewer mode for current probe  \n')
-# =============================================================================
-# print('l: load transform for current slice; press again to load probe points \n');
-# ============================================================================
-print('\n Viewing modes: \n')
-print('a: higher quality visualization of boundaries \n')
-print('b: toggle to viewing boundaries \n')
-print('d: delete most recent transform point \n')
-print('c: delete most recent probe point \n')
-print('g: toggle gridlines \n')
-print('v: toggle to color atlas mode \n')
-
+print('--------------------------- \n')
 # Lists for the points clicked in atlas and histology
 coords_atlas = []
 coords_hist = []
@@ -313,21 +292,24 @@ def on_key(event):
         ax_trans.imshow(img_warped, origin="lower", extent=[0, d1*pixdim, 0, d2*pixdim] )
         ax_trans.set_title("Histology adapted to atlas")
         plt.show()
-    
-    elif event.key == 'b':
-        print('Simple overlay')
-#       SIMPLE OVERLAY
-        global tracker2, fig_g
-        fig_g, ax_g = plt.subplots(1, 1) 
-        ax_g.imshow(img_warped, origin="lower", extent=[0, d1*pixdim, d2*pixdim,0])
-        tracker2 = IndexTracker_g(ax_g, Edges, pixdim, plane, tracker.ind)
-        fig_g.canvas.mpl_connect('scroll_event', tracker2.onscroll)  
-        #ax_g.format_coord = format_coord
-        ax_g.set_title("Histology and atlas overlayed")
-        plt.show()  
-        # Remove axes tick
-        plt.tick_params(axis='both', which='both', bottom=False, left=False, top=False, labelbottom=False, labelleft=False) 
-          
+# =============================================================================
+#     
+#     elif event.key == 'b':
+#         print('Simple overlay')
+# #       SIMPLE OVERLAY
+# # here you can scroll the atlas grid
+#         global tracker2, fig_g
+#         fig_g, ax_g = plt.subplots(1, 1) 
+#         ax_g.imshow(img_warped, origin="lower", extent=[0, d1*pixdim, d2*pixdim,0])
+#         tracker2 = IndexTracker_g(ax_g, Edges, pixdim, plane, tracker.ind)
+#         fig_g.canvas.mpl_connect('scroll_event', tracker2.onscroll)  
+#         #ax_g.format_coord = format_coord
+#         ax_g.set_title("Histology and atlas overlayed")
+#         plt.show()  
+#         # Remove axes tick
+#         plt.tick_params(axis='both', which='both', bottom=False, left=False, top=False, labelbottom=False, labelleft=False) 
+#           
+# =============================================================================
     elif event.key == 'a':        
         print('Overlay to the atlas')
         # get the edges of the colors defined in the label
@@ -492,21 +474,7 @@ def on_key(event):
                             fig_grid.canvas.draw()                        
                             p_probe_grid.pop(-1)
                         except:
-                            pass
-# =============================================================================
-#             elif event.key == 'p':
-#                 print( 'Change probe' )
-#                 global probe_counter
-#                 if probe_counter-1 > 0:
-#                     probe_counter -=  1                                                                                                 
-#                     print('probe %d selected (%s)' %(probe_counter+1, probe_colors[probe_counter]))
-#                 elif probe_counter == 0:
-#                     probe_counter +=1 
-#                     print('probe %d selected (%s)' %(probe_counter+1, probe_colors[probe_counter]))
-# 
-# 
-# =============================================================================
-                        
+                            pass                        
         fig_trans.canvas.mpl_connect('key_press_event', on_key2)
         
     elif event.key == 'e':
