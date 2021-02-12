@@ -209,9 +209,7 @@ print('t: activate mode where clicks are logged for transform \n')
 print('d: delete most recent transform point \n')
 print('h: overlay of current histology slice \n')
 print('x: save transform and current atlas location \n')
-# =============================================================================
-# print("b: display region's boundaries \n")
-# =============================================================================
+print("b: scroll through region's boundaries \n")
 print('a: visualization of boundaries \n')
 print('g: activate gridlines \n')
 print('v: activate color atlas mode \n\n')
@@ -292,24 +290,22 @@ def on_key(event):
         ax_trans.imshow(img_warped, origin="lower", extent=[0, d1*pixdim, 0, d2*pixdim] )
         ax_trans.set_title("Histology adapted to atlas")
         plt.show()
-# =============================================================================
-#     
-#     elif event.key == 'b':
-#         print('Simple overlay')
-# #       SIMPLE OVERLAY
-# # here you can scroll the atlas grid
-#         global tracker2, fig_g
-#         fig_g, ax_g = plt.subplots(1, 1) 
-#         ax_g.imshow(img_warped, origin="lower", extent=[0, d1*pixdim, d2*pixdim,0])
-#         tracker2 = IndexTracker_g(ax_g, Edges, pixdim, plane, tracker.ind)
-#         fig_g.canvas.mpl_connect('scroll_event', tracker2.onscroll)  
-#         #ax_g.format_coord = format_coord
-#         ax_g.set_title("Histology and atlas overlayed")
-#         plt.show()  
-#         # Remove axes tick
-#         plt.tick_params(axis='both', which='both', bottom=False, left=False, top=False, labelbottom=False, labelleft=False) 
-#           
-# =============================================================================
+    
+    elif event.key == 'b':
+        print('Simple overlay to scroll through brain regions')
+#       SIMPLE OVERLAY
+# here you can scroll the atlas grid
+        global tracker2, fig_g
+        fig_g, ax_g = plt.subplots(1, 1) 
+        ax_g.imshow(img_warped, origin="lower", extent=[0, d1*pixdim, d2*pixdim,0])
+        tracker2 = IndexTracker_g(ax_g, Edges, pixdim, plane, tracker.ind)
+        fig_g.canvas.mpl_connect('scroll_event', tracker2.onscroll)  
+        #ax_g.format_coord = format_coord
+        ax_g.set_title("Histology and atlas overlayed")
+        plt.show()  
+        # Remove axes tick
+        plt.tick_params(axis='both', which='both', bottom=False, left=False, top=False, labelbottom=False, labelleft=False) 
+          
     elif event.key == 'a':        
         print('Overlay to the atlas')
         # get the edges of the colors defined in the label
