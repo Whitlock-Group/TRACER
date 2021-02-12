@@ -357,7 +357,7 @@ def on_key(event):
         image_n = input('Image name: ')
         image_name = image_n+'.pkl'
         # The Transformed images will be saved in a subfolder of process histology called transformations
-        path_transformed = os.path.join(processed_histology_folder, 'transformations')
+        path_transformed = processed_histology_folder/'transformations'
         if not path.exists(os.path.join(processed_histology_folder, 'transformations')):
             os.mkdir(path_transformed)
         # Create and save slice, clicked points, and image info                                 
@@ -473,18 +473,18 @@ def on_key(event):
                             pass                        
         fig_trans.canvas.mpl_connect('key_press_event', on_key2)
         
-    elif event.key == 'e':
-        print('Probe points saved')        
-        path_probes = os.path.join(processed_histology_folder, 'probes')
+    elif event.key == 'e':        
+        path_probes = processed_histology_folder/'probes'
         if not path.exists(os.path.join(processed_histology_folder, 'probes')):
             os.mkdir(path_probes)
         # Create and save slice, clicked probes
         P = save_probe(tracker.ind, coords_probe, plane, probe_counter)        # Saving the object
         probe_n = input('Probe name: ')
-        probe_name = probe_n+'probes.pkl'
+        probe_name = probe_n+'_probes.pkl'
         # MAC    
         with open(path_probes/probe_name, 'wb') as F: 
             pickle.dump(P, F)# Create and save slice, clicked points, and image info 
+        print('Probe points saved')    
             
     elif event.key == 'w':
         try:   

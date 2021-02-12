@@ -90,13 +90,7 @@ P = []
 color_used_t = []
 for f in files_probe:
     # WINDOWS
-    P.append(pickle.load(open(os.path.join(path_probes, f), "rb")))
-# =============================================================================
-#     # MAC
-# P.append(pickle.load(open(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes/1probes.pkl', "rb")))
-# P.append(pickle.load(open(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes/2probes.pkl', "rb")))
-# =============================================================================
-# LL = pickle.load(open(os.path.join(path_probes, '1probes.pkl'), "rb"))    
+    P.append(pickle.load(open(os.path.join(path_probes, f), "rb"))) 
 probe_counter = P[0].Counter
 
 # If I have several probes
@@ -351,17 +345,9 @@ for i in range(0,n):
     IndexTracker_pi_col(ax_color_probe, cv_plot_display/255, Ed, pixdim, P[i].Plane, P[i].Slice, punti[0], punti[1], line_fit)
     ax_color_probe.set_title('Probe %d\n(%s)'%(i+1, color_used[i]))
     plt.show()    
-
-
 ax1.axis(xmin=0,xmax=100*n+20)
 ax1.axis(ymin=0,ymax=M)
 ax1.axis('off')
-
-
-
-
-
-
 
 # plot all the probes together
 if n==1:
