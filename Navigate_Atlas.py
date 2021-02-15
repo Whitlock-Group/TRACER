@@ -18,6 +18,7 @@ from nilearn.image import resample_img
 from skimage import io, transform
 import pickle 
 from six.moves import input 
+from skspatial.objects import Line
 
 # Functions defined in separate files
 # read label file
@@ -179,7 +180,7 @@ plt.show()
 
 # Fix size and location of the figure window
 mngr = plt.get_current_fig_manager()
-mngr.window.setGeometry(800,300,d2,d1)      
+mngr.window.setGeometry(800,300,d1,d2)      
 
 # Show the HISTOLOGY
 # Set up figure
@@ -201,7 +202,7 @@ ax_hist.format_coord = lambda x, y: ''
 plt.show()
 # Fix size and location of the figure window
 mngr_hist = plt.get_current_fig_manager()
-mngr_hist.window.setGeometry(150,300,d2,d1)
+mngr_hist.window.setGeometry(150,300,d1,d2)
         
 print('\nControls: \n')
 print('--------------------------- \n')
@@ -496,7 +497,6 @@ def on_key(event):
             for i in range(len(L)):
                 probe_x.append(L[i][0]*pixdim)
                 probe_y.append(L[i][1]*pixdim)
-            m, b = np.polyfit(probe_x, probe_y, 1)
             fig_probe, ax_probe = plt.subplots(1, 1)  
             trackerp = IndexTracker_p(ax_probe, atlas_data, pixdim, plane, tracker.ind)
             fig_probe.canvas.mpl_connect('scroll_event', trackerp.onscroll)        
@@ -531,9 +531,16 @@ def on_key(event):
             mngr_probe = plt.get_current_fig_manager()
             mngr_probe.window.setGeometry(800,300,d2,d1)    
             # plot the clicked points
-            plt.scatter(probe_x, probe_y, color=probe_colors[probe_selecter], s=2)#, marker='o', markersize=1)
+            plt.scatter(probe_x, probe_y, color=probe_colors[probe_selecter], s=2)#, marker='o', markersize=1)            
             # plot the probe
-            plt.plot(np.array(sorted(probe_x)), m*np.array(sorted(probe_x)) + b,color=probe_colors[probe_selecter], linestyle='dashed', linewidth=0.8)
+            pts = np.array((probe_x, probe_y)).T
+            # fit the probe
+            line_fit = Line.best_fit(pts)
+            if line_fit.direction[0] == 0:
+                plt.plot(np.array(sorted(probe_x)), np.array(sorted(probe_y)),color=probe_colors[probe_selecter], linestyle='dashed', linewidth=0.8)
+            else:
+                m, b = np.polyfit(probe_x, probe_y, 1)
+                plt.plot(np.array(sorted(probe_x)), m*np.array(sorted(probe_x)) + b,color=probe_colors[probe_selecter], linestyle='dashed', linewidth=0.8)
             probe_selecter +=1        
         except:
             print('No more probes to visualize')

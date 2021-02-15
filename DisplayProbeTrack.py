@@ -88,9 +88,15 @@ LENGTH = probe_obj()
 P = []
 
 color_used_t = []
-for f in files_probe:
-    # WINDOWS
-    P.append(pickle.load(open(os.path.join(path_probes, f), "rb"))) 
+# =============================================================================
+# for f in files_probe:
+#     # WINDOWS
+#     P.append(pickle.load(open(os.path.join(path_probes, f), "rb"))) 
+# =============================================================================
+    # MAC
+P.append(pickle.load(open(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes/aaa_probes.pkl', "rb")))
+P.append(pickle.load(open(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes/bbb_probes.pkl', "rb")))
+# LL = pickle.load(open(os.path.join(path_probes, '1probes.pkl'), "rb"))    
 probe_counter = P[0].Counter
 
 # If I have several probes
