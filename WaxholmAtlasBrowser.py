@@ -64,10 +64,6 @@ print('u: load saved probe points \n')   ##
 print('e: save probes \n') 
 print('w: enable/disable probe viewer mode for current probe  \n') 
 print('c: delete most recent probe point \n')
-# =============================================================================
-# print('up: scroll through A/P angles \n') ##
-# print('right: scroll through M/L angles \n') ##
-# =============================================================================
 print('--------------------------- \n')
 
 flag = 0
@@ -110,25 +106,6 @@ labels_index, labels_name, labels_color, labels_initials = readlabel( labels_ite
 
 # Atlas in RGB colors according with the label file
 cv_plot = np.load(path_files/'cv_plot.npy')/255
-
-# here I create the array to plot the brain regions in the RGB
-# of the label file
-# =============================================================================
-# cv_plot_display = np.zeros(shape = (atlas_data.shape[0],atlas_data.shape[1],atlas_data.shape[2],3))
-# for i in range(len(labels_index)):
-#     if i == 0:
-#         coord = np.where(segmentation_data == labels_index[i][0])        
-#         cv_plot_display[coord[0],coord[1],coord[2],:] =  labels_color[i]        
-#     else:
-#         coord = np.where(segmentation_data == labels_index[i][0])        
-#         cv_plot_display[coord[0],coord[1],coord[2],:] =  [128,128,128]
-# np.save('cv_plot_display.npy',cv_plot_display)        
-# =============================================================================
-##################
-# Remove skull and tissues from atlas_data
-# CC = np.where(mask_data == 0)
-# atlas_data[CC] = 0
-##################
 
 # Display the ATLAS
 # resolution
@@ -193,12 +170,6 @@ mngr.window.setGeometry(600,200,d2*2,d1*2)
 
 # get the edges of the colors defined in the label
 Edges = np.load(path_files/'Edges.npy')
-# =============================================================================
-# Edges = np.empty((512,1024,512))
-# for sl in range(0,1024):
-#     Edges[:,sl,:] = cv2.Canny(np.uint8((cv_plot[:,sl,:]*255).transpose((1,0,2))),100,200)  
-# 
-# =============================================================================
 
 # Lists for the points clicked in atlas and histology
 coords_atlas = []
