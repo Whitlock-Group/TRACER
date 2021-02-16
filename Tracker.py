@@ -345,10 +345,10 @@ class IndexTracker_pi_col(object):
             self.im2 = ax.imshow(self.edges[self.ind, :, :], origin="lower", alpha=0.5, extent=[0, 512*pixdim, 0, 1024*pixdim], cmap='gray')
         # plot the probe
         if self.line_fit.direction[0] == 0:
-            self.line = plt.plot(np.array(sorted(self.probe_x)), np.array(sorted(self.probe_y)), linestyle='dashed', linewidth=0.8);        
+            self.line = plt.plot(np.array(sorted(self.probe_x)), np.array(sorted(self.probe_y)), linewidth=1.5);        
         else:
             self.m, self.b =  np.polyfit(self.probe_x, self.probe_y, 1)
-            self.line = plt.plot(np.array(sorted(self.probe_x)), self.m*np.array(sorted(self.probe_x)) + self.b,color='black', linestyle='dashed', linewidth=0.8);        
+            self.line = plt.plot(np.array(sorted(self.probe_x)), self.m*np.array(sorted(self.probe_x)) + self.b,color='black', linewidth=1.5);        
         self.ax.set_ylabel('slice %d' % self.ind)
         self.im.axes.figure.canvas.draw()                  
         
