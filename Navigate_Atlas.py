@@ -210,6 +210,7 @@ print('t: activate mode where clicks are logged for transform \n')
 print('d: delete most recent transform point \n')
 print('h: overlay of current histology slice \n')
 print('x: save transform and current atlas location \n')
+print('u: load saved transform and atlas location \n')   ##
 print("b: scroll through region's boundaries \n")
 print('a: visualization of boundaries \n')
 print('g: activate gridlines \n')
@@ -241,14 +242,16 @@ p_probe_grid = []
 # Initialize probe counter and selecter
 probe_counter = 0
 probe_selecter = 0
+flag = 0
 
 # Set up the figure    
 plt.ioff()
 fig_trans, ax_trans = plt.subplots(1, 1)
-#fig_grid, ax_grid = plt.subplots(1, 1)
-# plt.ioff()
+
 # Reaction to key pressed
 def on_key(event):
+    global img_warped, ax_grid, fig_grid
+    global fig_trans, ax_trans, img2
     if event.key == 't': 
         print('Select at least 4 points in the same order in both figures')
         # ATLAS
@@ -278,24 +281,64 @@ def on_key(event):
             return
         # Call click func
         fig_hist.canvas.mpl_connect('button_press_event', onclick_hist)
+    
+    elif event.key == 'u':     
+        # if the histology and atlas have been already overlayed in a previous study it is possible to load it and keep working from that stage
+        # and start recording the probes
+        print('\nLoad image and slice')
+        path_transformed = processed_histology_folder/'transformations'
+        # name of the file
+        im_n = input('Image name: ')
+        image_name = im_n+'.pkl'
+        # load the file
+        IM = pickle.load(open(path_transformed/image_name, "rb"))
+        tracker.ind = IM.Slice
+        img2 = IM.Transform
+        img_warped = IM.Transform_withoulines
+        # open the wreaped figure
+        ax_trans.imshow(img_warped, origin="lower", extent=[0, d1*pixdim, 0, d2*pixdim] )
+        ax_trans.set_title("Histology adapted to atlas")
+        plt.show()
+        # open the overlayed figure
+        fig_grid, ax_grid = plt.subplots(1, 1)
+        overlay = ax_grid.imshow(img2, origin="lower", extent=[0, d1*pixdim, 0, d2*pixdim])   
+        ax_grid.text(0.15, 0.05, textstr, transform=ax.transAxes, fontsize=6 ,verticalalignment='bottom', bbox=props)
+        ax_grid.format_coord = format_coord
+        ax_grid.set_title("Histology and atlas overlayed")
+        plt.show()
+        cursor = mplcursors.cursor(overlay, hover=True)
+        # Show the names of the regions
+        def show_annotation(sel):
+            xi, yi = sel.target/pixdim
+            if np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1)).size:
+                Text = labels_name[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(xi)[1]),tracker.ind,int(math.modf(yi)[1])], axis = 1))[0,0]]
+            else:
+                # display nothing
+                Text = ' '
+            sel.annotation.set_text(Text)
+        cursor.connect('add', show_annotation)   
+        mngr_grid = plt.get_current_fig_manager()
+        mngr_grid.window.setGeometry(800,300,d2,d1)   
+        global flag
+        flag = 1            
+        print('Image loaded')
         
     elif event.key == 'h':
         print('Transform histology to adpat to the atlas')
-        # get the projective transformation from the set of clicked points
+        # get the projective transformation from the set of clicked points  
         t = transform.ProjectiveTransform()
         t.estimate(np.float32(coords_atlas),np.float32(coords_hist))
-        global img_warped, fig_trans, ax_trans # avoid unbound local error when passed top the next step
         img_warped = transform.warp(img_hist_temp, t, output_shape = (d1,d2), order=1, clip=False)#, mode='constant',cval=float('nan'))
         # Show the  transformed figure  
-        #fig_trans, ax_trans = plt.subplots(1, 1)#, figsize=(float(d1)/dpi_atl,float(d2)/dpi_atl))
+        #fig_trans, ax_trans = plt.subplots(1, 1)#, figsize=(float(d1)/dpi_atl,float(d2)/dpi_atl))        
         ax_trans.imshow(img_warped, origin="lower", extent=[0, d1*pixdim, 0, d2*pixdim] )
         ax_trans.set_title("Histology adapted to atlas")
         plt.show()
     
     elif event.key == 'b':
         print('Simple overlay to scroll through brain regions')
-#       SIMPLE OVERLAY
-# here you can scroll the atlas grid
+        # SIMPLE OVERLAY
+        # here you can scroll the atlas grid
         global tracker2, fig_g
         fig_g, ax_g = plt.subplots(1, 1) 
         ax_g.imshow(img_warped, origin="lower", extent=[0, d1*pixdim, d2*pixdim,0])
@@ -315,8 +358,7 @@ def on_key(event):
         elif plane == 's':
             edges = cv2.Canny(np.uint8((cv_plot[tracker.ind,:,:]*255).transpose((1,0,2))),100,200)
         elif plane == 'h':    
-            edges = cv2.Canny(np.uint8((cv_plot[:,:,tracker.ind]*255).transpose((1,0,2))),100,200)
-        global img2, fig_grid, ax_grid
+            edges = cv2.Canny(np.uint8((cv_plot[:,:,tracker.ind]*255).transpose((1,0,2))),100,200)        
         fig_grid, ax_grid = plt.subplots(1, 1)
         # position of the lines
         CC = np.where(edges == 255)
@@ -368,7 +410,8 @@ def on_key(event):
         # Save the images
         fig_name = image_name+'_Transformed_withoutlines.jpeg'
         fig_trans.savefig(os.path.join(path_transformed, fig_name))
-                        
+        print('Image saved')                   
+        
     elif event.key == 'v':
         print('Colored Atlas on')
         global fig_color
@@ -474,7 +517,9 @@ def on_key(event):
                             pass                        
         fig_trans.canvas.mpl_connect('key_press_event', on_key2)
         
-    elif event.key == 'e':        
+    elif event.key == 'e':  
+        # When saving probes use names in increasing order (Alphabetical or numerical) from the one with the first clicked point to the one with the last clicked point. 
+        # Since the order of the clicked points determin the starting and ending of the probe
         path_probes = processed_histology_folder/'probes'
         if not path.exists(os.path.join(processed_histology_folder, 'probes')):
             os.mkdir(path_probes)
