@@ -590,9 +590,7 @@ def on_key(event):
         except:
             print('No more probes to visualize')
             pass
-
-        
-            
+          
 fig.canvas.mpl_connect('key_press_event', on_key)
 fig_hist.canvas.mpl_connect('key_press_event', on_key)
 #fig_grid.canvas.mpl_connect('key_press_event', on_key)
