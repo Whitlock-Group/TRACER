@@ -76,10 +76,10 @@ labels_index, labels_name, labels_color, labels_initial = readlabel( labels_item
 # Probe colors
 probe_colors = ['purple', 'blue', 'yellow', 'orange', 'red', 'green']
 
-path_probe_insertion = '/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Probe_Insertion'
+path_probe_insertion = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Probe_Insertion')
 
 # get the all the files in the probe folder
-files_probe = os.listdir(path_probe_insertion)
+files_probe = [f for f in os.listdir(path_probe_insertion) if not f.startswith('.')] 
 
 L = probe_obj()
 LINE_FIT = probe_obj() 
@@ -87,15 +87,10 @@ pr = probe_obj()
 xyz = probe_obj()
 P = []
 color_used_t = []
-# =============================================================================
-# for f in files_probe:
-    #     # WINDOWS
-    #     P.append(pickle.load(open(os.path.join(path_probes, f), "rb")))
-    # =============================================================================
-    # MAC
-P.append(pickle.load(open(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Probe_Insertion/00.pkl', "rb")))
-# LL = pickle.load(open(os.path.join(path_probes, '1probes.pkl'), "rb"))    
-probe_counter = P[0].Counter
+
+for f in sorted(files_probe):
+    P.append(pickle.load(open(path_probe_insertion/f , "rb")))    
+# probe_counter = P[0].Counter
 
 # If I have several probes
 for j in range(len(probe_colors)):    
