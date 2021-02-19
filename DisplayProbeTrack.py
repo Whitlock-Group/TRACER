@@ -76,7 +76,7 @@ path_probes = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/p
 path_transformed = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/transformations')
 
 # get the all the files in the probe folder
-files_probe = os.listdir(path_probes)
+files_probe = [f for f in os.listdir(path_probes) if not f.startswith('.')]
 files_transformed = os.listdir(path_transformed)
 
 L = probe_obj()
@@ -88,16 +88,9 @@ LENGTH = probe_obj()
 P = []
 
 color_used_t = []
-# =============================================================================
-# for f in files_probe:
-#     # WINDOWS
-#     P.append(pickle.load(open(os.path.join(path_probes, f), "rb"))) 
-# =============================================================================
-    # MAC
-P.append(pickle.load(open(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes/aaa_probes.pkl', "rb")))
-P.append(pickle.load(open(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes/bbb_probes.pkl', "rb")))
-# LL = pickle.load(open(os.path.join(path_probes, '1probes.pkl'), "rb"))    
-probe_counter = P[0].Counter
+for f in sorted(files_probe):
+    P.append(pickle.load(open(path_probes/f , "rb")))    
+# probe_counter = P[0].Counter
 
 # If I have several probes
 for j in range(len(probe_colors)):    
@@ -193,9 +186,6 @@ color_used = list(OrderedDict.fromkeys(color_used_t))
 n = len(color_used)
 
 # load the brain regions
-# =============================================================================
-# Edges = np.load('Edges.npy')
-# =============================================================================
 mask = nib.load(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_brainmask_v1.01.nii.gz')
 mask_data = mask.get_fdata()[:,:,:,0].transpose((2,1,0))
 Edges = np.empty((512,1024,512))
