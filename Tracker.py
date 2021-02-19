@@ -248,21 +248,33 @@ class IndexTracker_pi(object):
             rows, self.slices, cols = X.shape
             self.ind = S
             self.im = ax.imshow(self.X[:, self.ind, :].T, origin="lower", extent=[0, 512*pixdim, 0, 512*pixdim], cmap='gray')
+            # plot the probe
+            if self.line_fit.direction[0] == 0:
+                self.line = plt.plot(np.array(sorted(self.probe_x)), np.array(sorted(self.probe_y)),color=self.probe_colors[self.probe_selecter], linestyle='dashed', linewidth=0.8);           
+            else:
+                self.m, self.b =  np.polyfit(self.probe_x, self.probe_y, 1)
+                self.line = plt.plot(np.array(sorted(self.probe_x)), self.m*np.array(sorted(self.probe_x)) + self.b,color=self.probe_colors[self.probe_selecter], linestyle='dashed', linewidth=0.8);    
         elif self.plane == 's':
             self.slices, rows, cols = X.shape
             self.ind = S                
-            self.im = ax.imshow(self.X[self.ind, :, :].T, origin="lower", extent=[0 ,1024*pixdim, 0, 512*pixdim], cmap='gray')            
+            self.im = ax.imshow(self.X[self.ind, :, :].T, origin="lower", extent=[0 ,1024*pixdim, 0, 512*pixdim], cmap='gray')           
+            # plot the probe
+            if self.line_fit.direction[1] == 0:
+                self.line = plt.plot(np.array(sorted(self.probe_x)), np.array(sorted(self.probe_y)),color=self.probe_colors[self.probe_selecter], linestyle='dashed', linewidth=0.8);           
+            else:
+                self.m, self.b =  np.polyfit(self.probe_x, self.probe_y, 1)
+                self.line = plt.plot(np.array(sorted(self.probe_x)), self.m*np.array(sorted(self.probe_x)) + self.b,color=self.probe_colors[self.probe_selecter], linestyle='dashed', linewidth=0.8);                
         elif self.plane == 'h':  
             rows, cols, self.slices = X.shape
             self.ind = S       
             self.im = ax.imshow(self.X[:, :, self.ind].T, origin="lower", extent=[0, 512*pixdim, 0, 1024*pixdim], cmap='gray') 
-        self.points = [plt.scatter(self.probe_x[i], self.probe_y[i], color=self.probe_colors[self.probe_selecter], s=2) for i in range(len(self.probe_x))]
-        # plot the probe
-        if self.line_fit.direction[0] == 0:
-            self.line = plt.plot(np.array(sorted(self.probe_x)), np.array(sorted(self.probe_y)),color=self.probe_colors[self.probe_selecter], linestyle='dashed', linewidth=0.8);           
-        else:
-            self.m, self.b =  np.polyfit(self.probe_x, self.probe_y, 1)
-            self.line = plt.plot(np.array(sorted(self.probe_x)), self.m*np.array(sorted(self.probe_x)) + self.b,color=self.probe_colors[self.probe_selecter], linestyle='dashed', linewidth=0.8);           
+            # plot the probe
+            if self.line_fit.direction[0] == 0:
+                self.line = plt.plot(np.array(sorted(self.probe_x)), np.array(sorted(self.probe_y)),color=self.probe_colors[self.probe_selecter], linestyle='dashed', linewidth=0.8);           
+            else:
+                self.m, self.b =  np.polyfit(self.probe_x, self.probe_y, 1)
+                self.line = plt.plot(np.array(sorted(self.probe_x)), self.m*np.array(sorted(self.probe_x)) + self.b,color=self.probe_colors[self.probe_selecter], linestyle='dashed', linewidth=0.8);    
+        self.points = [plt.scatter(self.probe_x[i], self.probe_y[i], color=self.probe_colors[self.probe_selecter], s=2) for i in range(len(self.probe_x))]               
         self.update()
 
     def onscroll(self, event):
@@ -272,13 +284,13 @@ class IndexTracker_pi(object):
             self.line.pop(0).remove()
             if self.ind not in self.unique_slice:
                 self.points = [plt.scatter(self.probe_x[i], self.probe_y[i], color=lighten_color(self.probe_colors[self.probe_selecter], 0.4), s=2) for i in range(len(self.probe_x))]
-                if self.line_fit.direction[0] == 0:
+                if (self.line_fit.direction[0] == 0 and (self.plane == 'c' or self.plane == 'h')) or (self.line_fit.direction[1] == 0 and self.plane == 's'):
                     self.line = plt.plot(np.array(sorted(self.probe_x)), np.array(sorted(self.probe_y)),color=lighten_color(self.probe_colors[self.probe_selecter], 0.4), linestyle='dashed', linewidth=0.8)
                 else:
                     self.line = plt.plot(np.array(sorted(self.probe_x)), self.m*np.array(sorted(self.probe_x)) + self.b,color=lighten_color(self.probe_colors[self.probe_selecter], 0.4), linestyle='dashed', linewidth=0.8)
             else:
                 self.points = [plt.scatter(self.probe_x[i], self.probe_y[i], color=self.probe_colors[self.probe_selecter], s=2) for i in range(len(self.probe_x))]
-                if self.line_fit.direction[0] == 0:
+                if (self.line_fit.direction[0] == 0 and (self.plane == 'c' or self.plane == 'h')) or (self.line_fit.direction[1] == 0 and self.plane == 's'):
                     self.line = plt.plot(np.array(sorted(self.probe_x)), np.array(sorted(self.probe_y)),color=self.probe_colors[self.probe_selecter], linestyle='dashed', linewidth=0.8);    
                 else:
                     # plot the probe
@@ -289,14 +301,14 @@ class IndexTracker_pi(object):
             self.line.pop(0).remove()
             if self.ind not in self.unique_slice:                
                 self.points = [plt.scatter(self.probe_x[i], self.probe_y[i], color=lighten_color(self.probe_colors[self.probe_selecter], 0.4), s=2) for i in range(len(self.probe_x))]
-                if self.line_fit.direction[0] == 0:
+                if (self.line_fit.direction[0] == 0 and (self.plane == 'c' or self.plane == 'h')) or (self.line_fit.direction[1] == 0 and self.plane == 's'):
                     self.line = plt.plot(np.array(sorted(self.probe_x)), np.array(sorted(self.probe_y)),color=lighten_color(self.probe_colors[self.probe_selecter], 0.4), linestyle='dashed', linewidth=0.8)
                 else:
                     self.line = plt.plot(np.array(sorted(self.probe_x)), self.m*np.array(sorted(self.probe_x)) + self.b,color=lighten_color(self.probe_colors[self.probe_selecter], 0.4), linestyle='dashed', linewidth=0.8)
             else:
                 self.points = [plt.scatter(self.probe_x[i], self.probe_y[i], color=self.probe_colors[self.probe_selecter], s=2) for i in range(len(self.probe_x))]
                 # plot the probe
-                if self.line_fit.direction[0] == 0:
+                if (self.line_fit.direction[0] == 0 and (self.plane == 'c' or self.plane == 'h')) or (self.line_fit.direction[1] == 0 and self.plane == 's'):
                     self.line = plt.plot(np.array(sorted(self.probe_x)), np.array(sorted(self.probe_y)),color=self.probe_colors[self.probe_selecter], linestyle='dashed', linewidth=0.8);    
                 else:
                     self.line = plt.plot(np.array(sorted(self.probe_x)), self.m*np.array(sorted(self.probe_x)) + self.b,color=self.probe_colors[self.probe_selecter], linestyle='dashed', linewidth=0.8);    
@@ -331,24 +343,36 @@ class IndexTracker_pi_col(object):
             self.L = self.X.transpose((2,1,0,3))
             self.im = ax.imshow(self.L[:, self.ind, :], origin="lower", extent=[0, 512*pixdim, 0, 512*pixdim])                       
             self.im2 = ax.imshow(self.edges[:, self.ind, :], origin="lower", alpha=0.5, extent=[0, 512*pixdim, 0, 512*pixdim,], cmap='gray')
+            # plot the probe
+            if self.line_fit.direction[0] == 0:
+                self.line = plt.plot(np.array(sorted(self.probe_x)), np.array(sorted(self.probe_y)), linewidth=1.5);        
+            else:
+                self.m, self.b =  np.polyfit(self.probe_x, self.probe_y, 1)
+                self.line = plt.plot(np.array(sorted(self.probe_x)), self.m*np.array(sorted(self.probe_x)) + self.b,color='black', linewidth=1.5);  
         elif self.plane == 's':
             self.slices, rows, cols, color= X.shape
             self.ind = S
             self.L = self.X.transpose((0,2,1,3))                  
             self.im = ax.imshow(self.L[self.ind, :, :], origin="lower", extent=[0 ,1024*pixdim, 0, 512*pixdim])            
-            self.im2 = ax.imshow(self.edges[self.ind, :, :], origin="lower", alpha=0.5, extent=[0, 1024*pixdim, 0, 512*pixdim,], cmap='gray')
+            self.im2 = ax.imshow(self.edges[:, :, self.ind], origin="lower", alpha=0.5, extent=[0, 1024*pixdim, 0, 512*pixdim,], cmap='gray')
+                        # plot the probe
+            if self.line_fit.direction[1] == 0:
+                self.line = plt.plot(np.array(sorted(self.probe_x)), np.array(sorted(self.probe_y)), linewidth=1.5);        
+            else:
+                self.m, self.b =  np.polyfit(self.probe_x, self.probe_y, 1)
+                self.line = plt.plot(np.array(sorted(self.probe_x)), self.m*np.array(sorted(self.probe_x)) + self.b,color='black', linewidth=1.5);  
         elif self.plane == 'h':  
             rows, cols, self.slices, color = X.shape
             self.ind = S
             self.L = self.X.transpose((1,0,2,3)) 
             self.im = ax.imshow(self.L[:, :, self.ind], origin="lower", extent=[0, 512*pixdim, 0, 1024*pixdim]) 
             self.im2 = ax.imshow(self.edges[self.ind, :, :], origin="lower", alpha=0.5, extent=[0, 512*pixdim, 0, 1024*pixdim], cmap='gray')
-        # plot the probe
-        if self.line_fit.direction[0] == 0:
-            self.line = plt.plot(np.array(sorted(self.probe_x)), np.array(sorted(self.probe_y)), linewidth=1.5);        
-        else:
-            self.m, self.b =  np.polyfit(self.probe_x, self.probe_y, 1)
-            self.line = plt.plot(np.array(sorted(self.probe_x)), self.m*np.array(sorted(self.probe_x)) + self.b,color='black', linewidth=1.5);        
+            # plot the probe
+            if self.line_fit.direction[0] == 0:
+                self.line = plt.plot(np.array(sorted(self.probe_x)), np.array(sorted(self.probe_y)), linewidth=1.5);        
+            else:
+                self.m, self.b =  np.polyfit(self.probe_x, self.probe_y, 1)
+                self.line = plt.plot(np.array(sorted(self.probe_x)), self.m*np.array(sorted(self.probe_x)) + self.b,color='black', linewidth=1.5);                    
         self.ax.set_ylabel('slice %d' % self.ind)
         self.im.axes.figure.canvas.draw()                  
         
