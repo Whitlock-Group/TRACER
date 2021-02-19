@@ -349,6 +349,7 @@ def on_key(event):
         probe_name = probe_n+'.pkl'
         with open(save_path/probe_name, 'wb') as F: 
             pickle.dump(P, F)# Create and save slice, clicked points, and image info 
+        print('Probe saved')
             
     elif event.key == 'u':        
         print('\nLoad probe')
@@ -358,6 +359,7 @@ def on_key(event):
         Pp.append(pickle.load(open(save_path/probe_name, "rb")))
         global flag
         flag = 1   
+        print('Probe loaded')
             
     elif event.key == 'w':
         global trackerp
@@ -640,7 +642,7 @@ def on_key(event):
                                 cv_plot_display[coord[0],coord[1],coord[2],:] =  labels_color[i]                
                         # Plot
                         fig_color, ax_color = plt.subplots(1, 1) # to plot the region interested with colors
-                        IndexTracker_pi_col(ax_color, cv_plot_display/255, Edges, pixdim, Pp[k].Plane, probe_slice[0], unique_slice, p_x, p_y, line_fit)
+                        IndexTracker_pi_col(ax_color, cv_plot_display/255, Edges, pixdim, Pp[k].Plane, probe_slice[0], p_x, p_y, line_fit)
                         plt.show()
                         mngr_col = plt.get_current_fig_manager()
                         mngr_col.window.setGeometry(650,250,d2*2,d1*2)                                  
