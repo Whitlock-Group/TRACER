@@ -328,7 +328,8 @@ def on_key(event):
         # get the projective transformation from the set of clicked points  
         t = transform.ProjectiveTransform()
         t.estimate(np.float32(coords_atlas),np.float32(coords_hist))
-        img_warped = transform.warp(img_hist_temp, t, output_shape = (d1,d2), order=1, clip=False)#, mode='constant',cval=float('nan'))
+        img_hist_tempo = np.asanyarray(img_hist_temp)
+        img_warped = transform.warp(img_hist_tempo, t, output_shape = (d1,d2), order=1, clip=False)#, mode='constant',cval=float('nan'))
         # Show the  transformed figure  
         #fig_trans, ax_trans = plt.subplots(1, 1)#, figsize=(float(d1)/dpi_atl,float(d2)/dpi_atl))        
         ax_trans.imshow(img_warped, origin="lower", extent=[0, d1*pixdim, 0, d2*pixdim] )
