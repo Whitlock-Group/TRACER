@@ -1,9 +1,11 @@
+"""Brain viewer"""
 from __future__ import print_function
 
 # Import libraries
 import math 
 import os
 import os.path
+from pathlib import Path
 import nibabel as nib
 import numpy as np
 import matplotlib
@@ -18,7 +20,7 @@ import pickle
 from skimage import measure
 from collections import OrderedDict, Counter
 from tabulate import tabulate
-
+from scipy.spatial import distance
     
 # 3d Brain
 from vedo import Volume as VedoVolume
@@ -32,52 +34,41 @@ from skspatial.objects import Line
 #from skspatial.plotting import plot_3d
 
 from ObjSave import  probe_obj, save_probe
+from Tracker import IndexTracker_pi_col
 
 # read label file
 from Readlabel import readlabel
 
-# Labels
-# Mac
-labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
-# Windows
-# labels_item = open(r"C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\Waxholm_Atlas\WHS_SD_rat_atlas_v4_beta.label", "r")
-labels_index, labels_name, labels_color, labels_initial = readlabel( labels_item )   
 
-# Segmentation
-# Mac
-segmentation = nib.load('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.nii.gz')
-# Windows
-#segmentation = nib.load(segmentation_path)
-segmentation_data = segmentation.get_fdata()
+path_files = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Files')
 
-# Load the atlas
-# Mac
-atlas = nib.load(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack/WHS_SD_rat_T2star_v1.01.nii.gz')
-# Windows
-#atlas = nib.load(atlas_path)
+# Paths of the atlas, segmentation and labels
+## Atlas ##
+atlas_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack')
+atlas_path =  atlas_folder/'WHS_SD_rat_T2star_v1.01.nii.gz'
+atlas = nib.load(atlas_path)
 atlas_header = atlas.header
-# get pixel dimension
 pixdim = atlas_header.get('pixdim')[1]
-
-
+#atlas_data = atlas.get_fdata()
+atlas_data = np.load(path_files/'atlas_data_masked.npy')
+## Segmentation ##
+segmentation_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
+segmentation_path = segmentation_folder/'WHS_SD_rat_atlas_v4_beta.nii.gz'
+segmentation = nib.load(segmentation_path)
+segmentation_data = segmentation.get_fdata()
+## Labels ##
+labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
+labels_index, labels_name, labels_color, labels_initial = readlabel( labels_item ) 
 
 # Probe colors
-probe_colors = ['green', 'purple', 'blue', 'yellow', 'orange', 'red']
+probe_colors = ['purple', 'blue', 'yellow', 'orange', 'red', 'green']
 
-# Windows
-# =============================================================================
-# processed_histology_folder = r'C:\Users\jacopop\Box Sync\macbook\Documents\KAVLI\histology\processed'
-# path_probes = os.path.join(processed_histology_folder, 'probes')
-# path_transformed = os.path.join(processed_histology_folder, 'transformations')
-# =============================================================================
-
-# Mac
-processed_histology_folder = r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed'
-path_probes = r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes'
-path_transformed = '/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/transformations'
+processed_histology_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed')
+path_probes = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes')
+path_transformed = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/transformations')
 
 # get the all the files in the probe folder
-files_probe = os.listdir(path_probes)
+files_probe = [f for f in os.listdir(path_probes) if not f.startswith('.')]
 files_transformed = os.listdir(path_transformed)
 
 
@@ -85,16 +76,9 @@ pr = probe_obj()
 PR = probe_obj()
 P = []
 color_used_t = []
-# =============================================================================
-# for f in files_probe:
-#     # WINDOWS
-#     P.append(pickle.load(open(os.path.join(path_probes, f), "rb")))
-# =============================================================================
-    # MAC
-P.append(pickle.load(open(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes/1probes.pkl', "rb")))
-P.append(pickle.load(open(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes/2probes.pkl', "rb")))
-# LL = pickle.load(open(os.path.join(path_probes, '1probes.pkl'), "rb"))    
-probe_counter = P[0].Counter
+for f in sorted(files_probe):
+    P.append(pickle.load(open(path_probes/f , "rb")))    
+# probe_counter = P[0].Counter
 
 # If I have several probes
 for j in range(len(probe_colors)):    
@@ -132,11 +116,6 @@ for j in range(len(probe_colors)):
 color_used = list(OrderedDict.fromkeys(color_used_t))
 n = len(color_used)
 
-# load the brain regions
-Edges = np.load('Edges.npy')
-edges = Edges.T
-coords = np.array(np.where(edges == 255))
-
 # compute and display the insertion angle for each probe
 for i in range(0,n):
     regions = []
@@ -166,16 +145,21 @@ for i in range(0,n):
     transpose = numpy_array.T
     transpose_list = transpose.tolist()
     print(tabulate(transpose_list, headers, floatfmt=".2f"))
-    
-        
-# =============================================================================
-# if ML >0:        
-#     'AP=%1.4f, ML=R%1.4f, z=%1.4f'%(AP, ML, Z)
-# else:
-#     'AP=%1.4f, ML=L%1.4f, z=%1.4f'%(AP, ML, Z)    
-# =============================================================================
 
+# load the brain regions
+mask = nib.load(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_brainmask_v1.01.nii.gz')
+mask_data = mask.get_fdata()[:,:,:,0].transpose((2,1,0))
+Edges = np.empty((512,1024,512))
+for sl in range(0,1024):
+    Edges[:,sl,:] = cv2.Canny(np.uint8((mask_data[:,sl,:])*255),100,200)  
 
+edges = Edges.T
+edges[:,::2,:] = edges[:,::2,:]*0
+edges[:,::5,:] = edges[:,::5,:]*0
+edges[::2,:,:] = edges[::2,:,:]*0
+edges[:,:,::2] = edges[:,:,::2]*0
+
+coords = np.array(np.where(edges == 255))
 # Manage Points cloud
 points = vedo.pointcloud.Points(coords)
 # Create the mesh
@@ -185,7 +169,7 @@ mesh = Mesh(points)
 data = mesh.points()[:,2]  # pick z-coords, use them as scalar data
 # build a custom LookUp Table of colors:
 lut = buildLUT([
-                (512, 'lightgrey', 0.01 ),
+                (512, 'white', 0.07 ),
                ],
                vmin=0, belowColor='lightblue',
                vmax= 512, aboveColor='grey',
@@ -195,31 +179,32 @@ lut = buildLUT([
 mesh.cmap(lut, data)
 
 
+        
+
 # plot all the probes together
 if n==1:
      show(mesh, getattr(pr,color_used[0]), __doc__,
-     axes=0, viewup="z", bg='white',
+     axes=0, viewup="z", bg='black',
      )        
 elif n==2:     
      show(mesh, getattr(pr,color_used[0]), getattr(pr,color_used[1]), __doc__,
-     axes=0, viewup="z", bg='white',
+     axes=0, viewup="z", bg='black',
      )
 elif n == 3:
      show(mesh, getattr(pr,color_used[0]), getattr(pr,color_used[1]), getattr(pr,color_used[2]), __doc__,
-     axes=0, viewup="z",
-     bg='white', 
+     axes=0, viewup="z", bg='black', 
      )
 elif n == 4:
      show(mesh, getattr(pr,color_used[0]), getattr(pr,color_used[1]), getattr(pr,color_used[2]), getattr(pr,color_used[3]), __doc__,
-     axes=0, viewup="z", bg='white',
+     axes=0, viewup="z", bg='black',
      )
 elif n==5:
      show(mesh, getattr(pr,color_used[0]), getattr(pr,color_used[1]), getattr(pr,color_used[2]), getattr(pr,color_used[3]), getattr(pr,color_used[4]), __doc__,
-     axes=0, viewup="z", bg='white',
+     axes=0, viewup="z", bg='black',
      )
 elif n == 6:
      show(mesh, getattr(pr,color_used[0]), getattr(pr,color_used[1]), getattr(pr,color_used[2]), getattr(pr,color_used[3]), getattr(pr,color_used[4]), getattr(pr,color_used[5]), __doc__,
-     axes=0, viewup="z", bg='white',
+     axes=0, viewup="z", bg='black',
      )
 
 
