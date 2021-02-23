@@ -1,6 +1,9 @@
 # First run the nex line in the console
 # %matplotlib inline
 
+# If error with the keypord run from the terminal (ONLY MAC)
+# sudo chmod a+rw /Users/jacopop/Box\ Sync/macbook/Documents/KAVLI/RatBrain
+
 # Adjust the histology images to the right size and format
 
 # Run it for each slices that need to be studied
@@ -23,8 +26,11 @@ from scipy import ndimage
 #import fnmatch
 #from operator import itemgetter
 #from resizeimage import resizeimage
+import warnings
 
-# Directory of histology images
+warnings.simplefilter('ignore', Image.DecompressionBombWarning)
+
+# Directory of histology imagesnew_image = image.resize((400, 400))
 histology_folder = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology')
 
 # Find the histology files in the folder and save the name
@@ -40,19 +46,6 @@ file_name = file_n+'.jpg'
 histology = Image.open(histology_folder/file_name).copy()
 # histology = histology.resize((512, 512))
 #histology = resizeimage.resize_crop(histology, [200, 200])
-
-my_dpi = histology.info['dpi'][1]
-pixdim_hist = 25.4/my_dpi # 1 inch = 25,4 mm
-# Set up figure
-fig=plt.figure(figsize=(float(histology.size[0])/my_dpi,float(histology.size[1])/my_dpi),dpi=my_dpi)
-ax=fig.add_subplot(111)
-# Remove whitespace from around the image
-fig.subplots_adjust(left=0,right=1,bottom=0,top=1)
-ax.set_title("Histology viewer")
-# Show the histology image  
-ax.imshow(histology)
-plt.tick_params(labelbottom=False, labelleft=False)
-plt.show()
 
 # The modified images will be saved in a subfolder called processed
 path_processed = histology_folder/'processed'
@@ -73,9 +66,32 @@ elif plane.lower() == 's':
     atlas_reference_size = (512, 1024)
 elif plane.lower() == 'h':
     atlas_reference_size = (1024, 512)
+
+if histology.size[0] * histology.size[1] > 89478485:
+    oo = histology.size[0] * histology.size[1]
+    print ('Image size (%d pixels) exceeds limit of 89478485 pixels' %oo )
+    print('Image resized to (%d , %d)' %(atlas_reference_size[0], atlas_reference_size[1]))
+    histology = histology.resize(atlas_reference_size)    
     
-print('\nThe image is ' + str(histology.size[0]) + ' x ' + str(histology.size[1]) + ' pixels')
-print('It is recommended to crop this image down to under ' + str(atlas_reference_size[0]) + ' x ' + str(atlas_reference_size[1]) + ' pixels\n' )            
+my_dpi = histology.info['dpi'][1]
+pixdim_hist = 25.4/my_dpi # 1 inch = 25,4 mm
+# Set up figure
+fig=plt.figure(figsize=(float(histology.size[0])/my_dpi,float(histology.size[1])/my_dpi),dpi=my_dpi)
+ax=fig.add_subplot(111)
+# Remove whitespace from around the image
+fig.subplots_adjust(left=0,right=1,bottom=0,top=1)
+# =============================================================================
+# ax.set_title("Histology viewer")
+# =============================================================================
+# Show the histology image  
+ax.imshow(histology)
+plt.tick_params(labelbottom=False, labelleft=False)
+plt.show()    
+    
+if histology.size[0] > atlas_reference_size[0] or histology.size[1] > atlas_reference_size[1]:    
+    print('\nThe image is ' + str(histology.size[0]) + ' x ' + str(histology.size[1]) + ' pixels')
+    print('It is recommended to resize this image down to under ' + str(atlas_reference_size[0]) + ' x ' + str(atlas_reference_size[1]) + ' pixels\n' )            
+
 
 # Downsample and adjust histology image  
 # HistologyBrowser(path_processed,histology)
@@ -110,7 +126,9 @@ while True:
                 ax=fig.add_subplot(111)
                 # Remove whitespace from around the image
                 fig.subplots_adjust(left=0,right=1,bottom=0,top=1)
-                ax.set_title("Slice viewer")
+# =============================================================================
+#                 ax.set_title("Slice viewer")
+# =============================================================================
                 # Show the histology image  
                 ax.imshow(histology)
                 plt.tick_params(labelbottom=False, labelleft=False)
@@ -123,7 +141,9 @@ while True:
                 ax=fig.add_subplot(111)
                 # Remove whitespace from around the image
                 fig.subplots_adjust(left=0,right=1,bottom=0,top=1)
-                ax.set_title("Slice viewer")
+# =============================================================================
+#                 ax.set_title("Slice viewer")
+# =============================================================================
                 # Show the histology image  
                 ax.imshow(histology)
                 plt.tick_params(labelbottom=False, labelleft=False)
@@ -136,7 +156,9 @@ while True:
                 ax=fig.add_subplot(111)
                 # Remove whitespace from around the image
                 fig.subplots_adjust(left=0,right=1,bottom=0,top=1)
-                ax.set_title("Slice viewer")
+# =============================================================================
+#                 ax.set_title("Slice viewer")
+# =============================================================================
                 # Show the histology image  
                 ax.imshow(histology)
                 plt.tick_params(labelbottom=False, labelleft=False)
@@ -154,7 +176,9 @@ while True:
         ax=fig.add_subplot(111)
         # Remove whitespace from around the image
         fig.subplots_adjust(left=0,right=1,bottom=0,top=1)
-        ax.set_title("Slice viewer")
+# =============================================================================
+#         ax.set_title("Slice viewer")
+# =============================================================================
         # Show the histology image  
         ax.imshow(histology)
         # ax.margins(x=0, y=-0.25) 
@@ -170,7 +194,9 @@ while True:
         ax=fig.add_subplot(111)
         # Remove whitespace from around the image
         fig.subplots_adjust(left=0,right=1,bottom=0,top=1)
-        ax.set_title("Slice viewer")
+# =============================================================================
+#         ax.set_title("Slice viewer")
+# =============================================================================
         # Show the histology image  
         ax.imshow(histology)
         plt.tick_params(labelbottom=False, labelleft=False)
@@ -181,7 +207,9 @@ while True:
         ax=fig.add_subplot(111)
         # Remove whitespace from around the image
         fig.subplots_adjust(left=0,right=1,bottom=0,top=1)
-        ax.set_title("Slice viewer")
+# =============================================================================
+#         ax.set_title("Slice viewer")
+# =============================================================================
         myInterval=50.
         ax.xaxis.set_major_locator(plticker.IndexLocator(myInterval,0))
         ax.yaxis.set_major_locator(plticker.IndexLocator(myInterval,0))
@@ -197,7 +225,9 @@ while True:
         ax=fig.add_subplot(111)
         # Remove whitespace from around the image
         fig.subplots_adjust(left=0,right=1,bottom=0,top=1)
-        ax.set_title("Slice viewer")
+# =============================================================================
+#         ax.set_title("Slice viewer")
+# =============================================================================
         # Add the grid
         ax.grid(False)
         # Add the image
@@ -212,7 +242,9 @@ while True:
         ax=fig.add_subplot(111)
         # Remove whitespace from around the image
         fig.subplots_adjust(left=0,right=1,bottom=0,top=1)
-        ax.set_title("Slice viewer")
+# =============================================================================
+#         ax.set_title("Slice viewer")
+# =============================================================================
         # Show the histology image  
         ax.imshow(histology)
         plt.tick_params(labelbottom=False, labelleft=False)
@@ -226,7 +258,9 @@ while True:
         ax=fig.add_subplot(111)
         # Remove whitespace from around the image
         fig.subplots_adjust(left=0,right=1,bottom=0,top=1)
-        ax.set_title("Slice viewer")
+# =============================================================================
+#         ax.set_title("Slice viewer")
+# =============================================================================
         # Show the histology image  
         ax.imshow(histology)
         plt.tick_params(labelbottom=False, labelleft=False)
@@ -245,7 +279,9 @@ while True:
         ax=fig.add_subplot(111)
         # Remove whitespace from around the image
         fig.subplots_adjust(left=0,right=1,bottom=0,top=1)
-        ax.set_title("Slice viewer")
+# =============================================================================
+#         ax.set_title("Slice viewer")
+# =============================================================================
         # Show the histology image  
         ax.imshow(histology)
         plt.tick_params(labelbottom=False, labelleft=False)
