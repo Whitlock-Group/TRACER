@@ -71,7 +71,11 @@ if histology.size[0] * histology.size[1] > 89478485:
     oo = histology.size[0] * histology.size[1]
     print ('Image size (%d pixels) exceeds limit of 89478485 pixels' %oo )
     print('Image resized to (%d , %d)' %(atlas_reference_size[0], atlas_reference_size[1]))
-    histology = histology.resize(atlas_reference_size)    
+    histology_width = 1000
+    width_percent = (histology_width / float(histology.size[0]))
+    height_size = int((float(histology.size[1]) * float(width_percent)))
+    histology = histology.resize((histology_width, height_size), Image.NEAREST)
+ 
     
 my_dpi = histology.info['dpi'][1]
 pixdim_hist = 25.4/my_dpi # 1 inch = 25,4 mm
