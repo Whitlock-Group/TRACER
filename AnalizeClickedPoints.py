@@ -94,12 +94,12 @@ for j in range(len(probe_colors)):
                     probe_x.append(PC[i][0])
                     probe_y.append(P[k].Slice)
                     probe_z.append(PC[i][1])
-            elif P[k].Plane == 'c':
+            elif P[k].Plane == 's':
                 for i in range(len(PC)):
                     probe_x.append(P[k].Slice)
                     probe_y.append(PC[i][0])
                     probe_z.append(PC[i][1])  
-            elif P[k].Plane == 'c':
+            elif P[k].Plane == 'h':
                 for i in range(len(PC)):        
                     probe_x.append(PC[i][0])
                     probe_y.append(PC[i][1])        
@@ -139,8 +139,8 @@ for i in range(0,n):
         
         # count the number of elements in each region to 
     print('\nRegions of clicked points for %s probe: \n ' %color_used[i])
-    LL = [regions,  initials, index, ML, AP,Z]
-    headers = [' Regions', 'Initials','Index', 'ML', 'AP', 'Z']
+    LL = [regions,  initials, ML, AP,Z]
+    headers = [' Regions', 'Initials', 'ML', 'AP', 'Z']
     numpy_array = np.array(LL)
     transpose = numpy_array.T
     transpose_list = transpose.tolist()
