@@ -229,9 +229,11 @@ for i in range(0,n):
     deg_ant = math.degrees(math.atan(line_fit.direction[1]))
     Length = getattr(LENGTH, color_used[i])
     print('\n\nAnalyze %s probe: \n ' %color_used[i])
+    print('Probe length: %.2f mm \n' %Length[0])
     print('Estimated %s probe insertion angle: ' %color_used[i])
     print('%.2f degrees in the anterior direction' %deg_ant)
     print('%.2f degrees in the lateral direction\n' %deg_lat)
+    
 
     # Get the brain regions traversed by the probe
     X1 = getattr(xyz, color_used[i])[0]
