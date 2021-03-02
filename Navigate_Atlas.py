@@ -222,6 +222,8 @@ flag = 0
 # Set up the figure    
 plt.ioff()
 fig_trans, ax_trans = plt.subplots(1, 1)
+mngr_trans = plt.get_current_fig_manager()
+mngr_trans.window.setGeometry(200,350,d2,d1)  
 
 # Reaction to key pressed
 def on_key(event):                   
@@ -545,7 +547,7 @@ def on_key(event):
                 sel.annotation.set_text(Text)
             cursor.connect('add', show_annotation)   
             mngr_probe = plt.get_current_fig_manager()
-            mngr_probe.window.setGeometry(800,300,d2,d1)    
+            mngr_probe.window.setGeometry(900,400,d2,d1)    
             # plot the clicked points
             plt.scatter(probe_x, probe_y, color=probe_colors[probe_selecter], s=2)#, marker='o', markersize=1)            
             # plot the probe
@@ -650,5 +652,4 @@ def on_key(event):
           
 fig.canvas.mpl_connect('key_press_event', on_key)
 fig_hist.canvas.mpl_connect('key_press_event', on_key)
-#fig_grid.canvas.mpl_connect('key_press_event', on_key)
 fig_trans.canvas.mpl_connect('key_press_event', on_key)
