@@ -72,6 +72,17 @@ files_probe = [f for f in os.listdir(path_probes) if not f.startswith('.')]
 files_transformed = os.listdir(path_transformed)
 
 
+# get the all the files in the probe folder that are not folders
+files_probe = []
+for fname in os.listdir(path_probes):
+    pathcheck = os.path.join(path_probes, fname)
+    if fname.startswith('.'):
+        continue
+    if os.path.isdir(pathcheck):
+        continue
+    files_probe.append(fname)
+
+
 pr = probe_obj()
 PR = probe_obj()
 P = []
