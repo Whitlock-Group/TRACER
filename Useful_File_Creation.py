@@ -26,7 +26,7 @@ atlas_data = atlas.get_fdata()
 mask_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
 mask_path = mask_folder/'WHS_SD_rat_brainmask_v1.01.nii.gz'
 mask = nib.load(mask_path)
-mask_data = mask.get_fdata()[:,:,:,0].transpose((2,1,0))
+mask_data = mask.get_fdata()[:,:,:,0]
 ## Segmentation ##
 segmentation_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
 segmentation_path = segmentation_folder/'WHS_SD_rat_atlas_v4_beta.nii.gz'
