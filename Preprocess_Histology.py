@@ -31,7 +31,7 @@ import warnings
 warnings.simplefilter('ignore', Image.DecompressionBombWarning)
 
 # Directory of histology imagesnew_image = image.resize((400, 400))
-histology_folder = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology')
+histology_folder = Path('/Users/admin/RatBrain/histology')
 
 # Find the histology files in the folder and save the name
 #i = 0
@@ -292,6 +292,8 @@ while True:
         plt.show()
         print('the image is now: ' + str(histology.size[0]) + ' x ' + str(histology.size[1]) + ' pixels')        
     elif keyboard.is_pressed('s'):
+        if histology.mode != 'RGB':
+            histology = histology.convert('RGB')
         histology.save(os.path.join(path_processed, file_name+'_processed.jpeg'),dpi=(my_dpi,my_dpi))
         print('Histology saved')
         break

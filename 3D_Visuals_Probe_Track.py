@@ -48,11 +48,11 @@ total_electrodes = 960 # total number of recording sites
 electrode = 0.012 # Electrode size is 12x12 micron
 vert_el_dist = 0.02  # There are 2 electrodes every 0.02 mm
 
-path_files = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Files')
+path_files = Path('/Users/admin/RatBrain')
 
 # Paths of the atlas, segmentation and labels
 ## Atlas ##
-atlas_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack')
+atlas_folder = Path(r'/Users/admin/RatBrain/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack')
 atlas_path =  atlas_folder/'WHS_SD_rat_T2star_v1.01.nii.gz'
 atlas = nib.load(atlas_path)
 atlas_header = atlas.header
@@ -60,19 +60,19 @@ pixdim = atlas_header.get('pixdim')[1]
 #atlas_data = atlas.get_fdata()
 atlas_data = np.load(path_files/'atlas_data_masked.npy')
 ## Segmentation ##
-segmentation_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
+segmentation_folder = Path(r'/Users/admin/RatBrain/Waxholm_Atlas')
 segmentation_path = segmentation_folder/'WHS_SD_rat_atlas_v4_beta.nii.gz'
 segmentation = nib.load(segmentation_path)
 segmentation_data = segmentation.get_fdata()
 ## Labels ##
-labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
+labels_item = open(r"/Users/admin/RatBrain/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
 labels_index, labels_name, labels_color, labels_initial = readlabel( labels_item ) 
 
 # Probe colors
 probe_colors = ['purple', 'blue', 'yellow', 'orange', 'red', 'green']
 
-processed_histology_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed')
-path_probes = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed/probes')
+processed_histology_folder = Path(r'/Users/admin/RatBrain/histology/processed')
+path_probes = Path(r'/Users/admin/RatBrain/histology/processed/probes')
 
 
 # The modified images will be saved in a subfolder called processed
@@ -198,7 +198,7 @@ color_used = list(OrderedDict.fromkeys(color_used_t))
 n = len(color_used)
 
 # load the brain regions
-mask = nib.load(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_brainmask_v1.01.nii.gz')
+mask = nib.load(r'/Users/admin/RatBrain/Waxholm_Atlas/WHS_SD_rat_brainmask_v1.01.nii.gz')
 mask_data = mask.get_fdata()[:,:,:,0].transpose((2,1,0))
 Edges = np.empty((512,1024,512))
 for sl in range(0,1024):
