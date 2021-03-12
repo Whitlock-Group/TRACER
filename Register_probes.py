@@ -30,10 +30,10 @@ from Tracker import IndexTracker, IndexTracker_g, IndexTracker_p
 from ObjSave import  save_transform, probe_obj, save_probe
 
   
-path_files = Path('/Users/admin/RatBrain')      
+path_files = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Files')      
 
 # Directory of the processed histology
-processed_histology_folder = Path('/Users/admin/RatBrain/histology/processed')
+processed_histology_folder = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed')
 
 # get the all the files in the probe folder and load the his
 
@@ -53,7 +53,7 @@ for fname in os.listdir(processed_histology_folder):
 
 # Paths of the atlas, segmentation and labels
 ## Atlas ##
-atlas_folder = Path(r'/Users/admin/RatBrain/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack')
+atlas_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack')
 atlas_path =  atlas_folder/'WHS_SD_rat_T2star_v1.01.nii.gz'
 atlas = nib.load(atlas_path)
 atlas_header = atlas.header
@@ -61,17 +61,17 @@ pixdim = atlas_header.get('pixdim')[1]
 #atlas_data = atlas.get_fdata()
 atlas_data = np.load(path_files/'atlas_data_masked.npy')
 ## Mask ##
-mask_folder = Path(r'/Users/admin/RatBrain/Waxholm_Atlas')
+mask_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
 mask_path = mask_folder/'WHS_SD_rat_brainmask_v1.01.nii.gz'
 mask = nib.load(mask_path)
 mask_data = mask.get_fdata()[:,:,:,0].transpose((2,1,0))
 ## Segmentation ##
-segmentation_folder = Path(r'/Users/admin/RatBrain/Waxholm_Atlas')
+segmentation_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
 segmentation_path = segmentation_folder/'WHS_SD_rat_atlas_v4_beta.nii.gz'
 segmentation = nib.load(segmentation_path)
 segmentation_data = segmentation.get_fdata()
 ## Labels ##
-labels_item = open(r"/Users/admin/RatBrain/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
+labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
 labels_index, labels_name, labels_color, labels_initial = readlabel( labels_item ) 
 
 # Atlas in RGB colors according with the label file
@@ -353,7 +353,7 @@ def on_key(event):
         CC = np.where(edges == 255)
         img2 = (img_warped).copy()
         # get the lines in the warped figure
-        img2[CC] = 0.5
+        img2[CC] = 0.5 # here change grid color (0 black, 1 white)
         overlay = ax_grid.imshow(img2, origin="lower", extent=[0, d1*pixdim, 0, d2*pixdim])   
         ax_grid.text(0.15, 0.05, textstr, transform=ax.transAxes, fontsize=6 ,verticalalignment='bottom', bbox=props)
         ax_grid.format_coord = format_coord
@@ -433,7 +433,7 @@ def on_key(event):
         except:
             pass
         try: 
-            plt.close(fig_color) +m Æsmall
+            plt.close(fig_color)
         except:
             pass
         # probes have different colors 

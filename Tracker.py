@@ -18,7 +18,7 @@ class IndexTracker(object):
         if self.plane == 'c':
             rows, self.slices, cols = X.shape
             self.ind = 653
-            self.im = ax.imshow(self.X[:, self.ind, :].T, origin="lower", extent=[0, 512*pixdim, 0, 512*pixdim], cmap='gray')
+            self.im = ax.imshow(self.X[:, self.ind, :].T, origin="lower", extent=[0, 512*pixdim, 0, 512*pixdim], cmap='grey') #cmap='gist_yarg' if white background wanted
         elif self.plane == 's':
             self.slices, rows, cols = X.shape
             self.ind = 246                

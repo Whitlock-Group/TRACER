@@ -297,6 +297,7 @@ for i in range(0,n):
     numpy_array = np.array(LL)
     transpose = numpy_array.T
     transpose_list = transpose.tolist()
+    transpose_list.reverse()
     print(tabulate(transpose_list, headers, floatfmt=".2f"))
 lims = (0,max(dist))
 plt.ylim(lims)
