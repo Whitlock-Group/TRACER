@@ -233,6 +233,8 @@ def on_key(event):
     global fig_hist, ax_hist, pixdim_hist, dpi_hist, mngr_hist
     global coords_atlas, redp_atlas, rednum_atlas, cid_atlas
     global coords_hist, redp_hist, rednum_hist, cid_hist
+    global coords_probe_temp_w, coords_probe_temp_g, coords_probe_temp_p, coords_probe_temp_b, coords_probe_temp_y, coords_probe_temp_o, coords_probe_temp_r
+    
     if event.key == 't': 
         print('\nRegister %s' %os.path.splitext(names[jj])[0])
         print('Select at least 4 points in the same order in both figures')    
@@ -318,7 +320,13 @@ def on_key(event):
         img_hist_tempo = np.asanyarray(img_hist_temp[jj])
         img_warped = transform.warp(img_hist_tempo, t, output_shape = (d1,d2), order=1, clip=False)#, mode='constant',cval=float('nan'))
         # Show the  transformed figure  
-        #fig_trans, ax_trans = plt.subplots(1, 1)#, figsize=(float(d1)/dpi_atl,float(d2)/dpi_atl))        
+        #fig_trans, ax_trans = plt.subplots(1, 1)#, figsize=(float(d1)/dpi_atl,float(d2)/dpi_atl))
+# =============================================================================
+#         # Select all black pixels 
+#         black = np.array([0, 0, 0])
+#         mask = np.abs(img_warped - black).sum(axis=2) < 0.03
+#         img_warped[mask] = [1, 1, 1]
+# =============================================================================
         ax_trans.imshow(img_warped, origin="lower", extent=[0, d1*pixdim, 0, d2*pixdim] )
         ax_trans.set_title("Histology adapted to atlas")
         fig_trans.canvas.draw()
@@ -479,7 +487,7 @@ def on_key(event):
             fig_trans.canvas.draw()
             return
         # Call click func
-        cid_trans = fig_trans.canvas.mpl_connect('button_press_event', onclick_probe) 
+        cid_trans2 = fig_trans.canvas.mpl_connect('button_press_event', onclick_probe) 
         
         def on_key2(event):            
             if event.key == 'n':
@@ -515,7 +523,7 @@ def on_key(event):
                             p_probe_grid.pop(-1)
                         except:
                             pass                                  
-        fig_trans.canvas.mpl_connect('key_press_event', on_key2)                  
+        cid_trans = fig_trans.canvas.mpl_connect('key_press_event', on_key2)                  
     elif event.key == 'w':
         try:   
             global probe_selecter, fig_probe
@@ -609,7 +617,7 @@ def on_key(event):
                 redp_hist[-1].remove() # remove the point from the plot
                 fig_hist.canvas.draw()
                 redp_hist.pop(-1)
-                rednum_hist.pop(-1)
+                rednum_hist.pop(-1)       
                 
             for j in range(len(probe_colors)):
                 try:
@@ -629,6 +637,7 @@ def on_key(event):
             fig.canvas.mpl_disconnect(cid_atlas)
             fig_hist.canvas.mpl_disconnect(cid_hist)  
             fig_trans.canvas.mpl_disconnect(cid_trans)  
+            #fig_trans.canvas.mpl_disconnect(cid_trans2)
                 
             #OPEN A NEW HISTOLOGY FOR NEXT REGISTRATION
             # get the pixel dimension
