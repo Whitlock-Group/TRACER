@@ -6,4 +6,5 @@ TRACKER is a useful toolbox for visualizing the trajectories of recording electr
 References:
 
 Papp, Eszter A., et al. "Waxholm Space atlas of the Sprague Dawley rat brain." Neuroimage 97 (2014): 374-386.
+
 Shamash, Philip, et al. "A tool for analyzing electrode tracks from slice histology." BioRxiv (2018): 447995.
