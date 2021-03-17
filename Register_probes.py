@@ -1,3 +1,6 @@
+"""
+@author: jacopop
+"""
 from __future__ import print_function
 
 # Import libraries
@@ -234,7 +237,7 @@ def on_key(event):
     global coords_atlas, redp_atlas, rednum_atlas, cid_atlas
     global coords_hist, redp_hist, rednum_hist, cid_hist
     global coords_probe_temp_w, coords_probe_temp_g, coords_probe_temp_p, coords_probe_temp_b, coords_probe_temp_y, coords_probe_temp_o, coords_probe_temp_r
-    
+    global cid_trans2
     if event.key == 't': 
         print('\nRegister %s' %os.path.splitext(names[jj])[0])
         print('Select at least 4 points in the same order in both figures')    
@@ -451,7 +454,7 @@ def on_key(event):
         def onclick_probe(event):
             global px, py
             px, py = event.xdata/pixdim, event.ydata/pixdim
-            # assign global variable to access outside of function
+            # assign global variable to access outsid e of function
             global coords_probe_temp_w, coords_probe_temp_g, coords_probe_temp_p, coords_probe_temp_b, coords_probe_temp_y, coords_probe_temp_o, coords_probe_temp_r,  p_probe_grid, p_probe_trans
             if probe_counter == 0:
                 coords_probe_temp_w.append((px, py)) 
@@ -487,7 +490,7 @@ def on_key(event):
             fig_trans.canvas.draw()
             return
         # Call click func
-        cid_trans2 = fig_trans.canvas.mpl_connect('button_press_event', onclick_probe) 
+        cid_trans = fig_trans.canvas.mpl_connect('button_press_event', onclick_probe) 
         
         def on_key2(event):            
             if event.key == 'n':
@@ -523,7 +526,7 @@ def on_key(event):
                             p_probe_grid.pop(-1)
                         except:
                             pass                                  
-        cid_trans = fig_trans.canvas.mpl_connect('key_press_event', on_key2)                  
+        cid_trans2 = fig_trans.canvas.mpl_connect('key_press_event', on_key2)                  
     elif event.key == 'w':
         try:   
             global probe_selecter, fig_probe
@@ -584,6 +587,8 @@ def on_key(event):
             pass
         
     elif event.key == 'e':  
+        fig_trans.canvas.mpl_disconnect(cid_trans)  
+        fig_trans.canvas.mpl_disconnect(cid_trans2)
         # When saving probes use names in increasing order (Alphabetical or numerical) from the one with the first clicked point to the one with the last clicked point. 
         # Since the order of the clicked points determin the starting and ending of the probe
         path_probes = processed_histology_folder/'probes'
@@ -636,8 +641,10 @@ def on_key(event):
             jj +=1 
             fig.canvas.mpl_disconnect(cid_atlas)
             fig_hist.canvas.mpl_disconnect(cid_hist)  
-            fig_trans.canvas.mpl_disconnect(cid_trans)  
-            #fig_trans.canvas.mpl_disconnect(cid_trans2)
+# =============================================================================
+#             fig_trans.canvas.mpl_disconnect(cid_trans)  
+#             #fig_trans.canvas.mpl_disconnect(cid_trans2)
+# =============================================================================
                 
             #OPEN A NEW HISTOLOGY FOR NEXT REGISTRATION
             # get the pixel dimension
