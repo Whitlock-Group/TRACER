@@ -1,8 +1,7 @@
-# RatBrain
+# TRACKER
+TRACKER is a useful toolbox for visualizing the trajectories of recording electrodes(e.g Neuropixels) through different sub-regions of the rat brain. Anatomical delineations are referenced from the Waxholm Space atlas of the adult Sprague Dawley rat brain(https://www.nitrc.org/projects/whs-sd-atlas). there are two packages in the TRACKER toolbox. One is for locating electrode tracks in the brain post-hoc using histological images, and the other is for generating coordinates prior to surgery in order to target specific brain regions. So happy tracking! 
 
 
-To change colors of the brain regions modify directly the label file. Be careful with this operation, and always keep a copy of the orginal file. When the file is modified remember to put the right name of the file in the scripts.
 
-When registering probes, it is important that the first and the last point clicked correspond to the entry point and to the last visible point of the probe.
-
-Interesting link to read the Waholm atlas: https://interactive-viewer.apps.hbp.eu/?templateSelected=Waxholm+Space+rat+brain+MRI%2FDTI&parcellationSelected=Waxholm+Space+rat+brain+atlas+v3&cNavigation=0.0.0.-W000.._9NGe.2-EX8V.-1Nk1.2_rMSN..1Sjt..Ecv%7E.Lqll%7E.33ix..9u8
+References:
+Papp, Eszter A., et al. "Waxholm Space atlas of the Sprague Dawley rat brain." Neuroimage 97 (2014): 374-386.
