@@ -1,3 +1,7 @@
+"""
+@author: jacopopaglia
+"""
+
 # Creation of importat files used in the scripts
 # This need to be done just once, if those file are not availabe or the atlas has been updated
 
