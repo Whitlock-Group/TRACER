@@ -1,3 +1,7 @@
+"""
+@author: jacopop
+"""
+
 from __future__ import print_function
 
 # Import libraries
