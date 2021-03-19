@@ -1,13 +1,13 @@
 numpy==1.19.4
 matplotlib==3.3.3
 mplcursors==0.3
-Pillow @ file:///opt/concourse/worker/volumes/live/be1e8a56-c4be-4ffe-4fa7-5a0e9c460b1a/volume/pillow_1594307312933/work
-keyboard @ git+https://github.com/boppreh/keyboard@e277e3f2baf53ee1d7901cbb562f443f8f861b90
-scipy @ file:///opt/concourse/worker/volumes/live/7f5e51f8-abf3-4409-4c56-a4fb14cc9869/volume/scipy_1593104185999/work
-nibabel @ file:///home/conda/feedstock_root/build_artifacts/nibabel_1603212922321/work
+Pillow==8.1.0
+keyboard==0.13.5
+scipy==1.6.0
+nibabel==3.2.1
 nilearn==0.7.0
 opencv-python==4.5.1.48
 scikit-image==0.18.1
 scikit-spatial==5.1.0
-vedo @ git+https://github.com/marcomusy/vedo.git@af7553dc04283e001cb03f910cfaf00f4682eb86
+vedo
 tabulate==0.8.7
