@@ -198,7 +198,7 @@ lut = buildLUT([
 mesh.cmap(lut, data)
 
 dist = []
-
+dist_real = []
 # To plot the probe with colors
 
 fig1 = plt.figure()
@@ -209,9 +209,6 @@ for i in range(0,n):
     deg_lat = math.degrees(math.atan(line_fit.direction[0]))
     deg_ant = math.degrees(math.atan(line_fit.direction[1]))
     print('\n\nAnalyze %s probe: \n ' %color_used[i])
-    print('Estimated %s probe insertion angle: ' %color_used[i])
-    print('%.2f degrees in the anterior direction' %deg_ant)
-    print('%.2f degrees in the lateral direction\n' %deg_lat)
 
     # Get the brain regions traversed by the probe
     X1 = getattr(xyz, color_used[i])[0]
@@ -225,7 +222,15 @@ for i in range(0,n):
     initials = []
     index = []
     point_along_line = []
-    if line_fit.direction[2] == 0:                
+    if line_fit.direction[2] == 0:      
+        # position_at_bregma_depth
+        z0 = 440*pixdim # correspond at the position of the bregma DV=0
+        x0 = pts[0,0]
+        y0 = line_fit.point[1]+((x0-line_fit.point[0])/line_fit.direction[0])*line_fit.direction[1]
+        ML_position = (x0-246*pixdim)
+        AP_position = (y0-653*pixdim)
+        X0 = np.array([x0,y0,z0])     
+        dist_real.append(np.linalg.norm(np.array(X0)-np.array(X2)))
         for x in range(min(s,f), max(s,f)):                        
             y = line_fit.point[1]/pixdim+((x-line_fit.point[0]/pixdim)/line_fit.direction[0])*line_fit.direction[1]
             z = pts[0,2]
@@ -239,6 +244,14 @@ for i in range(0,n):
                 colori.append(labels_color[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(x)[1]),int(math.modf(y)[1]),int(math.modf(z)[1])], axis = 1))[0,0]])
                 initials.append(labels_initial[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(x)[1]),int(math.modf(y)[1]),int(math.modf(z)[1])], axis = 1))[0,0]])
     else:
+        # position_at_bregma_depth
+        z0 = 440*pixdim # correspond at the position of the bregma DV=0
+        x0 = line_fit.point[0]+((z0-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[0]
+        y0 = line_fit.point[1]+((z0-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[1]
+        ML_position = (x0-246*pixdim)
+        AP_position = (y0-653*pixdim)
+        X0 = np.array([x0,y0,z0])    
+        dist_real.append(np.linalg.norm(np.array(X0)-np.array(X2)))
         for z in range(min(s,f),max(s,f)):
             x = line_fit.point[0]/pixdim+((z-line_fit.point[2]/pixdim)/line_fit.direction[2])*line_fit.direction[0]
             y = line_fit.point[1]/pixdim+((z-line_fit.point[2]/pixdim)/line_fit.direction[2])*line_fit.direction[1]
@@ -252,6 +265,16 @@ for i in range(0,n):
                 colori.append(labels_color[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(x)[1]),int(math.modf(y)[1]),int(math.modf(z)[1])], axis = 1))[0,0]])
                 initials.append(labels_initial[np.argwhere(np.all(labels_index == segmentation_data[int(math.modf(x)[1]),int(math.modf(y)[1]),int(math.modf(z)[1])], axis = 1))[0,0]])
             #index.append(segmentation_data[int(math.modf(x)[1]),int(math.modf(y)[1]),int(math.modf(z)[1])])
+    print('Insertion distance from the above position: %.2f mm' %dist_real[i])
+    if ML_position>0:
+        testo = '            ---Estimated probe insertion--- \nEntry position at DV = 0: AP = %.2f mm, ML = R%.2f mm \nInsertion distance from the above position: %.2f mm \n%.2f degrees in the anterior direction \n%.2f degrees in the lateral direction ' %( AP_position, abs(ML_position), dist_real[i], deg_ant, deg_lat)                    
+        print('Entry position at DV = 0: AP = %.2f mm, ML = R%.2f mm' %(AP_position, abs(ML_position)))
+    else:
+        testo = '            ---Estimated probe insertion--- \nEntry position at DV = 0: AP = %.2f mm, ML = L%.2f mm \nInsertion distance from the above position: %.2f mm \n%.2f degrees in the anterior direction \n%.2f degrees in the lateral direction ' %( AP_position, abs(ML_position), dist_real[i], deg_ant, deg_lat)                    
+        print('Entry position at DV = 0: AP = %.2f mm, ML = L%.2f fmm' %(AP_position, abs(ML_position)))       
+    print('Estimated %s probe insertion angle: ' %color_used[i])
+    print('%.2f degrees in the anterior direction' %deg_ant)
+    print('%.2f degrees in the lateral direction\n' %deg_lat)    
     # count the number of elements in each region to 
     counter_regions = dict(Counter(regions))    
     regioni = list(OrderedDict.fromkeys(regions))
