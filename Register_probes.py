@@ -345,7 +345,7 @@ def on_key(event):
         tracker2 = IndexTracker_g(ax_g, Edges, pixdim, plane, tracker.ind)
         fig_g.canvas.mpl_connect('scroll_event', tracker2.onscroll)  
         #ax_g.format_coord = format_coord
-        ax_g.set_title("Histology and atlas overlayed")
+        ax_g.set_title("Histology and atlas overlaid")
         plt.show()  
         # Remove axes tick
         plt.tick_params(axis='both', which='both', bottom=False, left=False, top=False, labelbottom=False, labelleft=False) 
