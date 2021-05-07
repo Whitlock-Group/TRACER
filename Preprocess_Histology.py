@@ -32,7 +32,7 @@ import warnings
 warnings.simplefilter('ignore', Image.DecompressionBombWarning)
 
 # Directory of histology imagesnew_image = image.resize((400, 400))
-histology_folder = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology')
+histology_folder = Path('/Users/pearlsaldanha/TRACER-3D/Histology')
 
 # Find the histology files in the folder and save the name
 #i = 0
@@ -44,8 +44,9 @@ histology_folder = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histolo
 file_n = input('Histology file name: ')
 file_name = file_n+'.jpg'
 # Open the histology
+
 histology = Image.open(histology_folder/file_name).copy()
-# histology = histology.resize((512, 512))
+#histology = histology.resize((512, 512))
 #histology = resizeimage.resize_crop(histology, [200, 200])
 
 # The modified images will be saved in a subfolder called processed

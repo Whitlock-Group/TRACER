@@ -12,14 +12,14 @@ import cv2
 # read label file
 from Readlabel import readlabel
   
-path_files = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Files')      
+path_files = Path('/Users/pearlsaldanha/TRACER-3D')      
 
 # Directory of the processed histology
-processed_histology_folder = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed')
+processed_histology_folder = Path('/Users/pearlsaldanha/TRACER-3D/histology/processed')
 
 # Paths of the atlas, segmentation and labels
 ## Atlas ##
-atlas_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack')
+atlas_folder = Path(r'/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack')
 atlas_path =  atlas_folder/'WHS_SD_rat_T2star_v1.01.nii.gz'
 atlas = nib.load(atlas_path)
 atlas_header = atlas.header
@@ -27,17 +27,17 @@ pixdim = atlas_header.get('pixdim')[1]
 atlas_data = atlas.get_fdata()
 
 ## Mask ##
-mask_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
+mask_folder = Path(r'/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas')
 mask_path = mask_folder/'WHS_SD_rat_brainmask_v1.01.nii.gz'
 mask = nib.load(mask_path)
 mask_data = mask.get_fdata()[:,:,:,0]
 ## Segmentation ##
-segmentation_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
-segmentation_path = segmentation_folder/'WHS_SD_rat_atlas_v4_beta.nii.gz'
+segmentation_folder = Path(r'/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas')
+segmentation_path = segmentation_folder/'WHS_SD_rat_atlas_v3.nii.gz'
 segmentation = nib.load(segmentation_path)
 segmentation_data = segmentation.get_fdata()
 ## Labels ##
-labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
+labels_item = open(r"/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas/WHS_SD_rat_atlas_v3.label", "r")
 labels_index, labels_name, labels_color, labels_initial = readlabel( labels_item ) 
 
 ### Atlas in RGB colors according with the label file ###

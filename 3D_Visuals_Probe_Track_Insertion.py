@@ -48,11 +48,11 @@ electrode = 0.012 # Electrode size is 12x12 micron
 vert_el_dist = 0.02 
 # There are 2 electrodes every 0.02 mm
 
-path_files = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Files')
+path_files = Path('/Users/pearlsaldanha/TRACER-3D')
 
 # Paths of the atlas, segmentation and labels
 ## Atlas ##
-atlas_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack')
+atlas_folder = Path(r'/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack')
 atlas_path =  atlas_folder/'WHS_SD_rat_T2star_v1.01.nii.gz'
 atlas = nib.load(atlas_path)
 atlas_header = atlas.header
@@ -60,23 +60,23 @@ pixdim = atlas_header.get('pixdim')[1]
 #atlas_data = atlas.get_fdata()
 atlas_data = np.load(path_files/'atlas_data_masked.npy')
 ## Mask ##
-mask_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
+mask_folder = Path(r'/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas')
 mask_path = mask_folder/'WHS_SD_rat_brainmask_v1.01.nii.gz'
 mask = nib.load(mask_path)
 mask_data = mask.get_fdata()[:,:,:,0].transpose((2,1,0))
 ## Segmentation ##
-segmentation_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
-segmentation_path = segmentation_folder/'WHS_SD_rat_atlas_v4_beta.nii.gz'
+segmentation_folder = Path(r'/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas')
+segmentation_path = segmentation_folder/'WHS_SD_rat_atlas_v3.nii.gz'
 segmentation = nib.load(segmentation_path)
 segmentation_data = segmentation.get_fdata()
 ## Labels ##
-labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
+labels_item = open(r"/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas/WHS_SD_rat_atlas_v3.label", "r")
 labels_index, labels_name, labels_color, labels_initial = readlabel( labels_item ) 
 
 # Probe colors
 probe_colors = ['purple', 'blue', 'yellow', 'orange', 'red', 'green']
 
-path_probe_insertion = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Probe_Insertion')
+path_probe_insertion = Path('/Users/pearlsaldanha/TRACER-3D/Probe_Insertion')
 
 # get the all the files in the probe folder
 files_probe = [f for f in os.listdir(path_probe_insertion) if not f.startswith('.')] 

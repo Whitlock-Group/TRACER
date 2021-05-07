@@ -72,10 +72,10 @@ print('--------------------------- \n')
 
 flag = 0
 
-path_files = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Files')
+path_files = Path('/Users/pearlsaldanha/TRACER-3D')
 
 # Directory of the processed histology
-path_probe_insertion = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Probe_Insertion')
+path_probe_insertion = Path('/Users/pearlsaldanha/TRACER-3D/Probe_Insertion')
 if not path.exists(path_probe_insertion):
     os.mkdir(path_probe_insertion)
 
@@ -87,7 +87,7 @@ while plane != 'c' and plane != 's' and plane != 'h':
 
 # Paths of the atlas, segmentation and labels
 ## Atlas ##
-atlas_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack')
+atlas_folder = Path(r'/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack')
 atlas_path =  atlas_folder/'WHS_SD_rat_T2star_v1.01.nii.gz'
 atlas = nib.load(atlas_path)
 atlas_header = atlas.header
@@ -95,17 +95,17 @@ pixdim = atlas_header.get('pixdim')[1]
 #atlas_data = atlas.get_fdata()
 atlas_data = np.load(path_files/'atlas_data_masked.npy')
 ## Mask ##
-mask_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
+mask_folder = Path(r'/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas')
 mask_path = mask_folder/'WHS_SD_rat_brainmask_v1.01.nii.gz'
 #mask = nib.load(mask_path)
 #mask_data = mask.get_fdata()[:,:,:,0]
 ## Segmentation ##
-segmentation_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
-segmentation_path = segmentation_folder/'WHS_SD_rat_atlas_v4_beta.nii.gz'
+segmentation_folder = Path(r'/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas')
+segmentation_path = segmentation_folder/'WHS_SD_rat_atlas_v3.nii.gz'
 segmentation = nib.load(segmentation_path)
 segmentation_data = segmentation.get_fdata()
 ## Labels ##
-labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
+labels_item = open(r"/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas/WHS_SD_rat_atlas_v3.label", "r")
 labels_index, labels_name, labels_color, labels_initials = readlabel( labels_item )  
 
 # Atlas in RGB colors according with the label file
@@ -348,7 +348,7 @@ def on_key(event):
         print('\n Save probe')        
         # Create and save slice, clicked probes
         P = save_probe_insertion(coords_probe, plane, probe_counter)        # Saving the object
-        save_path = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Probe_Insertion')
+        save_path = Path('/Users/pearlsaldanha/TRACER-3D/Probe_Insertion')
         probe_n = input('Probe name: ')
         probe_name = probe_n+'.pkl'
         with open(save_path/probe_name, 'wb') as F: 
@@ -357,7 +357,7 @@ def on_key(event):
             
     elif event.key == 'u':        
         print('\nLoad probe')
-        save_path = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Probe_Insertion')
+        save_path = Path('/Users/pearlsaldanha/TRACER-3D/Probe_Insertion')
         probe_n = input('Probe name: ')
         probe_name = probe_n+'.pkl'
         Pp.append(pickle.load(open(save_path/probe_name, "rb")))

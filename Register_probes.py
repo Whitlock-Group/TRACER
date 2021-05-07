@@ -33,10 +33,10 @@ from Tracker import IndexTracker, IndexTracker_g, IndexTracker_p
 from ObjSave import  save_transform, probe_obj, save_probe
 
   
-path_files = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Files')      
+path_files = Path('/Users/pearlsaldanha/TRACER-3D')      
 
 # Directory of the processed histology
-processed_histology_folder = Path('/Users/jacopop/Box Sync/macbook/Documents/KAVLI/histology/processed')
+processed_histology_folder = Path('/Users/pearlsaldanha/TRACER-3D/Histology/processed')
 
 # get the all the files in the probe folder and load the his
 
@@ -56,7 +56,7 @@ for fname in os.listdir(processed_histology_folder):
 
 # Paths of the atlas, segmentation and labels
 ## Atlas ##
-atlas_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack')
+atlas_folder = Path(r'/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas/WHS_SD_rat_atlas_v2_pack')
 atlas_path =  atlas_folder/'WHS_SD_rat_T2star_v1.01.nii.gz'
 atlas = nib.load(atlas_path)
 atlas_header = atlas.header
@@ -64,17 +64,17 @@ pixdim = atlas_header.get('pixdim')[1]
 #atlas_data = atlas.get_fdata()
 atlas_data = np.load(path_files/'atlas_data_masked.npy')
 ## Mask ##
-mask_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
+mask_folder = Path(r'/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas')
 mask_path = mask_folder/'WHS_SD_rat_brainmask_v1.01.nii.gz'
 mask = nib.load(mask_path)
 mask_data = mask.get_fdata()[:,:,:,0].transpose((2,1,0))
 ## Segmentation ##
-segmentation_folder = Path(r'/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas')
-segmentation_path = segmentation_folder/'WHS_SD_rat_atlas_v4_beta.nii.gz'
+segmentation_folder = Path(r'/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas')
+segmentation_path = segmentation_folder/'WHS_SD_rat_atlas_v3.nii.gz'
 segmentation = nib.load(segmentation_path)
 segmentation_data = segmentation.get_fdata()
 ## Labels ##
-labels_item = open(r"/Users/jacopop/Box Sync/macbook/Documents/KAVLI/Waxholm_Atlas/WHS_SD_rat_atlas_v4_beta.label", "r")
+labels_item = open(r"/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas/WHS_SD_rat_atlas_v3.label", "r")
 labels_index, labels_name, labels_color, labels_initial = readlabel( labels_item ) 
 
 # Atlas in RGB colors according with the label file
@@ -188,7 +188,7 @@ print('h: overlay of current histology slice \n')
 print('x: save transform and current atlas location \n')
 print('u: load saved transform and atlas location \n')   ##
 print("b: scroll through region's boundaries \n")
-print('a: visualization of boundaries \n')
+print('p: visualization of boundaries \n')
 print('g: activate gridlines \n')
 print('v: activate color atlas mode \n\n')
 print('r: activate mode where clicks are logged for probe \n')
@@ -345,12 +345,12 @@ def on_key(event):
         tracker2 = IndexTracker_g(ax_g, Edges, pixdim, plane, tracker.ind)
         fig_g.canvas.mpl_connect('scroll_event', tracker2.onscroll)  
         #ax_g.format_coord = format_coord
-        ax_g.set_title("Histology and atlas overlaid")
+        ax_g.set_title("Histology and atlas overlayed")
         plt.show()  
         # Remove axes tick
         plt.tick_params(axis='both', which='both', bottom=False, left=False, top=False, labelbottom=False, labelleft=False) 
           
-    elif event.key == 'a':        
+    elif event.key == 'p':        
         print('Overlay to the atlas')
         # get the edges of the colors defined in the label
         if plane == 'c':
