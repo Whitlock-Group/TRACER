@@ -1,4 +1,4 @@
-""" """
+"""Brain viewer"""
 from __future__ import print_function
 
 # Import libraries
@@ -40,7 +40,7 @@ from Tracker import IndexTracker_pi_col
 from Readlabel import readlabel
 
 
-path_files = Path('/Users/pearlsaldanha/TRACER-3D') 
+path_files = Path('/Users/pearlsaldanha/TRACER-3D')
 
 # Paths of the atlas, segmentation and labels
 ## Atlas ##
@@ -51,11 +51,6 @@ atlas_header = atlas.header
 pixdim = atlas_header.get('pixdim')[1]
 #atlas_data = atlas.get_fdata()
 atlas_data = np.load(path_files/'atlas_data_masked.npy')
-## Mask ##
-mask_folder = Path(r'/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas')
-mask_path = mask_folder/'WHS_SD_rat_brainmask_v1.01.nii.gz'
-mask = nib.load(mask_path)
-mask_data = mask.get_fdata()[:,:,:,0].transpose((2,1,0))
 ## Segmentation ##
 segmentation_folder = Path(r'/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas')
 segmentation_path = segmentation_folder/'2021-05-27_WHS_SD_rat_atlas_v4_final_cx.nii.gz'
@@ -66,66 +61,65 @@ labels_item = open(r"/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas/Labels.txt", "
 labels_index, labels_name, labels_color, labels_initial = readlabel( labels_item ) 
 
 # Probe colors
-virus_colors = ['orange', 'blue', 'purple', 'yellow', 'red', 'green']
+probe_colors = ['purple', 'blue', 'yellow', 'orange', 'red', 'green']
 
-processed_histology_folder = Path('/Users/pearlsaldanha/TRACER-3D/histology/processed')
-path_virus =processed_histology_folder/'virus'
+processed_histology_folder = Path(r'/Users/pearlsaldanha/TRACER-3D/histology/processed')
+path_probes = Path(r'/Users/pearlsaldanha/TRACER-3D/histology/processed/virus')
+path_transformed = Path('/Users/pearlsaldanha/TRACER-3D/histology/processed')
 
-
-# The virus info will be saved in a subfolder called info
-path_info = path_virus/'info'
-if not os.path.exists(os.path.join(path_virus, 'info')):
-    os.mkdir(path_info)
+# get the all the files in the probe folder
+files_probe = [f for f in os.listdir(path_probes) if not f.startswith('.')]
+files_transformed = os.listdir(path_transformed)
 
 
 # get the all the files in the probe folder that are not folders
-files_virus = []
-for fname in os.listdir(path_virus):
-    pathcheck = os.path.join(path_virus, fname)
+files_probe = []
+for fname in os.listdir(path_probes):
+    pathcheck = os.path.join(path_probes, fname)
     if fname.startswith('.'):
         continue
     if os.path.isdir(pathcheck):
         continue
-    files_virus.append(fname)
+    files_probe.append(fname)
 
 
 pr = probe_obj()
 PR = probe_obj()
 P = []
 color_used_t = []
-for f in sorted(files_virus):
-    P.append(pickle.load(open(path_virus/f , "rb")))    
+for f in sorted(files_probe):
+    P.append(pickle.load(open(path_probes/f , "rb")))    
 # probe_counter = P[0].Counter
 
 # If I have several probes
-for j in range(len(virus_colors)):    
+for j in range(len(probe_colors)):    
     # get the probe coordinates and the region's names
-    virus_x = []
-    virus_y = []
-    virus_z = []
+    probe_x = []
+    probe_y = []
+    probe_z = []
     for k in range(len(P)):
         try:
-            PC = getattr(P[k].Probe, virus_colors[j])
+            PC = getattr(P[k].Probe, probe_colors[j])
             if P[k].Plane == 'c':
                 for i in range(len(PC)):
-                    virus_x.append(PC[i][0])
-                    virus_y.append(P[k].Slice)
-                    virus_z.append(PC[i][1])
+                    probe_x.append(PC[i][0])
+                    probe_y.append(P[k].Slice)
+                    probe_z.append(PC[i][1])
             elif P[k].Plane == 's':
                 for i in range(len(PC)):
-                    virus_x.append(P[k].Slice)
-                    virus_y.append(PC[i][0])
-                    virus_z.append(PC[i][1])  
+                    probe_x.append(P[k].Slice)
+                    probe_y.append(PC[i][0])
+                    probe_z.append(PC[i][1])  
             elif P[k].Plane == 'h':
                 for i in range(len(PC)):        
-                    virus_x.append(PC[i][0])
-                    virus_y.append(PC[i][1])        
-                    virus_z.append(P[k].Slice)
-            pts = np.array((virus_x, virus_y, virus_z)).T 
-            pp = vedo.Points(pts, c = virus_colors[j], r = 7) #fast    #### CHANGE COLOR HERE AND SIZE!!! ####
-            setattr(pr, virus_colors[j], pp)
-            setattr(PR, virus_colors[j], pts)
-            color_used_t.append(virus_colors[j])
+                    probe_x.append(PC[i][0])
+                    probe_y.append(PC[i][1])        
+                    probe_z.append(P[k].Slice)
+            pts = np.array((probe_x, probe_y, probe_z)).T 
+            pp = vedo.Points(pts, c = probe_colors[j]) #fast    
+            setattr(pr, probe_colors[j], pp)
+            setattr(PR, probe_colors[j], pts)
+            color_used_t.append(probe_colors[j])
         except:
             pass  
 
@@ -162,15 +156,10 @@ for i in range(0,n):
     transpose = numpy_array.T
     transpose_list = transpose.tolist()
     print(tabulate(transpose_list, headers, floatfmt=".2f"))
-    
-    # Write and save txt file with probe info
-    pn = "Virus_Info.txt"
-    f = open(path_info/pn,"w+")
-    f.write('Analyze virus expression: \n\n ')
-    f.write(tabulate(transpose_list, headers, floatfmt=".2f"))
-    f.close() 
 
 # load the brain regions
+mask = nib.load(r'/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas/WHS_SD_rat_brainmask_v1.01.nii.gz')
+mask_data = mask.get_fdata()[:,:,:,0].transpose((2,1,0))
 Edges = np.empty((512,1024,512))
 for sl in range(0,1024):
     Edges[:,sl,:] = cv2.Canny(np.uint8((mask_data[:,sl,:])*255),100,200)  
@@ -191,7 +180,7 @@ mesh = Mesh(points)
 data = mesh.points()[:,2]  # pick z-coords, use them as scalar data
 # build a custom LookUp Table of colors:
 lut = buildLUT([
-                (512, 'white', 0.1 ),  ### Change brain color and transparency ####
+                (512, 'white', 0.07 ),
                ],
                vmin=0, belowColor='lightblue',
                vmax= 512, aboveColor='grey',
@@ -201,10 +190,12 @@ lut = buildLUT([
 mesh.cmap(lut, data)
 
 
+        
+
 # plot all the probes together
 if n==1:
-     show(mesh, getattr(pr,color_used[0]), __doc__, 
-     axes=0, viewup="z", bg='black',  ### change the backgrond color ###
+     show(mesh, getattr(pr,color_used[0]), __doc__,
+     axes=0, viewup="z", bg='black',
      )        
 elif n==2:     
      show(mesh, getattr(pr,color_used[0]), getattr(pr,color_used[1]), __doc__,

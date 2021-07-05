@@ -32,7 +32,7 @@ import warnings
 warnings.simplefilter('ignore', Image.DecompressionBombWarning)
 
 # Directory of histology imagesnew_image = image.resize((400, 400))
-histology_folder = Path('/Users/pearlsaldanha/TRACER-3D/Histology')
+histology_folder = Path('/Users/pearlsaldanha/TRACER-3D/histology')
 
 # Find the histology files in the folder and save the name
 #i = 0

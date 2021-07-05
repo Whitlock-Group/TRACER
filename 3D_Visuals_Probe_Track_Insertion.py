@@ -66,11 +66,11 @@ mask = nib.load(mask_path)
 mask_data = mask.get_fdata()[:,:,:,0].transpose((2,1,0))
 ## Segmentation ##
 segmentation_folder = Path(r'/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas')
-segmentation_path = segmentation_folder/'WHS_SD_rat_atlas_v3.nii.gz'
+segmentation_path = segmentation_folder/'2021-05-27_WHS_SD_rat_atlas_v4_final_cx.nii.gz'
 segmentation = nib.load(segmentation_path)
 segmentation_data = segmentation.get_fdata()
 ## Labels ##
-labels_item = open(r"/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas/WHS_SD_rat_atlas_v3.label", "r")
+labels_item = open(r"/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas/Labels.txt", "r")
 labels_index, labels_name, labels_color, labels_initial = readlabel( labels_item ) 
 
 # Probe colors

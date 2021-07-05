@@ -101,11 +101,11 @@ mask_path = mask_folder/'WHS_SD_rat_brainmask_v1.01.nii.gz'
 #mask_data = mask.get_fdata()[:,:,:,0]
 ## Segmentation ##
 segmentation_folder = Path(r'/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas')
-segmentation_path = segmentation_folder/'WHS_SD_rat_atlas_v3.nii.gz'
+segmentation_path = segmentation_folder/'2021-05-27_WHS_SD_rat_atlas_v4_final_cx.nii.gz'
 segmentation = nib.load(segmentation_path)
 segmentation_data = segmentation.get_fdata()
 ## Labels ##
-labels_item = open(r"/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas/WHS_SD_rat_atlas_v3.label", "r")
+labels_item = open(r"/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas/Labels.txt", "r")
 labels_index, labels_name, labels_color, labels_initials = readlabel( labels_item )  
 
 # Atlas in RGB colors according with the label file
@@ -288,27 +288,27 @@ def on_key(event):
             global coords_probe_temp_w, coords_probe_temp_g, coords_probe_temp_p, coords_probe_temp_b, coords_probe_temp_y, coords_probe_temp_o, coords_probe_temp_r,  p_probe_grid, p_probe_trans
             if probe_counter == 0:
                 coords_probe_temp_w.append((px, py, tracker.ind)) 
-                p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=2))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_w)
             elif probe_counter == 1:
                 coords_probe_temp_g.append((px, py, tracker.ind))
-                p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=2))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_g)
             elif probe_counter == 2:
                 coords_probe_temp_p.append((px, py, tracker.ind))    
-                p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=2))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_p)
             elif probe_counter == 3:
                 coords_probe_temp_b.append((px, py, tracker.ind))
-                p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=2))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_b)
             elif probe_counter == 4:
                 coords_probe_temp_y.append((px, py, tracker.ind))
-                p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=2))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_y)
             elif probe_counter == 5:
                 coords_probe_temp_o.append((px, py, tracker.ind))
-                p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=1))
+                p_probe.extend(ax.plot(event.xdata, event.ydata, color=probe_colors[probe_counter], marker='o', markersize=2))
                 setattr(coords_probe,probe_colors[probe_counter],coords_probe_temp_o)
             fig.canvas.draw()
             return
@@ -592,7 +592,8 @@ def on_key(event):
                             print('Entry position at DV = 0: AP = %.2f mm, ML = R%.2f mm' %(AP_position, abs(ML_position)))
                         else:
                             testo = '            ---Estimated probe insertion--- \nEntry position at DV = 0: AP = %.2f mm, ML = L%.2f mm \nInsertion distance from the above position: %.2f mm \n%.2f degrees in the anterior direction \n%.2f degrees in the lateral direction ' %( AP_position, abs(ML_position), dist, deg_ant, deg_lat)                    
-                            print('Entry position at DV = 0: AP = %.2f mm, ML = L%.2f fmm' %(AP_position, abs(ML_position)))
+                            print('Entry position at DV = 0: AP = %.2f mm, ML = L%.2f fmm' 
+                                  %(AP_position, abs(ML_position)))
                         print('Insertion distance from the above position: %.2f mm' %dist)
                         print('%.2f degrees in the anterior direction' %deg_ant)
                         print('%.2f degrees in the lateral direction\n' %deg_lat)

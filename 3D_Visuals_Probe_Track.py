@@ -61,11 +61,11 @@ pixdim = atlas_header.get('pixdim')[1]
 atlas_data = np.load(path_files/'atlas_data_masked.npy')
 ## Segmentation ##
 segmentation_folder = Path(r'/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas')
-segmentation_path = segmentation_folder/'WHS_SD_rat_atlas_v3.nii.gz'
+segmentation_path = segmentation_folder/'2021-05-27_WHS_SD_rat_atlas_v4_final_cx.nii.gz'
 segmentation = nib.load(segmentation_path)
 segmentation_data = segmentation.get_fdata()
 ## Labels ##
-labels_item = open(r"/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas/WHS_SD_rat_atlas_v3.label", "r")
+labels_item = open(r"/Users/pearlsaldanha/TRACER-3D/Waxholm_Atlas/Labels.txt", "r")
 labels_index, labels_name, labels_color, labels_initial = readlabel( labels_item ) 
 
 # Probe colors
@@ -155,7 +155,7 @@ for j in range(len(probe_colors)):
                 y2 = line_fit.point[1]+((x2-line_fit.point[0])/line_fit.direction[0])*line_fit.direction[1]             
             else:
                 # line equations, to derive the starting and end point of the line (aka probe)
-                # it is impartant that the first point clicked is the most external one, and the last correspond to the end of the probe
+                # it is important that the first point clicked is the most external one, and the last correspond to the end of the probe
                 z1 = pts[0,2]
                 x1 = line_fit.point[0]+((z1-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[0]
                 y1 = line_fit.point[1]+((z1-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[1]
