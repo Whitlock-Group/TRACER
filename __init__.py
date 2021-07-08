@@ -1,5 +1,5 @@
 """
-``tracer``
+``TRACER``
 ================
 
 Functions present in tracer are listed below.
@@ -45,14 +45,14 @@ import vedo
 from skspatial.objects import Line
 
 
-
-from .atlas_loader import *
-from .preprocess_histology import *
-from .ObjSave import *
-from .index_tracker import *
-from .probes_registration import *
-from .probes_insertion import *
-from .virus_registration import *
-from .vis3d_registered_virus import *
-from .vis_inserted_probes import *
-from .vis_registered_probes import *
+from . import tracer
+from .tracer.atlas_loader import *
+from .tracer.preprocess_histology import *
+from .tracer.ObjSave import *
+from .tracer.index_tracker import *
+from .tracer.probes_registration import *
+from .tracer.probes_insertion import *
+from .tracer.virus_registration import *
+from .tracer.vis3d_registered_virus import *
+from .tracer.vis_inserted_probes import *
+from .tracer.vis_registered_probes import *
