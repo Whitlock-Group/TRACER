@@ -14,8 +14,8 @@ vedo.settings.embedWindow(backend=False, verbose=True)
 
 
 
-from tracer.ObjSave import probe_obj, save_probe
-from tracer.atlas_loader import AtlasLoader
+from .ObjSave import probe_obj, save_probe
+from .atlas_loader import AtlasLoader
 
 
 def vis3d_registered_virus(atlas, virus_folder):
@@ -184,11 +184,5 @@ def vis3d_registered_virus(atlas, virus_folder):
          axes=0, viewup="z", bg='black',
          )
 
-virus_folder='/Users/jingyig/Work/Kavli/PyCode/vitlab/racer/image/test_virus/processed/virus'
-
-
-atlas = AtlasLoader(atlas_folder='/Users/jingyig/Work/Kavli/PyCode/vitlab/racer/waxholm_atlas', atlas_version='v3')
-
-vis3d_registered_virus(atlas, virus_folder)
 
 

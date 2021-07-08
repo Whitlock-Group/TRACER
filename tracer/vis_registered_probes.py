@@ -16,8 +16,8 @@ from scipy.spatial import distance
 import vedo
 from skspatial.objects import Line
 
-from tracer.ObjSave import probe_obj, save_probe
-from tracer.index_tracker import IndexTracker_pi_col
+from .ObjSave import probe_obj, save_probe
+from .index_tracker import IndexTracker_pi_col
 
 
 

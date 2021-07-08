@@ -19,7 +19,7 @@ import vedo
 from skspatial.objects import Line
 #from skspatial.plotting import plot_3d
 
-from tracer.ObjSave import probe_obj, save_probe
+from .ObjSave import probe_obj, save_probe
 
 
 class vis_inserted_probes(object):

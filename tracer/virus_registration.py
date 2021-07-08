@@ -18,10 +18,9 @@ from skspatial.objects import Line
 
 # from readlabel_customized import readlabel_c
 # Allow to navigate in the atlas
-from tracer.index_tracker import IndexTracker, IndexTracker_g, IndexTracker_p
+from .index_tracker import IndexTracker, IndexTracker_g, IndexTracker_p
 # create objects to svae transformations and probes
-from tracer.ObjSave import save_transform, probe_obj, save_probe
-from tracer.atlas_loader import AtlasLoader
+from .ObjSave import save_transform, probe_obj, save_probe
 
 
 
