@@ -17,9 +17,9 @@ from six.moves import input
 from skspatial.objects import Line
 
 
-from ObjSave import probe_obj, save_probe_insertion
-from Tracker import IndexTracker, IndexTracker_g, IndexTracker_pi, IndexTracker_b, IndexTracker_c, IndexTracker_pi_col
-from Atlas_Loader import AtlasLoader
+from tracer.ObjSave import probe_obj, save_probe_insertion
+from tracer.index_tracker import IndexTracker, IndexTracker_g, IndexTracker_pi, IndexTracker_b, IndexTracker_c, IndexTracker_pi_col
+from tracer.atlas_loader import AtlasLoader
 
 
 class ProbesInsertion(object):

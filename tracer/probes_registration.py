@@ -17,10 +17,10 @@ from six.moves import input
 from skspatial.objects import Line
 
 
-from Tracker import IndexTracker, IndexTracker_g, IndexTracker_p
+from tracer.index_tracker import IndexTracker, IndexTracker_g, IndexTracker_p
 # create objects to svae transformations and probes
-from ObjSave import save_transform, probe_obj, save_probe
-from Atlas_Loader import AtlasLoader
+from tracer.ObjSave import save_transform, probe_obj, save_probe
+from tracer.atlas_loader import AtlasLoader
 
 
 

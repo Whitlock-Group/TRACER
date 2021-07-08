@@ -1,6 +1,3 @@
-import sys
-sys.path.extend(['/Users/jingyig/Work/Kavli/PyCode/vitlab/github_code/TRACER'])
-
 # Import libraries
 import os
 import numpy as np
@@ -21,10 +18,10 @@ from skspatial.objects import Line
 
 # from readlabel_customized import readlabel_c
 # Allow to navigate in the atlas
-from Tracker import IndexTracker, IndexTracker_g, IndexTracker_p
+from tracer.index_tracker import IndexTracker, IndexTracker_g, IndexTracker_p
 # create objects to svae transformations and probes
-from ObjSave import save_transform, probe_obj, save_probe
-from atlas_loader import AtlasLoader
+from tracer.ObjSave import save_transform, probe_obj, save_probe
+from tracer.atlas_loader import AtlasLoader
 
 
 
@@ -613,10 +610,3 @@ class VirusRegistration(object):
                 print('\nNo more histology slice to register')
                 plt.close('all')
                 
-              
-    
-
-
-atlas = AtlasLoader(atlas_folder='/Users/jingyig/Work/Kavli/PyCode/vitlab/racer/waxholm_atlas', atlas_version='v3')
-processed_histology_folder = '/Users/jingyig/Work/Kavli/PyCode/vitlab/racer/image/test_virus/processed'
-da_virus = VirusRegistration(atlas, processed_histology_folder, True)

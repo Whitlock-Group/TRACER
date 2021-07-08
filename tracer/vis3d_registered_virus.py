@@ -1,7 +1,4 @@
 from __future__ import print_function
-import sys
-sys.path.extend(['/Users/jingyig/Work/Kavli/PyCode/vitlab/github_code/TRACER/tracer'])
-
 # Import libraries
 import math 
 import os
@@ -17,8 +14,8 @@ vedo.settings.embedWindow(backend=False, verbose=True)
 
 
 
-from ObjSave import probe_obj, save_probe
-from atlas_loader import AtlasLoader
+from tracer.ObjSave import probe_obj, save_probe
+from tracer.atlas_loader import AtlasLoader
 
 
 def vis3d_registered_virus(atlas, virus_folder):
