@@ -1,6 +1,4 @@
 # Import libraries
-import sys
-sys.path.extend(['/Users/jingyig/Work/Kavli/PyCode/vitlab/github_code/TRACER/tracer'])
 import math
 import os
 import numpy as np
@@ -22,9 +20,6 @@ from skspatial.objects import Line
 #from skspatial.plotting import plot_3d
 
 from ObjSave import probe_obj, save_probe
-from index_tracker import IndexTracker_pi_col
-from atlas_loader import AtlasLoader
-
 
 
 class vis_inserted_probes(object):
@@ -38,11 +33,19 @@ class vis_inserted_probes(object):
 
     Inputs
     -------------
-    file :
+    atlas :
+    probe_folder: (optional), can be set up later through object method set_data_folder
 
     Outputs
     -------------
-    A list contains ...
+    A object contains the probes information.
+    
+    Usage
+    -------------
+    vis_obj = vis_inserted_probes(atlas)
+    vis_obj.set_data_folder('path_to_the_inserted_probes_data')
+    vis_obj.vis2d()
+    vis_obj_vis3d()
     
     """
 
@@ -112,18 +115,18 @@ class vis_inserted_probes(object):
                     if self.P[k].Plane == 'c':
                         for i in range(len(PC)):
                             probe_x.append(PC[i][0])
-                            probe_y.append(PC[i][2] * atlas.pixdim)
+                            probe_y.append(PC[i][2] * self.atlas.pixdim)
                             probe_z.append(PC[i][1])
                     elif self.P[k].Plane == 's':
                         for i in range(len(PC)):
-                            probe_x.append(PC[i][2] * atlas.pixdim)
+                            probe_x.append(PC[i][2] * self.atlas.pixdim)
                             probe_y.append(PC[i][0])
                             probe_z.append(PC[i][1])
                     elif self.P[k].Plane == 'h':
                         for i in range(len(PC)):
                             probe_x.append(PC[i][0])
                             probe_y.append(PC[i][1])
-                            probe_z.append(PC[i][2] * atlas.pixdim)
+                            probe_z.append(PC[i][2] * self.atlas.pixdim)
                     self.pts = np.array((probe_x, probe_y, probe_z)).T
                     # fit the probe
                     line_fit = Line.best_fit(self.pts)
@@ -161,7 +164,7 @@ class vis_inserted_probes(object):
                             xt = line_fit.point[0]+((zt-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[0]
                             yt = line_fit.point[1]+((zt-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[1]
                     # get the line to plot
-                    l = vedo.Line([x1, y1, z1]/atlas.pixdim,[x2, y2, z2]/atlas.pixdim,c=self.probe_colors[j], lw=2)
+                    l = vedo.Line([x1, y1, z1]/self.atlas.pixdim,[x2, y2, z2]/self.atlas.pixdim,c=self.probe_colors[j], lw=2)
                     # clicked points to display
                     pp = vedo.Points(self.pts / self.atlas.pixdim, c=self.probe_colors[j])  # fast
                     setattr(self.xyz, self.probe_colors[j], [[x1, y1, z1], [xt, yt, zt]])
@@ -194,8 +197,8 @@ class vis_inserted_probes(object):
             # Get the brain regions traversed by the probe
             X1 = getattr(self.xyz, self.color_used[i])[0]
             X2 = getattr(self.xyz, self.color_used[i])[1]
-            s = int(math.modf(X1[2]/atlas.pixdim)[1])  # starting point
-            f = int(math.modf(X2[2]/atlas.pixdim)[1])  # ending point
+            s = int(math.modf(X1[2]/self.atlas.pixdim)[1])  # starting point
+            f = int(math.modf(X2[2]/self.atlas.pixdim)[1])  # ending point
             # get lenght of the probe
             dist.append(np.linalg.norm(f-s))
             regions = []
@@ -368,11 +371,7 @@ class vis_inserted_probes(object):
              axes=0, viewup="z", bg='black',
              )
 
-probe_insertion_folder='/Users/jingyig/Work/Kavli/PyCode/vitlab/racer/waxholm_atlas/probes'
 
-
-atlas = AtlasLoader(atlas_folder='/Users/jingyig/Work/Kavli/PyCode/vitlab/racer/waxholm_atlas', atlas_version='v3')
-visobj = vis_inserted_probes(atlas, probe_insertion_folder)
 
 
 
