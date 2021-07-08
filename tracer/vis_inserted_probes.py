@@ -19,7 +19,7 @@ import vedo
 from skspatial.objects import Line
 #from skspatial.plotting import plot_3d
 
-from ObjSave import probe_obj, save_probe
+from tracer.ObjSave import probe_obj, save_probe
 
 
 class vis_inserted_probes(object):
@@ -80,6 +80,7 @@ class vis_inserted_probes(object):
         if not os.path.exists(probe_folder):
             raise Exception('Please give the correct folder.')
 
+        self.probe_folder = probe_folder
         # get the all the files in the probe folder
         self.files_probe = []
         for fname in os.listdir(self.probe_folder):
