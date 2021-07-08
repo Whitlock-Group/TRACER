@@ -55,3 +55,4 @@ from .probes_insertion import *
 from .virus_registration import *
 from .vis3d_registered_virus import *
 from .vis_inserted_probes import *
+from .vis_registered_probes import *
