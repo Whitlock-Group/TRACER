@@ -1,10 +1,3 @@
-"""
-@ author    : Jacopo Paglia,   2021-03
-@ modified  : Jingyi Fuglstad, 2021-07
-@ maintainer: Jingyi Fuglstad, jingyi.guo@ntnu.no
-              Pearl Saldanha,  pearl.saldanha@ntnu.no
-@ copyright : whitlock group @ KISN @ NTNU
-"""
 
 from __future__ import print_function
 # Import libraries
