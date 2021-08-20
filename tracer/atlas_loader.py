@@ -58,8 +58,8 @@ class AtlasLoader(object):
 
     Inputs
     -------------
-    atlas_folder  : the path of the folder contains all the atlas related data files.
-    atlas_version : specify the version of atlas in use, default is version 3 ('v3').
+    atlas_folder  : str, the path of the folder contains all the atlas related data files.
+    atlas_version : str, specify the version of atlas in use, default is version 3 ('v3').
 
     Outputs
     -------------

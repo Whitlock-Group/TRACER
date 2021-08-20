@@ -8,25 +8,34 @@ Created on Mon Dec 14 13:31:04 2020
 
 # Class to scroll the atlas slices (coronal, sagittal and horizontal)    
 class IndexTracker(object):
-    def __init__(self, ax, X, pixdim, p):
+    def __init__(self, ax, X, pixdim, p, S=None):
         self.ax = ax
         self.plane = p.lower()
-        ax.set_title('Atlas viewer')
+        self.ax.set_title('Atlas viewer')
         print('\nuse scroll wheel to navigate the atlas \n')
 
         self.X = X
         if self.plane == 'c':
             rows, self.slices, cols = X.shape
-            self.ind = 653
-            self.im = ax.imshow(self.X[:, self.ind, :].T, origin="lower", extent=[0, 512*pixdim, 0, 512*pixdim], cmap='gray') #cmap='gist_yarg' if white background wanted
+            if S is None:
+                self.ind = 653
+            else:
+                self.ind = S
+            self.im = self.ax.imshow(self.X[:, self.ind, :].T, origin="lower", extent=[0, 512*pixdim, 0, 512*pixdim], cmap='gray') #cmap='gist_yarg' if white background wanted
         elif self.plane == 's':
             self.slices, rows, cols = X.shape
-            self.ind = 246                
-            self.im = ax.imshow(self.X[self.ind, :, :].T, origin="lower", extent=[0 ,1024*pixdim, 0, 512*pixdim], cmap='gray')            
+            if S is None:
+                self.ind = 246
+            else:
+                self.ind = S
+            self.im = self.ax.imshow(self.X[self.ind, :, :].T, origin="lower", extent=[0 ,1024*pixdim, 0, 512*pixdim], cmap='gray')
         elif self.plane == 'h':  
             rows, cols, self.slices = X.shape
-            self.ind = 440       
-            self.im = ax.imshow(self.X[:, :, self.ind].T, origin="lower", extent=[0, 512*pixdim, 0, 1024*pixdim], cmap='gray')            
+            if S is None:
+                self.ind = 440
+            else:
+                self.ind = S
+            self.im = self.ax.imshow(self.X[:, :, self.ind].T, origin="lower", extent=[0, 512*pixdim, 0, 1024*pixdim], cmap='gray')
         self.update()
 
     def onscroll(self, event):
@@ -139,7 +148,7 @@ class IndexTracker_b(object):
         if self.plane == 'c':
             rows, self.slices, cols = X.shape
             self.ind = S
-            self.im = ax.imshow(self.X[:, self.ind, :], origin="lower", alpha=0.5, extent=[0, 512*pixdim, 0, 512*pixdim,], cmap='gray')
+            self.im = ax.imshow(self.X[:, self.ind, :].T, origin="lower", alpha=0.5, extent=[0, 512*pixdim, 0, 512*pixdim,], cmap='gray')
         elif self.plane == 's':
             self.slices, rows, cols = X.shape
             self.ind = S                

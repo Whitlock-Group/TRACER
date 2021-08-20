@@ -1,5 +1,6 @@
 
 import os
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as plticker
 from PIL import Image, ImageEnhance
@@ -27,6 +28,7 @@ def preprocess_histology(histology_folder):
 
     """
     
+    
     if not os.path.exists(histology_folder):
         raise Exception('Folder path %s does not exist. Please give the correct path.' % histology_folder)
     # Directory of histology imagesnew_image = image.resize((400, 400))
@@ -47,8 +49,8 @@ def preprocess_histology(histology_folder):
     # histology = resizeimage.resize_crop(histology, [200, 200])
     
     # The modified images will be saved in a subfolder called processed
-    path_processed = histology_folder / 'processed'
-    if not os.path.exists(os.path.join(histology_folder, 'processed')):
+    path_processed = os.path.join(histology_folder, 'processed')
+    if not os.path.exists(path_processed):
         os.mkdir(path_processed)
     
     # Insert the plane of interest

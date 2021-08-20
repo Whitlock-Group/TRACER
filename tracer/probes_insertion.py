@@ -39,7 +39,7 @@ class ProbesInsertion(object):
         
         self.atlas = atlas
         self.probe_folder = probe_folder
-        
+
         
         if not os.path.exists(self.probe_folder):
             raise Exception('Please give the correct folder.')
@@ -94,7 +94,7 @@ class ProbesInsertion(object):
         print('scroll: move between slices \n')
         print('g: add/remove gridlines \n')
         print('b: add/remove name of current region \n')
-        print('o: add/remove viewing boundaries \n')
+        print('u: add/remove viewing boundaries \n')
         print('v: add/remove atlas color \n')
         print('r: toggle mode where clicks are logged for probe \n')
         print('n: trace a new probe \n')
@@ -117,6 +117,9 @@ class ProbesInsertion(object):
         # scroll cursor
         self.tracker = IndexTracker(self.ax, self.atlas.atlas_data, self.atlas.pixdim, self.plane)
         self.fig.canvas.mpl_connect('scroll_event', self.tracker.onscroll)
+
+
+
         # place a text box with bregma coordinates in bottom left in axes coords
         self.ax.text(0.03, 0.03, self.textstr, transform=self.ax.transAxes, fontsize=6, verticalalignment='bottom', bbox=self.props)
         if self.plane == 'c':
@@ -186,26 +189,26 @@ class ProbesInsertion(object):
         xi, yi = sel.target / self.atlas.pixdim
         if self.plane == 'c':
             if np.argwhere(np.all(self.atlas.labels_index == self.atlas.segmentation_data[int(math.modf(xi)[1]), self.tracker.ind, int(math.modf(yi)[1])], axis=1)).size:
-                Text = self.atlas.labels_name[np.argwhere(np.all(self.atlas.labels_index == self.atlas.segmentation_data[
+                self.Text = self.atlas.labels_name[np.argwhere(np.all(self.atlas.labels_index == self.atlas.segmentation_data[
                     int(math.modf(xi)[1]), self.tracker.ind, int(math.modf(yi)[1])], axis=1))[0, 0]]
             else:
                 # display nothing
-                Text = ' '
+                self.Text = ' '
         elif self.plane == 's':
             if np.argwhere(np.all(self.atlas.labels_index == self.atlas.segmentation_data[self.tracker.ind, int(math.modf(xi)[1]), int(math.modf(yi)[1])], axis=1)).size:
-                Text = self.atlas.labels_name[np.argwhere(np.all(self.atlas.labels_index == self.atlas.segmentation_data[
+                self.Text = self.atlas.labels_name[np.argwhere(np.all(self.atlas.labels_index == self.atlas.segmentation_data[
                     self.tracker.ind, int(math.modf(xi)[1]), int(math.modf(yi)[1])], axis=1))[0, 0]]
             else:
                 # display nothing
-                Text = ' '
+                self.Text = ' '
         elif self.plane == 'h':
             if np.argwhere(np.all(self.atlas.labels_index == self.atlas.segmentation_data[int(math.modf(xi)[1]), int(math.modf(yi)[1]), self.tracker.ind], axis=1)).size:
-                Text = self.atlas.labels_name[np.argwhere(np.all(self.atlas.labels_index == self.atlas.segmentation_data[
+                self.Text = self.atlas.labels_name[np.argwhere(np.all(self.atlas.labels_index == self.atlas.segmentation_data[
                     int(math.modf(xi)[1]), int(math.modf(yi)[1]), self.tracker.ind], axis=1))[0, 0]]
             else:
                 # display nothing
-                Text = ' '
-        sel.annotation.set_text(Text)
+                self.Text = ' '
+        sel.annotation.set_text(self.Text)
 
     
     def onclick_probe(self, event):
@@ -272,13 +275,27 @@ class ProbesInsertion(object):
                 
                     except:
                         pass
+
     
     def on_key(self, event):
-        if event.key == 'o':
+        if event.key == 'b':
+            # Show the names of the regions
+            self.cursor = mplcursors.cursor(hover=True)
+            self.cursor.connect('add', lambda sel: self.show_annotation(sel))
+            if self.flag_names == 0:
+                print("Show region's name on")
+                self.flag_names = 1
+            elif self.flag_names == 1:
+                print("Show region's name off")
+                self.flag_names = 0
+        elif event.key == 'u':
             if self.flag_boundaries == 0:
                 print('View boundaries on')
-                self.tracker2 = IndexTracker_b(self.ax, self.atlas.Edges, self.atlas.pixdim, self.plane, self.tracker.ind)
-                self.fig.canvas.mpl_connect('scroll_event', self.tracker2.onscroll)
+                self.tracker4 = IndexTracker_b(self.ax, self.atlas.Edges, self.atlas.pixdim, self.plane, self.tracker.ind)
+                # print(self.atlas.Edges[250, self.tracker.ind, 250])
+                self.fig.canvas.mpl_connect('scroll_event', self.tracker4.onscroll)
+                # self.tracker4 = IndexTracker_c(self.ax, self.atlas.cv_plot, self.atlas.pixdim, self.plane, self.tracker.ind)
+                # self.fig.canvas.mpl_connect('scroll_event', self.tracker4.onscroll)
                 plt.show()
                 self.flag_boundaries = 1
             elif self.flag_boundaries == 1:
@@ -288,7 +305,8 @@ class ProbesInsertion(object):
                 plt.draw()
                 self.fig.add_axes(self.ax)
                 plt.draw()
-                self.tracker = IndexTracker(self.ax, self.atlas.atlas_data, self.atlas.pixdim, self.plane)
+                self.tracker = IndexTracker(self.ax, self.atlas.atlas_data, self.atlas.pixdim, self.plane, self.tracker.ind)
+                print(self.atlas.atlas_data[250, self.tracker.ind, 250])
                 self.fig.canvas.mpl_connect('scroll_event', self.tracker.onscroll)
                 plt.show()
                 self.flag_boundaries = 0
@@ -306,20 +324,12 @@ class ProbesInsertion(object):
                 plt.draw()
                 self.fig.add_axes(self.ax)
                 plt.draw()
-                self.tracker = IndexTracker(self.ax, self.atlas.atlas_data, self.atlas.pixdim, self.plane)
+                self.tracker = IndexTracker(self.ax, self.atlas.atlas_data, self.atlas.pixdim, self.plane, self.tracker.ind)
                 self.fig.canvas.mpl_connect('scroll_event', self.tracker.onscroll)
+                # self.fig.canvas.mpl_connect("motion_notify_event", self.show_annotation)
                 plt.show()
                 self.flag_color = 0
-        elif event.key == 'b':
-            # Show the names of the regions
-            self.cursor = mplcursors.cursor(hover=True)
-            self.cursor.connect('add', self.show_annotation)
-            if self.flag_names == 0:
-                print("Show region's name on")
-                self.flag_names = 1
-            elif self.flag_names == 1:
-                print("Show region's name off")
-                self.flag_names = 0
+
         elif event.key == 'r':
             print('Register probe %d' % self.probe_counter)
             # Call click func
