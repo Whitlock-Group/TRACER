@@ -97,7 +97,7 @@ class ProbesRegistration(object):
             self.names = []
             for fname in os.listdir(self.processed_histology_folder):
                 image_path = os.path.join(self.processed_histology_folder, fname)
-                if image_path[-4:] not in ['.jpg', '.jpeg']:
+                if image_path[-4:] not in ['.jpg', 'jpeg']:
                     continue
                 self.img_hist_temp.append(Image.open(image_path).copy())
                 self.img_hist.append(cv2.imread(image_path, cv2.IMREAD_GRAYSCALE))
@@ -466,6 +466,7 @@ class ProbesRegistration(object):
                 self.edges = cv2.Canny(np.uint8((self.atlas.cv_plot[self.tracker.ind, :, :] * 255).transpose((1, 0, 2))), 100, 200)
             elif self.plane == 'h':
                 self.edges = cv2.Canny(np.uint8((self.atlas.cv_plot[:, :, self.tracker.ind] * 255).transpose((1, 0, 2))), 100, 200)
+
             self.fig_grid, self.ax_grid = plt.subplots(1, 1)
             # position of the lines
             self.CC = np.where(self.edges == 255)
@@ -680,7 +681,6 @@ class ProbesRegistration(object):
                 plt.close('all')
     
     
-
 
 
 
