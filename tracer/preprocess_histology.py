@@ -307,7 +307,7 @@ def preprocess_histology(histology_folder):
             print('the image is now: ' + str(histology.size[0]) + ' x ' + str(histology.size[1]) + ' pixels')
         elif ipt == 's':
             print(histology)
-            histology.save(os.path.join(path_processed, file_n + '_processed.jpg'), 'JPEG', dpi=(my_dpi, my_dpi))
+            histology.save(os.path.join(path_processed, file_n + '_processed.jpg'), 'JPG', dpi=(my_dpi, my_dpi))
             print('Histology saved')
             process_finished = True
             break

@@ -99,7 +99,7 @@ class VirusRegistration(object):
             self.img_hist = []
             self.names = []
             for fname in os.listdir(self.processed_histology_folder):
-                if fname[-4:] not in ['.jpg', '.jpeg']:
+                if fname[-4:] not in ['.jpg', 'jpeg']:
                     continue
                 pathcheck = os.path.join(self.processed_histology_folder, fname)
                 self.img_hist_temp.append(Image.open(pathcheck).copy())
@@ -119,7 +119,7 @@ class VirusRegistration(object):
         # resolution
         self.dpi_atl = 25.4 / self.atlas.pixdim
         # Bregma coordinates
-        self.textstr = 'Bregma (mm): c = %.3f, h = %.3f, s = %.3f \nBregma (voxels): c = 653, h = 440, s = 246' % (653*self.atlas.pixdim, 440*self.atlas.pixdim, 246*self.atlas.pixdim)
+        self.textstr = 'Bregma (mm): c = %.3f, h = %.3f, s = %.3f \nBregma (voxels): c = 623, h = 440, s = 246' % (623*self.atlas.pixdim, 440*self.atlas.pixdim, 246*self.atlas.pixdim)
         # these are matplotlib.patch.Patch properties
         self.props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
         # Figure
@@ -184,7 +184,7 @@ class VirusRegistration(object):
     def format_coord(self, x, y):
         # display the coordinates relative to the bregma when hovering with the cursor
         if self.plane == 'c':
-            AP = self.tracker.ind * self.atlas.pixdim - 653 * self.atlas.pixdim
+            AP = self.tracker.ind * self.atlas.pixdim - 623 * self.atlas.pixdim
             ML = x - 246 * self.atlas.pixdim
             Z = y - 440 * self.atlas.pixdim
             if ML > 0:
@@ -192,7 +192,7 @@ class VirusRegistration(object):
             else:
                 return 'AP=%1.4f, ML=L%1.4f, z=%1.4f' % (AP, abs(ML), Z)
         elif self.plane == 's':
-            AP = x - 653 * self.atlas.pixdim
+            AP = x - 623 * self.atlas.pixdim
             ML = self.tracker.ind * self.atlas.pixdim - 246 * self.atlas.pixdim
             Z = y - 440 * self.atlas.pixdim
             if ML > 0:
@@ -200,7 +200,7 @@ class VirusRegistration(object):
             else:
                 return 'AP=%1.4f, ML=L%1.4f, z=%1.4f' % (AP, abs(ML), Z)
         elif self.plane == 'h':
-            AP = y - 653 * self.atlas.pixdim
+            AP = y - 623 * self.atlas.pixdim
             ML = x - 246 * self.atlas.pixdim
             Z = self.tracker.ind * self.atlas.pixdim - 440 * self.atlas.pixdim
             if ML > 0:
@@ -431,7 +431,7 @@ class VirusRegistration(object):
             self.fig_trans.canvas.draw()
             plt.show()
             
-        elif event.key == 'a':
+        elif event.key == 'p':
             print('Overlay to the atlas')
             # get the edges of the colors defined in the label
             if self.plane == 'c':

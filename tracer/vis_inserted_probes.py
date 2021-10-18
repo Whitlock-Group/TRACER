@@ -213,7 +213,7 @@ class vis_inserted_probes(object):
                 x0 = self.pts[0,0]
                 y0 = line_fit.point[1]+((x0-line_fit.point[0])/line_fit.direction[0])*line_fit.direction[1]
                 ML_position = (x0 - 246 * self.atlas.pixdim)
-                AP_position = (y0 - 653 * self.atlas.pixdim)
+                AP_position = (y0 - 623 * self.atlas.pixdim)
                 X0 = np.array([x0,y0,z0])
                 dist_real.append(np.linalg.norm(np.array(X0)-np.array(X2)))
                 for x in range(min(s,f), max(s,f)):
@@ -234,7 +234,7 @@ class vis_inserted_probes(object):
                 x0 = line_fit.point[0]+((z0-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[0]
                 y0 = line_fit.point[1]+((z0-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[1]
                 ML_position = (x0 - 246 * self.atlas.pixdim)
-                AP_position = (y0 - 653 * self.atlas.pixdim)
+                AP_position = (y0 - 623 * self.atlas.pixdim)
                 X0 = np.array([x0,y0,z0])
                 dist_real.append(np.linalg.norm(np.array(X0)-np.array(X2)))
                 for z in range(min(s,f),max(s,f)):
