@@ -1,3 +1,10 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Oct 18 15:49:46 2021
+
+@author: root
+"""
 
 from __future__ import print_function
 # Import libraries
@@ -28,7 +35,6 @@ class ProbesRegistration(object):
     Purpose
     -------------
     For register probes.
-
     Inputs
     -------------
     atlas :
@@ -36,11 +42,9 @@ class ProbesRegistration(object):
     show_hist :
     probe_name :
     
-
     Outputs
     -------------
     A list contains ...
-
     """
 
     def __init__(self, atlas, processed_histology_folder=None, show_hist=False, probe_name='probe'):
@@ -117,8 +121,8 @@ class ProbesRegistration(object):
         self.dpi_atl = 25.4 / self.atlas.pixdim
         
         # Bregma coordinates
-        self.textstr = 'Bregma (mm): c = %.3f, h = %.3f, s = %.3f \nBregma (voxels): c = 653, h = 440, s = 246' % (
-            653 * self.atlas.pixdim, 440 * self.atlas.pixdim, 246 * self.atlas.pixdim)
+        self.textstr = 'Bregma (mm): c = %.3f, h = %.3f, s = %.3f \nBregma (voxels): c = 623, h = 440, s = 246' % (
+            623 * self.atlas.pixdim, 440 * self.atlas.pixdim, 246 * self.atlas.pixdim)
         # these are matplotlib.patch.Patch properties
         self.props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
         # Figure
@@ -184,7 +188,7 @@ class ProbesRegistration(object):
     def format_coord(self, x, y):
         # display the coordinates relative to the bregma when hovering with the cursor
         if self.plane == 'c':
-            AP = self.tracker.ind * self.atlas.pixdim - 653 * self.atlas.pixdim
+            AP = self.tracker.ind * self.atlas.pixdim - 623 * self.atlas.pixdim
             ML = x - 246 * self.atlas.pixdim
             Z = y - 440 * self.atlas.pixdim
             if ML > 0:
@@ -192,7 +196,7 @@ class ProbesRegistration(object):
             else:
                 return 'AP=%1.4f, ML=L%1.4f, z=%1.4f' % (AP, abs(ML), Z)
         elif self.plane == 's':
-            AP = x - 653 * self.atlas.pixdim
+            AP = x - 623 * self.atlas.pixdim
             ML = self.tracker.ind * self.atlas.pixdim - 246 * self.atlas.pixdim
             Z = y - 440 * self.atlas.pixdim
             if ML > 0:
@@ -200,7 +204,7 @@ class ProbesRegistration(object):
             else:
                 return 'AP=%1.4f, ML=L%1.4f, z=%1.4f' % (AP, abs(ML), Z)
         elif self.plane == 'h':
-            AP = y - 653 * self.atlas.pixdim
+            AP = y - 623 * self.atlas.pixdim
             ML = x - 246 * self.atlas.pixdim
             Z = self.tracker.ind * self.atlas.pixdim - 440 * self.atlas.pixdim
             if ML > 0:
@@ -679,9 +683,3 @@ class ProbesRegistration(object):
             except:
                 print('\nNo more histology slice to register')
                 plt.close('all')
-    
-    
-
-
-
-
