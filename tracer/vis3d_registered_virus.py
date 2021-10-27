@@ -111,7 +111,7 @@ def vis3d_registered_virus(atlas, virus_folder):
                 ML.append('R '+str(abs(round(ml,2))))
             else:
                 ML.append('L '+str(abs(round(ml,2))))
-            AP.append((punti[j,1]-623)*atlas.pixdim)
+            AP.append((punti[j,1]-653)*atlas.pixdim)
             Z.append((punti[j,2]-440)*atlas.pixdim)
             
             # count the number of elements in each region to
@@ -183,6 +183,5 @@ def vis3d_registered_virus(atlas, virus_folder):
          plt1.show(mesh, getattr(pr,color_used[0]), getattr(pr,color_used[1]), getattr(pr,color_used[2]), getattr(pr,color_used[3]), getattr(pr,color_used[4]), getattr(pr,color_used[5]), __doc__,
          axes=0, viewup="z", bg='black',
          )
-
 
 

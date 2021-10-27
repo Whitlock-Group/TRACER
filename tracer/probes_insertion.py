@@ -109,7 +109,7 @@ class ProbesInsertion(object):
         # resolution
         self.dpi_atl = 25.4 / self.atlas.pixdim
         # Bregma coordinates
-        self.textstr = 'Bregma (mm): c = %.3f, h = %.3f, s = %.3f \nBregma (voxels): c = 623, h = 440, s = 246' % (623 * self.atlas.pixdim, 440 * self.atlas.pixdim, 246 * self.atlas.pixdim)
+        self.textstr = 'Bregma (mm): c = %.3f, h = %.3f, s = %.3f \nBregma (voxels): c = 653, h = 440, s = 246' % (653 * self.atlas.pixdim, 440 * self.atlas.pixdim, 246 * self.atlas.pixdim)
         # these are matplotlib.patch.Patch properties
         self.props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
         # Figure
@@ -157,7 +157,7 @@ class ProbesInsertion(object):
     def format_coord(self, x, y):
         # display the coordinates relative to the bregma when hovering with the cursor
         if self.plane == 'c':
-            AP = self.tracker.ind * self.atlas.pixdim - 623 * self.atlas.pixdim
+            AP = self.tracker.ind * self.atlas.pixdim - 653 * self.atlas.pixdim
             ML = x - 246 * self.atlas.pixdim
             Z = y - 440 * self.atlas.pixdim
             if ML > 0:
@@ -165,7 +165,7 @@ class ProbesInsertion(object):
             else:
                 return 'AP=%1.4f, ML=L%1.4f, z=%1.4f' % (AP, abs(ML), Z)
         elif self.plane == 's':
-            AP = x - 623 * self.atlas.pixdim
+            AP = x - 653 * self.atlas.pixdim
             ML = self.tracker.ind * self.atlas.pixdim - 246 * self.atlas.pixdim
             Z = y - 440 * self.atlas.pixdim
             if ML > 0:
@@ -173,7 +173,7 @@ class ProbesInsertion(object):
             else:
                 return 'AP=%1.4f, ML=L%1.4f, z=%1.4f' % (AP, abs(ML), Z)
         elif self.plane == 'h':
-            AP = y - 623 * self.atlas.pixdim
+            AP = y - 653 * self.atlas.pixdim
             ML = x - 246 * self.atlas.pixdim
             Z = self.tracker.ind * self.atlas.pixdim - 440 * self.atlas.pixdim
             if ML > 0:
@@ -414,7 +414,7 @@ class ProbesInsertion(object):
                                     x0 = pts[0,0]
                                     y0 = pts[-1,1]
                                     ML_position = (x0 - 246 * self.atlas.pixdim)
-                                    AP_position = (y0 - 623 * self.atlas.pixdim)
+                                    AP_position = (y0 - 653 * self.atlas.pixdim)
                                     X0 = np.array([x0, y0, z0])
                                     X2 = np.array([x2, y2, z2])
                                     # start point for visualization (the first clicked point)
@@ -462,7 +462,7 @@ class ProbesInsertion(object):
                                     x0 = pts[0,0]
                                     y0 = line_fit.point[1]+((x0-line_fit.point[0])/line_fit.direction[0])*line_fit.direction[1]
                                     ML_position = (x0-246 * self.atlas.pixdim)
-                                    AP_position = (y0-623 * self.atlas.pixdim)
+                                    AP_position = (y0-653 * self.atlas.pixdim)
                                     X0 = np.array([x0,y0,z0])
                                     X2 = np.array([x2,y2,z2])
                                     # start point for visualization (the first clicked point)
@@ -511,7 +511,7 @@ class ProbesInsertion(object):
                                 x0 = line_fit.point[0]+((z0-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[0]
                                 y0 = line_fit.point[1]+((z0-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[1]
                                 ML_position = (x0 - 246 * self.atlas.pixdim)
-                                AP_position = (y0 - 623 * self.atlas.pixdim)
+                                AP_position = (y0 - 653 * self.atlas.pixdim)
                                 X0 = np.array([x0,y0,z0])
                                 X2 = np.array([x2,y2,z2])
                                 # start point for visualization (the first clicked point)
@@ -696,7 +696,7 @@ class ProbesInsertion(object):
                             x0 = pts[0,0]
                             y0 = pts[-1,1]
                             ML_position = (x0 - 246 * self.atlas.pixdim)
-                            AP_position = (y0 - 623 * self.atlas.pixdim)
+                            AP_position = (y0 - 653 * self.atlas.pixdim)
                             X0 = np.array([x0,y0,z0])
                             X2 = np.array([x2,y2,z2])
                             # start point for visualization (the first clicked point)
@@ -744,7 +744,7 @@ class ProbesInsertion(object):
                             x0 = pts[0,0]
                             y0 = line_fit.point[1]+((x0-line_fit.point[0])/line_fit.direction[0])*line_fit.direction[1]
                             ML_position = (x0-246 * self.atlas.pixdim)
-                            AP_position = (y0-623 * self.atlas.pixdim)
+                            AP_position = (y0-653 * self.atlas.pixdim)
                             X0 = np.array([x0,y0,z0])
                             X2 = np.array([x2,y2,z2])
                             # start point for visualization (the first clicked point)
@@ -793,7 +793,7 @@ class ProbesInsertion(object):
                         x0 = line_fit.point[0]+((z0-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[0]
                         y0 = line_fit.point[1]+((z0-line_fit.point[2])/line_fit.direction[2])*line_fit.direction[1]
                         ML_position = (x0 - 246 * self.atlas.pixdim)
-                        AP_position = (y0 - 623 * self.atlas.pixdim)
+                        AP_position = (y0 - 653 * self.atlas.pixdim)
                         X0 = np.array([x0,y0,z0])
                         X2 = np.array([x2,y2,z2])
                         # start point for visualization (the first clicked point)
@@ -923,7 +923,6 @@ class ProbesInsertion(object):
                     pass
                 
     
-
 
 
 

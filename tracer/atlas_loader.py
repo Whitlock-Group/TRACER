@@ -67,7 +67,7 @@ class AtlasLoader(object):
 
     """
 
-    def __init__(self, atlas_folder, atlas_version='v4'):
+    def __init__(self, atlas_folder, atlas_version='v3'):
         if not os.path.exists(atlas_folder):
             raise Exception('Folder path %s does not exist. Please give the correct path.' % atlas_folder)
         
