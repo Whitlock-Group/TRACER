@@ -184,7 +184,7 @@ class VirusRegistration(object):
     def format_coord(self, x, y):
         # display the coordinates relative to the bregma when hovering with the cursor
         if self.plane == 'c':
-            AP = self.tracker.ind * self.atlas.pixdim - 653 * self.atlas.pixdim
+            AP = self.tracker.ind * self.atlas.pixdim - 623 * self.atlas.pixdim
             ML = x - 246 * self.atlas.pixdim
             Z = y - 440 * self.atlas.pixdim
             if ML > 0:

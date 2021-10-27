@@ -125,7 +125,7 @@ class ProbesRegistration(object):
         self.dpi_atl = 25.4 / self.atlas.pixdim
         
         # Bregma coordinates
-        self.textstr = 'Bregma (mm): c = %.3f, h = %.3f, s = %.3f \nBregma (voxels): c = 653, h = 440, s = 246' % (
+        self.textstr = 'Bregma (mm): c = %.3f, h = %.3f, s = %.3f \nBregma (voxels): c = 623, h = 440, s = 246' % (
             653 * self.atlas.pixdim, 440 * self.atlas.pixdim, 246 * self.atlas.pixdim)
         # these are matplotlib.patch.Patch properties
         self.props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
@@ -192,7 +192,7 @@ class ProbesRegistration(object):
     def format_coord(self, x, y):
         # display the coordinates relative to the bregma when hovering with the cursor
         if self.plane == 'c':
-            AP = self.tracker.ind * self.atlas.pixdim - 653 * self.atlas.pixdim
+            AP = self.tracker.ind * self.atlas.pixdim - 623 * self.atlas.pixdim
             ML = x - 246 * self.atlas.pixdim
             Z = y - 440 * self.atlas.pixdim
             if ML > 0:
