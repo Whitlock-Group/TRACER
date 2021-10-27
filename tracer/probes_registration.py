@@ -51,7 +51,7 @@ class ProbesRegistration(object):
 
     """
 
-    def __init__(self, atlas, processed_histology_folder=None, show_hist=False, probe_name='probe'):
+    def __init__(self, atlas, processed_histology_folder=None, show_hist=True, probe_name='probe'):
         
         self.atlas = atlas
         self.processed_histology_folder = processed_histology_folder
