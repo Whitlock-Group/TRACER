@@ -47,7 +47,7 @@ class VirusRegistration(object):
 
     """
 
-    def __init__(self, atlas, processed_histology_folder=None, show_hist=False, virus_name='virus_points'):
+    def __init__(self, atlas, processed_histology_folder=None, show_hist=True, virus_name='virus_points'):
     
         self.atlas = atlas
         self.processed_histology_folder = processed_histology_folder
