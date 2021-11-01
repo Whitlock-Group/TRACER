@@ -125,7 +125,7 @@ class ProbesRegistration(object):
         self.dpi_atl = 25.4 / self.atlas.pixdim
         
         # Bregma coordinates
-        self.textstr = 'Bregma (mm): c = %.3f, h = %.3f, s = %.3f \nBregma (voxels): c = 623, h = 440, s = 246' % (
+        self.textstr = 'Bregma (mm): c = %.3f, h = %.3f, s = %.3f \nBregma (voxels): c = 653, h = 440, s = 246' % (
             653 * self.atlas.pixdim, 440 * self.atlas.pixdim, 246 * self.atlas.pixdim)
         # these are matplotlib.patch.Patch properties
         self.props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
@@ -193,24 +193,24 @@ class ProbesRegistration(object):
         # display the coordinates relative to the bregma when hovering with the cursor
         if self.plane == 'c':
             AP = self.tracker.ind * self.atlas.pixdim - 623 * self.atlas.pixdim
-            ML = x - 246 * self.atlas.pixdim
-            Z = y - 440 * self.atlas.pixdim
+            ML = x - 244 * self.atlas.pixdim
+            Z = y - 248 * self.atlas.pixdim
             if ML > 0:
                 return 'AP=%1.4f, ML=R%1.4f, z=%1.4f' % (AP, abs(ML), Z)
             else:
                 return 'AP=%1.4f, ML=L%1.4f, z=%1.4f' % (AP, abs(ML), Z)
         elif self.plane == 's':
-            AP = x - 653 * self.atlas.pixdim
-            ML = self.tracker.ind * self.atlas.pixdim - 246 * self.atlas.pixdim
-            Z = y - 440 * self.atlas.pixdim
+            AP = x - 623 * self.atlas.pixdim
+            ML = self.tracker.ind * self.atlas.pixdim - 244 * self.atlas.pixdim
+            Z = y - 248 * self.atlas.pixdim
             if ML > 0:
                 return 'AP=%1.4f, ML=R%1.4f, z=%1.4f' % (AP, abs(ML), Z)
             else:
                 return 'AP=%1.4f, ML=L%1.4f, z=%1.4f' % (AP, abs(ML), Z)
         elif self.plane == 'h':
-            AP = y - 653 * self.atlas.pixdim
-            ML = x - 246 * self.atlas.pixdim
-            Z = self.tracker.ind * self.atlas.pixdim - 440 * self.atlas.pixdim
+            AP = y - 623 * self.atlas.pixdim
+            ML = x - 244 * self.atlas.pixdim
+            Z = self.tracker.ind * self.atlas.pixdim - 248 * self.atlas.pixdim
             if ML > 0:
                 return 'AP=%1.4f, ML=R%1.4f, z=%1.4f' % (AP, abs(ML), Z)
             else:
